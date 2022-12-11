@@ -2,7 +2,7 @@ import * as path from 'path';
 import { fs, getRouteId, normalizeToPosixPath } from '@modern-js/utils';
 import type { NestedRoute } from '@modern-js/types';
 import { JS_EXTENSIONS } from './constants';
-import { hasLoader, replaceWithAlias } from './utils';
+import { hasLoader, parseRouteModule, replaceWithAlias } from './utils';
 
 const LAYOUT_FILE = 'layout';
 const PAGE_FILE = 'page';
@@ -121,7 +121,13 @@ export const walk = async (
 
     if (itemWithoutExt === LAYOUT_FILE) {
       route._component = replaceWithAlias(alias.basename, itemPath, alias.name);
-      route.loader = await getLoaderPath(itemPath);
+      const routeModuleExports = await parseRouteModule(itemPath);
+      if (routeModuleExports.loader) {
+        route.loader = itemPath;
+      }
+      if (routeModuleExports.meta) {
+        route.meta = itemPath;
+      }
     }
 
     if (itemWithoutExt === PAGE_FILE) {
@@ -133,7 +139,14 @@ export const walk = async (
         itemPath,
         entryName,
       );
-      childRoute.loader = await getLoaderPath(itemPath);
+      const routeModuleExports = await parseRouteModule(itemPath);
+      // childRoute.loader = await getLoaderPath(itemPath);
+      if (routeModuleExports.loader) {
+        childRoute.loader = itemPath;
+      }
+      if (routeModuleExports.meta) {
+        childRoute.meta = itemPath;
+      }
       route.children?.push(childRoute);
     }
 

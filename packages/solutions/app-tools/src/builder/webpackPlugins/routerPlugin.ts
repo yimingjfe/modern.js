@@ -79,12 +79,14 @@ export default class RouterPlugin {
           }
 
           for (const [name, chunkGroup] of Object.entries(namedChunkGroups)) {
-            routeAssets[name] = {
-              chunkIds: chunkGroup.chunks,
-              assets: assetsByChunkName[name].map(item =>
-                publicPath ? normalizePath(publicPath) + item : item,
-              ),
-            };
+            if (assetsByChunkName[name]) {
+              routeAssets[name] = {
+                chunkIds: chunkGroup.chunks,
+                assets: assetsByChunkName[name].map(item =>
+                  publicPath ? normalizePath(publicPath) + item : item,
+                ),
+              };
+            }
           }
 
           const manifest = {

@@ -247,6 +247,10 @@ export const fileSystemRoutes = async ({
         loader = `loader_${loaderId}`;
         loadersMap[loader] = route.id!;
       }
+      if (route.meta) {
+        // TODO: ssr 适配
+        route.meta = `import(/* webpackChunkName: "${route.id}" */  '${componentLoaderPath}${route._component}')`;
+      }
 
       if (route._component) {
         if (route.isRoot) {
@@ -283,13 +287,10 @@ export const fileSystemRoutes = async ({
     if ('type' in route) {
       const newRoute = traverseRouteTree(route);
       routeComponentsCode += `${JSON.stringify(newRoute, null, 2)
-        .replace(/"(loadable.*\))"/g, '$1')
-        .replace(/"(loadableLazy.*\))"/g, '$1')
-        .replace(/"(lazy.*\))"/g, '$1')
-        .replace(/"(loading_[^"])"/g, '$1')
-        .replace(/"(loader_[^"])"/g, '$1')
-        .replace(/"(RootLayout)"/g, '$1')
-        .replace(/"(error_[^"])"/g, '$1')
+        .replace(
+          /("(?:loader|meta|loading|error|component)":\s*)"(.+)"(,|\n)/g,
+          '$1$2$3',
+        )
         .replace(/\\"/g, '"')},`;
     } else {
       const component = `loadable(() => import('${route._component}'))`;

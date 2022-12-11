@@ -60,6 +60,8 @@ export type NestedRoute = Merge<
     loading?: string;
     error?: string;
     isRoot?: boolean;
+    // TODO: 补充类型
+    meta?: any;
   }
 >;
 

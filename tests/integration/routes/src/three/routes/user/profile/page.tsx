@@ -2,6 +2,12 @@ import { Outlet, useLoaderData } from '@modern-js/runtime/router';
 // import { readFile } from './utils.server';
 // import { readFile } from 'fs-extra';
 
+export const meta = () => {
+  return {
+    title: 'user profile page',
+  };
+};
+
 export async function loader() {
   // console.log(readFile.toString());
   return 'request profile page';

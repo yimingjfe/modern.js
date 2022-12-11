@@ -6,6 +6,26 @@ export const loader = async () => {
   };
 };
 
+export const meta = () => {
+  return {
+    title: 'root layout',
+  };
+};
+
+// const cc = async () => {
+//   const a = await import('./a');
+//   console.log(a);
+// };
+
+// const bb = async () => {
+//   const a = await import('./a');
+//   console.log(a);
+// };
+
+// cc();
+
+// bb();
+
 export default function Layout() {
   return (
     <div>

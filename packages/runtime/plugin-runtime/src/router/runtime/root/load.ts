@@ -1,5 +1,6 @@
 import { matchRoutes, Location, RouteObject, Params } from 'react-router-dom';
 import type { NestedRoute } from '@modern-js/types';
+import { matchClientRoutes, RouteMatch } from './utils';
 
 declare const __webpack_chunk_load__: (chunkId: string) => Promise<void>;
 
@@ -14,12 +15,6 @@ interface RouteManifest {
   routeAssets: RouteAssets;
   enableFetchParallel?: boolean;
   enableLogging?: boolean;
-}
-
-export interface RouteMatch<Route> {
-  params: Params;
-  pathname: string;
-  route: Route;
 }
 
 interface LoggerOptions {
@@ -55,6 +50,7 @@ export function handleLoad(
   routes: NestedRoute[],
   location: Location,
   routeManifest: RouteManifest,
+  matches: RouteMatch<NestedRoute>[],
 ) {
   if (!routeManifest || !routeManifest.enableFetchParallel === false) {
     return;
@@ -64,16 +60,7 @@ export function handleLoad(
   Logger.getLogger({ enableLogging: routeManifest.enableLogging }).log(
     'handle page load',
   );
-  const matches = matchClientRoutes(routes, location);
   matches?.forEach(match => loadRouteModule(match.route, routeAssets));
-}
-
-export function matchClientRoutes(
-  routes: NestedRoute[],
-  location: Location,
-): RouteMatch<NestedRoute>[] {
-  const matches = matchRoutes(routes as RouteObject[], location);
-  return matches as unknown as RouteMatch<NestedRoute>[];
 }
 
 export async function loadRouteModule(

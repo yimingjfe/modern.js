@@ -6,7 +6,11 @@ import type { Loader } from 'esbuild';
 import { transform } from 'esbuild';
 import { parse } from 'es-module-lexer';
 import type { ImportStatement } from '../types';
-import { FILE_SYSTEM_ROUTES_FILE_NAME, LOADER_EXPORT_NAME } from './constants';
+import {
+  FILE_SYSTEM_ROUTES_FILE_NAME,
+  LOADER_EXPORT_NAME,
+  META_EXPORT_NAME,
+} from './constants';
 
 export const walkDirectory = (dir: string): string[] =>
   fs.readdirSync(dir).reduce<string[]>((previous, filename) => {
@@ -126,6 +130,25 @@ export const parseModule = async ({
 
   // eslint-disable-next-line @typescript-eslint/await-thenable
   return await parse(content);
+};
+
+const conventionRouteExports = [LOADER_EXPORT_NAME, META_EXPORT_NAME];
+export const parseRouteModule = async (filename: string) => {
+  const source = await fse.readFile(filename);
+  const [, moduleExports] = await parseModule({
+    source: source.toString(),
+    filename,
+  });
+
+  return moduleExports.reduce((res, exportItem) => {
+    if (conventionRouteExports.includes(exportItem.n)) {
+      return {
+        ...res,
+        [exportItem.n]: true,
+      };
+    }
+    return res;
+  }, {} as Record<string, boolean>);
 };
 
 export const hasLoader = async (filename: string) => {
