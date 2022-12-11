@@ -4,6 +4,7 @@ const wait = (time: number) =>
   new Promise(resolve => setTimeout(resolve, time));
 
 export async function loader() {
+  console.log('request profile layout');
   await wait(200);
   return 'request profile layout999';
 }

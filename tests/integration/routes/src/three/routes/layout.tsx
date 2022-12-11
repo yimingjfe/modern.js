@@ -1,4 +1,6 @@
 import { Link, Outlet } from '@modern-js/runtime/router';
+import React from 'react';
+import { AuthProvider } from './auth';
 
 export const loader = async () => {
   return {
@@ -7,12 +9,15 @@ export const loader = async () => {
 };
 
 export default function Layout() {
+  console.log('render root layout');
   return (
-    <div>
-      root layout
-      <Link to="user">/user</Link>
-      <Link to="user/profile">/user/profile</Link>
-      <Outlet />
-    </div>
+    <AuthProvider>
+      <div>
+        root layout
+        <Link to="user">/user</Link>
+        <Link to="user/profile">/user/profile</Link>
+        <Outlet />
+      </div>
+    </AuthProvider>
   );
 }

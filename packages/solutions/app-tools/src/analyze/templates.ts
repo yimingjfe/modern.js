@@ -263,7 +263,7 @@ export const fileSystemRoutes = async ({
       ...route,
       loading,
       loader,
-      error,
+      errorElement: error,
       children,
     };
     if (route._component) {
