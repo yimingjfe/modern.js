@@ -5,9 +5,7 @@ module.exports = {
   preset: 'jest-puppeteer',
   rootDir: __dirname,
   setupFilesAfterEnv: ['./utils/jest.setup.js'],
-  testMatch: [
-    '<rootDir>/integration/tests/integration/runtime/test/index.test.js',
-  ],
+  testMatch: ['<rootDir>/integration/runtime/test/index.test.js'],
   testPathIgnorePatterns: [
     '/node_modules/',
     '/api-service-koa/api/',
