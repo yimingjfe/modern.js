@@ -31,7 +31,7 @@ describe('useLoader with SSR', () => {
 
     page.on('console', msg => logs.push(msg.text));
     page.on('pageerror', error => errors.push(error.text));
-    await page.goto(`http://localhost:${appPort}`, {
+    await page.goto(`http://127.0.0.1:${appPort}`, {
       waitUntil: ['networkidle0'],
     });
     $data = await page.$('#data');
@@ -105,7 +105,7 @@ describe('convention router', () => {
     browser,
     appPort;
 
-  const getUrl = str => `http://localhost:${appPort}/${str}`;
+  const getUrl = str => `http://127.0.0.1:${appPort}/${str}`;
 
   beforeAll(async () => {
     const appDir = join(fixtureDir, 'file-based-router');
