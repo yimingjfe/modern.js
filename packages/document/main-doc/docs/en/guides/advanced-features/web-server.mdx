@@ -78,9 +78,9 @@ For some projects, there may be more requirements at the server level, Modern.js
 Modern.js provides a set of APIs by default for projects to use:
 
 ```ts
-import { Middlewre } from '@modern-js/runtime/server';
+import { Middleware } from '@modern-js/runtime/server';
 
-export const middleware: Middlewre = (context, next) => {
+export const middleware: Middleware = (context, next) => {
   const { source: { req, res } } = context;
   console.log(req.url);
   next();
