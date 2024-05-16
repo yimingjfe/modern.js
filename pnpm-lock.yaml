@@ -3615,7 +3615,7 @@ importers:
         specifier: ^29
         version: 29.5.0(@types/node@14.18.35)(ts-node@10.9.2)
       koa:
-        specifier: ^2.13.4
+        specifier: 2.13.4
         version: 2.13.4
       supertest:
         specifier: ^6.1.6
@@ -5616,7 +5616,7 @@ importers:
         specifier: workspace:*
         version: link:../../../packages/runtime/plugin-runtime
       koa:
-        specifier: ^2.13.4
+        specifier: 2.13.4
         version: 2.13.4
       react:
         specifier: ^18
@@ -5635,7 +5635,7 @@ importers:
         specifier: ^29
         version: 29.2.6
       '@types/koa':
-        specifier: ^2.13.4
+        specifier: 2.13.4
         version: 2.13.4
       '@types/node':
         specifier: ^14
