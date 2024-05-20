@@ -6145,7 +6145,7 @@ importers:
         specifier: ^29
         version: 29.2.6
       '@types/koa':
-        specifier: '2.13.4 '
+        specifier: 2.13.4
         version: 2.13.4
       '@types/node':
         specifier: ^14
