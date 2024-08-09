@@ -5,9 +5,14 @@ export default applyBaseConfig({
     router: true,
   },
   server: {
-    ssr: true,
+    ssr: {
+      mode: 'stream',
+    },
   },
   security: {
     nonce: 'test-nonce',
+  },
+  source: {
+    enableAsyncEntry: true,
   },
 });

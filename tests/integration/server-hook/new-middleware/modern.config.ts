@@ -8,6 +8,9 @@ export default applyBaseConfig({
     state: false,
   },
   server: {
-    ssr: true,
+    ssr: false,
+  },
+  source: {
+    enableAsyncEntry: true,
   },
 });

@@ -1,4 +1,6 @@
+import path from 'node:path';
 import { UnstableMiddleware } from '@modern-js/runtime/server';
+import { injectAssets } from '@modern-js/plugin-server/runtime';
 import { Var } from '../shared';
 
 function time(): UnstableMiddleware {
@@ -61,15 +63,25 @@ function injectMessage(): UnstableMiddleware {
 
     const language = await getLangauge();
 
-    const { response } = c;
+    const { response, request } = c;
     const text = await response.text();
 
     const newText = text.replace('<html>', `<html lang="${language}">`);
 
+    // eslint-disable-next-line node/no-unsupported-features/node-builtins
+    const url = new URL(request.url);
+
+    const newHtml = await injectAssets({
+      html: newText,
+      pathname: url.pathname,
+      distDir: path.resolve(__dirname, '../dist'),
+    });
+    console.log('nnnnnnnnnnn', newHtml);
+
     const newheaders = response.headers;
     newheaders.set('x-custom-value', 'modern');
 
-    c.response = c.body(newText, {
+    c.response = c.body(newHtml, {
       status: response.status,
       headers: newheaders,
     });
@@ -84,7 +96,6 @@ function injectRequestBody(): UnstableMiddleware {
 
     if (request.method.toUpperCase() === 'POST' && request.body) {
       const requestBody = await request.text();
-
       c.response = c.body(requestBody, {
         status: response.status,
         headers: response.headers,
