@@ -15,7 +15,7 @@ import { isRuntimeEntry } from './entry';
 import { ssrPlugin } from './ssr';
 
 export { isRuntimeEntry } from './entry';
-export { statePlugin, ssrPlugin, routerPlugin, documentPlugin };
+export { statePlugin, ssrPlugin, routerPlugin };
 export const runtimePlugin = (params?: {
   plugins?: CliPlugin<AppTools>[];
 }): CliPlugin<AppTools> => ({
@@ -32,7 +32,7 @@ export const runtimePlugin = (params?: {
     ssrPlugin(),
     routerPlugin(),
     statePlugin(),
-    documentPlugin(),
+    // documentPlugin(),
   ],
   setup: api => {
     return {
