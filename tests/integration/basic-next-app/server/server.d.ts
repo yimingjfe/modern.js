@@ -9,6 +9,7 @@ type ImportManifestEntry = {
   id: string;
   chunks: string[];
   name: string;
+  styles: string[];
 };
 
 type ModuleLoading = null | {

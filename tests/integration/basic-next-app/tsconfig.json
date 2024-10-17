@@ -10,5 +10,13 @@
       "@shared/*": ["./shared/*"]
     }
   },
-  "include": ["src", "server", "shared", "config", "credentials.js"]
+  "include": [
+    "src",
+    "modern-app-env.d.ts",
+    "plugins",
+    "server",
+    "shared",
+    "config",
+    "credentials.js"
+  ]
 }
