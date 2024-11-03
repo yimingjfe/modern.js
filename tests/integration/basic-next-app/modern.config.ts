@@ -1,8 +1,8 @@
-import { applyBaseConfig } from '../../utils/applyBaseConfig';
 import path from 'path';
-import { WebpackRscServerPlugin } from '@mfng/webpack-rsc';
-import { WebpackRscClientPlugin } from './plugins/rsc-client-plugin';
 import { RsdoctorWebpackPlugin } from '@rsdoctor/webpack-plugin';
+import { applyBaseConfig } from '../../utils/applyBaseConfig';
+import { WebpackRscClientPlugin } from './plugins/rsc-client-plugin';
+import { WebpackRscServerPlugin } from './plugins/rsc-server-plugin';
 
 const clientReferencesMap = new Map();
 const serverReferencesMap = new Map();
@@ -17,9 +17,11 @@ const rscServerLoaderPath = path.join(
 const rscSsrLoaderPath = path.join(__dirname, 'plugins/rsc-ssr-loader.ts');
 
 const rscClientLoaderPath = path.join(
-  path.dirname(require.resolve('@mfng/webpack-rsc')),
-  '/webpack-rsc-client-loader.cjs',
+  __dirname,
+  'plugins/rsc-client-loader.ts',
 );
+
+const styles = new Set<string>();
 
 export default applyBaseConfig({
   runtime: {
@@ -55,6 +57,7 @@ export default applyBaseConfig({
           }),
         );
       }
+      // delete config.cache;
     },
 
     bundlerChain(chain, { isServer }) {
@@ -83,6 +86,7 @@ export default applyBaseConfig({
 
         chain.module.rules.delete('js');
 
+        // babel-loader 待在前面，保证 ts 和 tsx 被编译了
         chain.module
           .rule('js')
           .test(/\.(?:js|jsx|mjs|cjs|ts|tsx|mts|cts)$/)
@@ -128,13 +132,15 @@ export default applyBaseConfig({
         chain
           .plugin('rsc-server-plugin')
           .use(WebpackRscServerPlugin, [
-            { clientReferencesMap, serverReferencesMap },
+            { clientReferencesMap, serverReferencesMap, styles },
           ]);
 
         chain.module
           .rule('react-server')
           .issuerLayer(webpackRscLayerName)
           .resolve.conditionNames.merge(['react-server', '...']);
+
+        chain.module.rule('css').uses.delete('ignore-css');
       } else {
         chain.name('client');
         chain.dependencies(['server']);
@@ -160,7 +166,7 @@ export default applyBaseConfig({
 
         chain
           .plugin('rsc-client-plugin')
-          .use(WebpackRscClientPlugin, [{ clientReferencesMap }]);
+          .use(WebpackRscClientPlugin, [{ clientReferencesMap, styles }]);
       }
     },
   },

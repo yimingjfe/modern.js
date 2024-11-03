@@ -2,8 +2,8 @@ import * as generate from '@babel/generator';
 import * as parser from '@babel/parser';
 import * as traverse from '@babel/traverse';
 import * as t from '@babel/types';
-import type webpack from 'webpack';
 import type { ServerReferencesMap } from '@mfng/webpack-rsc';
+import type webpack from 'webpack';
 
 namespace webpackRscSsrLoader {
   export interface WebpackRscSsrLoaderOptions {

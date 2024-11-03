@@ -40,13 +40,12 @@ interface ExtendedFunctionInfo extends FunctionInfo {
 
 const webpackRscServerLoader: webpack.LoaderDefinitionFunction<webpackRscServerLoader.WebpackRscServerLoaderOptions> =
   function (source, sourceMap) {
-    this.cacheable(true);
-
     const { clientReferencesMap, serverReferencesMap } = this.getOptions();
     const clientReferences: webpackRscServerLoader.ClientReference[] = [];
     const serverReferenceExportNames: string[] = [];
     const resourcePath = this.resourcePath;
 
+    console.log('server loader11111111111');
     const ast = parser.parse(source, {
       sourceType: `module`,
       sourceFilename: resourcePath,
