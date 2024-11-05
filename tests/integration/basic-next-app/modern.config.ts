@@ -23,6 +23,8 @@ const rscClientLoaderPath = path.join(
 
 const styles = new Set<string>();
 
+const CSS_RULE_NAMES = ['less', 'css', 'scss', 'sass'];
+
 export default applyBaseConfig({
   runtime: {
     state: false,
@@ -139,6 +141,18 @@ export default applyBaseConfig({
           .rule('react-server')
           .issuerLayer(webpackRscLayerName)
           .resolve.conditionNames.merge(['react-server', '...']);
+
+        // TODO: 临时代码
+        CSS_RULE_NAMES.forEach(ruleName => {
+          const rule = chain.module.rules.get(ruleName);
+          if (rule) {
+            chain.module
+              .rule(ruleName)
+              .use('custom-loader')
+              .before('ignore-css')
+              .loader('./plugins/rsc-css-loader.ts');
+          }
+        });
 
         chain.module.rule('css').uses.delete('ignore-css');
       } else {

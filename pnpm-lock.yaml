@@ -2585,7 +2585,7 @@ importers:
         version: 5.5.11
       debug:
         specifier: 4.3.7
-        version: 4.3.7(supports-color@9.3.1)
+        version: 4.3.7(supports-color@5.5.0)
       garfish:
         specifier: ^1.8.1
         version: 1.8.1
@@ -3781,7 +3781,7 @@ importers:
         version: 7.23.6
       '@babel/traverse':
         specifier: ^7.23.2
-        version: 7.23.6
+        version: 7.23.6(supports-color@5.5.0)
       '@babel/types':
         specifier: ^7.24.7
         version: 7.24.7
@@ -4697,7 +4697,7 @@ importers:
         version: 10.0.1
       debug:
         specifier: 4.3.7
-        version: 4.3.7(supports-color@9.3.1)
+        version: 4.3.7(supports-color@5.5.0)
       dotenv:
         specifier: 10.0.0
         version: 10.0.0
@@ -5514,6 +5514,9 @@ importers:
       '@modern-js/runtime':
         specifier: workspace:*
         version: link:../../../packages/runtime/plugin-runtime
+      '@swc/core':
+        specifier: 1.3.42
+        version: 1.3.42
       busboy:
         specifier: ^1.6.0
         version: 1.6.0
@@ -8670,6 +8673,7 @@ packages:
 
   '@babel/plugin-proposal-object-rest-spread@7.12.1':
     resolution: {integrity: sha512-s6SowJIjzlhx8o7lsFx5zmY4At6CTtDvgNQDdPzkBQucle58A6b/TTeEBYtyDgmcXjUTM+vE8YOGHZzzbc/ioA==}
+    deprecated: This proposal has been merged to the ECMAScript standard and thus this plugin is no longer maintained. Please use @babel/plugin-transform-object-rest-spread instead.
     peerDependencies:
       '@babel/core': ^7.0.0-0
 
@@ -9702,12 +9706,15 @@ packages:
 
   '@esbuild-kit/cjs-loader@2.4.2':
     resolution: {integrity: sha512-BDXFbYOJzT/NBEtp71cvsrGPwGAMGRB/349rwKuoxNSiKjPraNNnlK6MIIabViCjqZugu6j+xeMDlEkWdHHJSg==}
+    deprecated: 'Merged into tsx: https://tsx.is'
 
   '@esbuild-kit/core-utils@3.1.0':
     resolution: {integrity: sha512-Uuk8RpCg/7fdHSceR1M6XbSZFSuMrxcePFuGgyvsBn+u339dk5OeL4jv2EojwTN2st/unJGsVm4qHWjWNmJ/tw==}
+    deprecated: 'Merged into tsx: https://tsx.is'
 
   '@esbuild-kit/esm-loader@2.5.5':
     resolution: {integrity: sha512-Qwfvj/qoPbClxCRNuac1Du01r9gvNOT+pMYtJDapfB1eoGN1YlJ1BixLyL9WVENRx5RXgNLdfYdx/CuswlGhMw==}
+    deprecated: 'Merged into tsx: https://tsx.is'
 
   '@esbuild/android-arm64@0.17.19':
     resolution: {integrity: sha512-KBMWvEZooR7+kzY0BtbTQn0OAYY7CsiydT63pVEaPtVYF0hXbUaOyZog37DKxK7NF3XacBJOpYT4adIJh+avxA==}
@@ -10642,9 +10649,6 @@ packages:
   '@modern-js/utils@2.58.1':
     resolution: {integrity: sha512-JemTkJ4UqqFbJ72NqBXzMFG0dqw70HTGDoX7VAXdYPrEmn8LRvSqHlSCIeX5KF1U+KNa0a7OEdsb9Q56UESjdQ==}
 
-  '@modern-js/utils@2.60.1':
-    resolution: {integrity: sha512-Xu/xumI2xnkB6BXqHfqD5cDrMhxAW1/QsrHXWHcvEW1hSbtviw77PUwXs90NgPKGtV5wwdA319kUPxswe4TCUA==}
-
   '@modern-js/utils@2.60.3':
     resolution: {integrity: sha512-g9kxWsYZ71MZPXMEf2ltDP229WjGIChNB95fjmcvtWRoW9grhINdQJ0/tO+jEaHZiDDQEWuPJlqqUrXWcZB0nQ==}
 
@@ -10761,6 +10765,7 @@ packages:
   '@playwright/test@1.33.0':
     resolution: {integrity: sha512-YunBa2mE7Hq4CfPkGzQRK916a4tuZoVx/EpLjeWlTVOnD4S2+fdaQZE0LJkbfhN5FTSKNLdcl7MoT5XB37bTkg==}
     engines: {node: '>=14'}
+    deprecated: Please update to the latest version of Playwright to test up-to-date browsers.
     hasBin: true
 
   '@pmmmwh/react-refresh-webpack-plugin@0.5.15':
@@ -16054,6 +16059,7 @@ packages:
   glob@8.1.0:
     resolution: {integrity: sha512-r8hpEjiQEYlF2QU0df3dS+nxxSIreXQS1qRhMJM0Q5NDdR386C7jb7Hwwod8Fgiuex+k0GFjgft18yvxm5XoCQ==}
     engines: {node: '>=12'}
+    deprecated: Glob versions prior to v9 are no longer supported
 
   glob@9.3.5:
     resolution: {integrity: sha512-e1LleDykUz2Iu+MTYdkSsuWX8lvAjAcs0Xef0lNIu0S2wOAzuTxCJtcd9S3cijlwYF18EsU3rzb8jPVobxDh9Q==}
@@ -19153,7 +19159,7 @@ packages:
 
   puppeteer@19.11.1:
     resolution: {integrity: sha512-39olGaX2djYUdhaQQHDZ0T0GwEp+5f9UB9HmEP0qHfdQHIq0xGQZuAZ5TLnJIc/88SrPLpEflPC+xUqOTv3c5g==}
-    deprecated: < 21.3.7 is no longer supported
+    deprecated: < 22.8.2 is no longer supported
 
   pure-color@1.3.0:
     resolution: {integrity: sha512-QFADYnsVoBMw1srW7OVKEYjG+MbIa49s54w1MA1EDY6r2r/sTcKKYqRX1f4GYvnXP7eN/Pe9HFcX+hwzmrXRHA==}
@@ -19168,6 +19174,10 @@ packages:
   q@1.5.1:
     resolution: {integrity: sha512-kV/CThkXo6xyFEZUugw/+pIOywXcDbFYgSct5cT3gqlbkBE1SJdwy6UQoZvodiWF/ckQLZyDE/Bu1M6gVu5lVw==}
     engines: {node: '>=0.6.0', teleport: '>=0.2.0'}
+    deprecated: |-
+      You or someone you depend on is using Q, the JavaScript Promise library that gave JavaScript developers strong feelings about promises. They can almost certainly migrate to the native JavaScript promise now. Thank you literally everyone for joining me in this bet against the odds. Be excellent to each other.
+
+      (For a CapTP with native promises, see @endo/eventual-send and @endo/captp)
 
   qrcode.react@3.1.0:
     resolution: {integrity: sha512-oyF+Urr3oAMUG/OiOuONL3HXM+53wvuH3mtIWQrYmsXoAq0DkvZp2RYUWFSMFtbdOpuS++9v+WAkzNVkMlNW6Q==}
@@ -20149,6 +20159,7 @@ packages:
 
   rimraf@3.0.2:
     resolution: {integrity: sha512-JZkJMZkAGFFPP2YqXZXPbMlMBgsxzE8ILs4lMIX/2o0L9UBw9O/Y3o6wFw/i9YLapcUJWwqbi3kdxIPdC62TIA==}
+    deprecated: Rimraf versions prior to v4 are no longer supported
     hasBin: true
 
   rimraf@6.0.1:
@@ -21069,6 +21080,7 @@ packages:
   superagent@7.1.5:
     resolution: {integrity: sha512-HQYyGuDRFGmZ6GNC4hq2f37KnsY9Lr0/R1marNZTgMweVDQLTLJJ6DGQ9Tj/xVVs5HEnop9EMmTbywb5P30aqw==}
     engines: {node: '>=6.4.0 <13 || >=14'}
+    deprecated: Please upgrade to v9.0.0+ as we have fixed a public vulnerability with formidable dependency. Note that v9.0.0+ requires Node.js v14.18.0+. See https://github.com/ladjs/superagent/pull/1800 for insight. This project is supported and maintained by the team at Forward Email @ https://forwardemail.net
 
   supertest@6.2.3:
     resolution: {integrity: sha512-3GSdMYTMItzsSYjnIcljxMVZKPW1J9kYHZY+7yLfD0wpPwww97GeImZC1oOk0S5+wYl2niJwuFusBJqwLqYM3g==}
@@ -21329,6 +21341,7 @@ packages:
 
   trim@0.0.1:
     resolution: {integrity: sha512-YzQV+TZg4AxpKxaTHK3c3D+kRDCGVEE7LemdlQZoQXn0iennk10RsIoY6ikzAqJTc9Xjl9C1/waHom/J86ziAQ==}
+    deprecated: Use String.prototype.trim() instead
 
   trough@1.0.5:
     resolution: {integrity: sha512-rvuRbTarPXmMb79SmzEp8aqXNKcK+y0XaB298IXueQ8I2PsrATcPBCSPyK/dDNa2iWOhKlfNnOjdAOTBU/nkFA==}
@@ -22595,7 +22608,7 @@ snapshots:
       '@babel/traverse': 7.25.7
       '@babel/types': 7.25.8
       convert-source-map: 1.8.0
-      debug: 4.3.7(supports-color@9.3.1)
+      debug: 4.3.7(supports-color@5.5.0)
       gensync: 1.0.0-beta.2
       json5: 2.2.3
       lodash: 4.17.21
@@ -22638,7 +22651,7 @@ snapshots:
       '@babel/traverse': 7.25.7
       '@babel/types': 7.25.8
       convert-source-map: 2.0.0
-      debug: 4.3.7(supports-color@9.3.1)
+      debug: 4.3.7(supports-color@5.5.0)
       gensync: 1.0.0-beta.2
       json5: 2.2.3
       semver: 6.3.1
@@ -22658,7 +22671,7 @@ snapshots:
       '@babel/traverse': 7.25.7
       '@babel/types': 7.25.8
       convert-source-map: 2.0.0
-      debug: 4.3.7(supports-color@9.3.1)
+      debug: 4.3.7(supports-color@5.5.0)
       gensync: 1.0.0-beta.2
       json5: 2.2.3
       semver: 6.3.1
@@ -22837,7 +22850,7 @@ snapshots:
       '@babel/core': 7.24.7
       '@babel/helper-compilation-targets': 7.25.2
       '@babel/helper-plugin-utils': 7.24.7
-      debug: 4.3.7(supports-color@9.3.1)
+      debug: 4.3.7(supports-color@5.5.0)
       lodash.debounce: 4.0.8
       resolve: 1.22.4
       semver: 6.3.1
@@ -22849,7 +22862,7 @@ snapshots:
       '@babel/core': 7.24.7
       '@babel/helper-compilation-targets': 7.25.7
       '@babel/helper-plugin-utils': 7.24.8
-      debug: 4.3.7(supports-color@9.3.1)
+      debug: 4.3.7(supports-color@5.5.0)
       lodash.debounce: 4.0.8
       resolve: 1.22.8
     transitivePeerDependencies:
@@ -22860,7 +22873,7 @@ snapshots:
       '@babel/core': 7.25.8
       '@babel/helper-compilation-targets': 7.25.7
       '@babel/helper-plugin-utils': 7.24.8
-      debug: 4.3.7(supports-color@9.3.1)
+      debug: 4.3.7(supports-color@5.5.0)
       lodash.debounce: 4.0.8
       resolve: 1.22.8
     transitivePeerDependencies:
@@ -22871,7 +22884,7 @@ snapshots:
       '@babel/core': 7.25.8
       '@babel/helper-compilation-targets': 7.25.7
       '@babel/helper-plugin-utils': 7.24.8
-      debug: 4.3.7(supports-color@9.3.1)
+      debug: 4.3.7(supports-color@5.5.0)
       lodash.debounce: 4.0.8
       resolve: 1.22.8
     transitivePeerDependencies:
@@ -24885,21 +24898,6 @@ snapshots:
       '@babel/parser': 7.25.8
       '@babel/types': 7.25.8
 
-  '@babel/traverse@7.23.6':
-    dependencies:
-      '@babel/code-frame': 7.24.2
-      '@babel/generator': 7.24.5
-      '@babel/helper-environment-visitor': 7.22.20
-      '@babel/helper-function-name': 7.23.0
-      '@babel/helper-hoist-variables': 7.22.5
-      '@babel/helper-split-export-declaration': 7.22.6
-      '@babel/parser': 7.24.5
-      '@babel/types': 7.24.7
-      debug: 4.3.7(supports-color@9.3.1)
-      globals: 11.12.0
-    transitivePeerDependencies:
-      - supports-color
-
   '@babel/traverse@7.23.6(supports-color@5.5.0)':
     dependencies:
       '@babel/code-frame': 7.24.2
@@ -24925,7 +24923,7 @@ snapshots:
       '@babel/helper-split-export-declaration': 7.24.7
       '@babel/parser': 7.25.8
       '@babel/types': 7.25.8
-      debug: 4.3.7(supports-color@9.3.1)
+      debug: 4.3.7(supports-color@5.5.0)
       globals: 11.12.0
     transitivePeerDependencies:
       - supports-color
@@ -24937,7 +24935,7 @@ snapshots:
       '@babel/parser': 7.25.8
       '@babel/template': 7.25.7
       '@babel/types': 7.25.8
-      debug: 4.3.7(supports-color@9.3.1)
+      debug: 4.3.7(supports-color@5.5.0)
       globals: 11.12.0
     transitivePeerDependencies:
       - supports-color
@@ -25829,7 +25827,7 @@ snapshots:
 
   '@garfish/utils@1.8.1':
     dependencies:
-      debug: 4.3.7(supports-color@9.3.1)
+      debug: 4.3.7(supports-color@5.5.0)
     transitivePeerDependencies:
       - supports-color
 
@@ -26583,7 +26581,7 @@ snapshots:
       '@modern-js/codesmith-utils': 2.6.5
       '@swc/helpers': 0.5.1
       axios: 1.7.7(debug@4.3.7)
-      debug: 4.3.7(supports-color@9.3.1)
+      debug: 4.3.7(supports-color@5.5.0)
       tar: 6.2.1
     transitivePeerDependencies:
       - supports-color
@@ -26752,13 +26750,6 @@ snapshots:
   '@modern-js/utils@2.58.1':
     dependencies:
       '@swc/helpers': 0.5.3
-      caniuse-lite: 1.0.30001668
-      lodash: 4.17.21
-      rslog: 1.2.3
-
-  '@modern-js/utils@2.60.1':
-    dependencies:
-      '@swc/helpers': 0.5.13
       caniuse-lite: 1.0.30001668
       lodash: 4.17.21
       rslog: 1.2.3
@@ -29037,7 +29028,7 @@ snapshots:
       '@mdx-js/loader': 2.3.0(webpack@5.95.0(@swc/core@1.3.42)(esbuild@0.17.19))
       '@mdx-js/mdx': 2.3.0
       '@mdx-js/react': 2.3.0(react@18.3.0-canary-8039e6d0b-20231026)
-      '@modern-js/utils': 2.60.1
+      '@modern-js/utils': link:packages/toolkit/utils
       '@rsbuild/core': 1.0.5
       '@rsbuild/plugin-less': 1.0.1(@rsbuild/core@1.0.5)
       '@rsbuild/plugin-react': 1.0.2(@rsbuild/core@1.0.5)
@@ -29092,7 +29083,7 @@ snapshots:
       '@mdx-js/loader': 2.3.0(webpack@5.95.0(esbuild@0.17.19))
       '@mdx-js/mdx': 2.3.0
       '@mdx-js/react': 2.3.0(react@18.3.0-canary-8039e6d0b-20231026)
-      '@modern-js/utils': 2.60.1
+      '@modern-js/utils': link:packages/toolkit/utils
       '@rsbuild/core': 1.0.5
       '@rsbuild/plugin-less': 1.0.1(@rsbuild/core@1.0.5)
       '@rsbuild/plugin-react': 1.0.2(@rsbuild/core@1.0.5)
@@ -29748,7 +29739,7 @@ snapshots:
 
   '@storybook/react-docgen-typescript-plugin@1.0.6--canary.9.0c3f3b7.0(typescript@5.3.3)(webpack@5.95.0(esbuild@0.18.20))':
     dependencies:
-      debug: 4.3.7(supports-color@9.3.1)
+      debug: 4.3.7(supports-color@5.5.0)
       endent: 2.1.0
       find-cache-dir: 3.3.2
       flat-cache: 3.0.4
@@ -30724,7 +30715,7 @@ snapshots:
       '@babel/helper-module-imports': 7.22.15
       '@babel/plugin-syntax-jsx': 7.22.5(@babel/core@7.24.7)
       '@babel/template': 7.22.15
-      '@babel/traverse': 7.23.6
+      '@babel/traverse': 7.23.6(supports-color@5.5.0)
       '@babel/types': 7.24.7
       '@vue/babel-helper-vue-transform-on': 1.1.5
       camelcase: 6.3.0
@@ -31028,7 +31019,7 @@ snapshots:
 
   agent-base@6.0.2:
     dependencies:
-      debug: 4.3.7(supports-color@9.3.1)
+      debug: 4.3.7(supports-color@5.5.0)
     transitivePeerDependencies:
       - supports-color
 
@@ -32853,7 +32844,7 @@ snapshots:
 
   declaration-update@0.0.2:
     dependencies:
-      debug: 4.3.7(supports-color@9.3.1)
+      debug: 4.3.7(supports-color@5.5.0)
     transitivePeerDependencies:
       - supports-color
 
@@ -32975,7 +32966,7 @@ snapshots:
   detect-port@1.6.1:
     dependencies:
       address: 1.2.2
-      debug: 4.3.7(supports-color@9.3.1)
+      debug: 4.3.7(supports-color@5.5.0)
     transitivePeerDependencies:
       - supports-color
 
@@ -33233,7 +33224,7 @@ snapshots:
       base64id: 2.0.0
       cookie: 0.4.2
       cors: 2.8.5
-      debug: 4.3.7(supports-color@9.3.1)
+      debug: 4.3.7(supports-color@5.5.0)
       engine.io-parser: 5.2.1
       ws: 8.11.0(bufferutil@4.0.8)(utf-8-validate@5.0.10)
     transitivePeerDependencies:
@@ -33430,14 +33421,14 @@ snapshots:
 
   esbuild-register@3.5.0(esbuild@0.17.19):
     dependencies:
-      debug: 4.3.7(supports-color@9.3.1)
+      debug: 4.3.7(supports-color@5.5.0)
       esbuild: 0.17.19
     transitivePeerDependencies:
       - supports-color
 
   esbuild-register@3.6.0(esbuild@0.18.20):
     dependencies:
-      debug: 4.3.7(supports-color@9.3.1)
+      debug: 4.3.7(supports-color@5.5.0)
       esbuild: 0.18.20
     transitivePeerDependencies:
       - supports-color
@@ -33853,7 +33844,7 @@ snapshots:
 
   extract-zip@2.0.1:
     dependencies:
-      debug: 4.3.7(supports-color@9.3.1)
+      debug: 4.3.7(supports-color@5.5.0)
       get-stream: 5.2.0
       yauzl: 2.10.0
     optionalDependencies:
@@ -34069,7 +34060,7 @@ snapshots:
     dependencies:
       chalk: 4.1.2
       commander: 5.1.0
-      debug: 4.3.7(supports-color@9.3.1)
+      debug: 4.3.7(supports-color@5.5.0)
     transitivePeerDependencies:
       - supports-color
 
@@ -34132,7 +34123,7 @@ snapshots:
 
   follow-redirects@1.15.9(debug@4.3.7):
     optionalDependencies:
-      debug: 4.3.7(supports-color@9.3.1)
+      debug: 4.3.7(supports-color@5.5.0)
 
   for-each@0.3.3:
     dependencies:
@@ -34909,7 +34900,7 @@ snapshots:
     dependencies:
       '@tootallnate/once': 2.0.0
       agent-base: 6.0.2
-      debug: 4.3.7(supports-color@9.3.1)
+      debug: 4.3.7(supports-color@5.5.0)
     transitivePeerDependencies:
       - supports-color
 
@@ -34943,14 +34934,14 @@ snapshots:
   https-proxy-agent@4.0.0:
     dependencies:
       agent-base: 5.1.1
-      debug: 4.3.7(supports-color@9.3.1)
+      debug: 4.3.7(supports-color@5.5.0)
     transitivePeerDependencies:
       - supports-color
 
   https-proxy-agent@5.0.1:
     dependencies:
       agent-base: 6.0.2
-      debug: 4.3.7(supports-color@9.3.1)
+      debug: 4.3.7(supports-color@5.5.0)
     transitivePeerDependencies:
       - supports-color
 
@@ -35373,7 +35364,7 @@ snapshots:
 
   istanbul-lib-source-maps@4.0.1:
     dependencies:
-      debug: 4.3.7(supports-color@9.3.1)
+      debug: 4.3.7(supports-color@5.5.0)
       istanbul-lib-coverage: 3.2.0
       source-map: 0.6.1
     transitivePeerDependencies:
@@ -36413,7 +36404,7 @@ snapshots:
 
   koa-router@10.1.1:
     dependencies:
-      debug: 4.3.7(supports-color@9.3.1)
+      debug: 4.3.7(supports-color@5.5.0)
       http-errors: 1.8.1
       koa-compose: 4.1.0
       methods: 1.1.2
@@ -36428,7 +36419,7 @@ snapshots:
       content-disposition: 0.5.4
       content-type: 1.0.4
       cookies: 0.8.0
-      debug: 4.3.7(supports-color@9.3.1)
+      debug: 4.3.7(supports-color@5.5.0)
       delegates: 1.0.0
       depd: 2.0.0
       destroy: 1.2.0
@@ -37210,7 +37201,7 @@ snapshots:
   micromark@3.1.0:
     dependencies:
       '@types/debug': 4.1.12
-      debug: 4.3.7(supports-color@9.3.1)
+      debug: 4.3.7(supports-color@5.5.0)
       decode-named-character-reference: 1.0.2
       micromark-core-commonmark: 1.0.6
       micromark-factory-space: 1.0.0
@@ -37434,7 +37425,7 @@ snapshots:
 
   nock@13.2.7:
     dependencies:
-      debug: 4.3.7(supports-color@9.3.1)
+      debug: 4.3.7(supports-color@5.5.0)
       json-stringify-safe: 5.0.1
       lodash: 4.17.21
       propagate: 2.0.1
@@ -38786,7 +38777,7 @@ snapshots:
   puppeteer-core@2.1.1(bufferutil@4.0.8)(utf-8-validate@5.0.10):
     dependencies:
       '@types/mime-types': 2.1.4
-      debug: 4.3.7(supports-color@9.3.1)
+      debug: 4.3.7(supports-color@5.5.0)
       extract-zip: 1.7.0
       https-proxy-agent: 4.0.0
       mime: 2.6.0
@@ -41164,7 +41155,7 @@ snapshots:
   socket.io-parser@4.2.4:
     dependencies:
       '@socket.io/component-emitter': 3.1.0
-      debug: 4.3.7(supports-color@9.3.1)
+      debug: 4.3.7(supports-color@5.5.0)
     transitivePeerDependencies:
       - supports-color
 
@@ -41173,7 +41164,7 @@ snapshots:
       accepts: 1.3.8
       base64id: 2.0.0
       cors: 2.8.5
-      debug: 4.3.7(supports-color@9.3.1)
+      debug: 4.3.7(supports-color@5.5.0)
       engine.io: 6.5.4(bufferutil@4.0.8)(utf-8-validate@5.0.10)
       socket.io-adapter: 2.5.2(bufferutil@4.0.8)(utf-8-validate@5.0.10)
       socket.io-parser: 4.2.4
@@ -41525,7 +41516,7 @@ snapshots:
     dependencies:
       component-emitter: 1.3.0
       cookiejar: 2.1.3
-      debug: 4.3.7(supports-color@9.3.1)
+      debug: 4.3.7(supports-color@5.5.0)
       fast-safe-stringify: 2.1.1
       form-data: 4.0.0
       formidable: 2.0.1
@@ -42673,7 +42664,7 @@ snapshots:
   vite-node@0.33.0(@types/node@18.19.55)(less@4.1.3)(sass@1.54.4)(terser@5.31.6):
     dependencies:
       cac: 6.7.14
-      debug: 4.3.7(supports-color@9.3.1)
+      debug: 4.3.7(supports-color@5.5.0)
       mlly: 1.7.2
       pathe: 1.1.1
       picocolors: 1.1.0
@@ -42714,7 +42705,7 @@ snapshots:
       acorn-walk: 8.3.1
       cac: 6.7.14
       chai: 4.3.7
-      debug: 4.3.7(supports-color@9.3.1)
+      debug: 4.3.7(supports-color@5.5.0)
       local-pkg: 0.4.3
       magic-string: 0.30.12
       pathe: 1.1.1

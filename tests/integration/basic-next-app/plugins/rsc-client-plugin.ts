@@ -1,10 +1,10 @@
+import type { ClientReferencesMap } from '@mfng/webpack-rsc';
 import type {
   ClientManifest,
   ImportManifestEntry,
   SSRManifest,
 } from 'react-server-dom-webpack';
 import type Webpack from 'webpack';
-import type { ClientReferencesMap } from '@mfng/webpack-rsc';
 
 export interface WebpackRscClientPluginOptions {
   readonly clientReferencesMap: ClientReferencesMap;
@@ -228,9 +228,6 @@ export class WebpackRscClientPlugin {
                       if (file.endsWith('.js')) {
                         chunks.push(chunk.id, file);
                       }
-                      if (file.endsWith('.css')) {
-                        styles.push(file);
-                      }
                     }
                   }
                 }
@@ -277,13 +274,11 @@ export class WebpackRscClientPlugin {
 
           if (this.styles && this.styles.size > 0) {
             const assets = compilation.getAssets();
-            for (const style of this.styles) {
-              const cssAsset = assets.find(asset =>
-                asset.name.endsWith('.css'),
-              );
-              if (cssAsset) {
-                ssrManifest.styles.push(cssAsset.name);
-              }
+            const cssAsset = assets.find(asset => {
+              return asset.name.endsWith('.css');
+            });
+            if (cssAsset) {
+              ssrManifest.styles.push(cssAsset.name);
             }
           }
 

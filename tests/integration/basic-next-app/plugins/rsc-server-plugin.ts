@@ -1,5 +1,6 @@
 import type { ServerManifest } from 'react-server-dom-webpack';
 import type Webpack from 'webpack';
+import { isCssModule } from './utils';
 import type {
   ClientReferencesMap,
   ServerReferencesMap,
@@ -175,12 +176,8 @@ export class WebpackRscServerPlugin {
         }
 
         for (const module of compilation.modules) {
-          // TODO:临时代码:写死 layer name
-          if (
-            module.resource?.endsWith('.css') &&
-            module.layer === 'react-server'
-          ) {
-            this.styles.add(module.resource);
+          if ('resource' in module && isCssModule(module)) {
+            this.styles.add(module.resource as string);
           }
         }
       },

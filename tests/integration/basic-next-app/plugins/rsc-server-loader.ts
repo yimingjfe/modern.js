@@ -45,7 +45,6 @@ const webpackRscServerLoader: webpack.LoaderDefinitionFunction<webpackRscServerL
     const serverReferenceExportNames: string[] = [];
     const resourcePath = this.resourcePath;
 
-    console.log('server loader11111111111');
     const ast = parser.parse(source, {
       sourceType: `module`,
       sourceFilename: resourcePath,
