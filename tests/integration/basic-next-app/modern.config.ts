@@ -4,22 +4,37 @@ import { applyBaseConfig } from '../../utils/applyBaseConfig';
 import { WebpackRscClientPlugin } from './plugins/rsc-client-plugin';
 import { WebpackRscServerPlugin } from './plugins/rsc-server-plugin';
 
+const appToolsPath = require.resolve('@modern-js/app-tools');
+const uniBuilderRscPath = require.resolve('@modern-js/uni-builder/rsc', {
+  paths: [appToolsPath],
+});
+
+const rscClientLoaderPath = path.join(
+  path.dirname(uniBuilderRscPath),
+  'rsc-client-loader',
+);
+
+const rscServerLoaderPath = path.join(
+  path.dirname(uniBuilderRscPath),
+  'rsc-server-loader',
+);
+
+const rscSsrLoaderPath = path.join(
+  path.dirname(uniBuilderRscPath),
+  'rsc-ssr-loader',
+);
+
 const clientReferencesMap = new Map();
 const serverReferencesMap = new Map();
 
 const webpackRscLayerName = `react-server`;
 
-const rscServerLoaderPath = path.join(
-  __dirname,
-  'plugins/rsc-server-loader.ts',
-);
+// const rscServerLoaderPath = path.join(
+//   __dirname,
+//   'plugins/rsc-server-loader.ts',
+// );
 
-const rscSsrLoaderPath = path.join(__dirname, 'plugins/rsc-ssr-loader.ts');
-
-const rscClientLoaderPath = path.join(
-  __dirname,
-  'plugins/rsc-client-loader.ts',
-);
+// const rscSsrLoaderPath = path.join(__dirname, 'plugins/rsc-ssr-loader.ts');
 
 const styles = new Set<string>();
 
@@ -170,7 +185,7 @@ export default applyBaseConfig({
           .loader(rscClientLoaderPath)
           .options({
             serverReferencesMap,
-            callServerImportSource: path.resolve(
+            callServerImport: path.resolve(
               __dirname,
               'src/framework/client-entry',
             ),

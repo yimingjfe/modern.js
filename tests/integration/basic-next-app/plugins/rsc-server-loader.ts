@@ -74,6 +74,7 @@ const webpackRscServerLoader: webpack.LoaderDefinitionFunction<webpackRscServerL
           return nodePath.skip();
         }
 
+        // 收集 export 的名称
         if (t.isExportNamedDeclaration(node)) {
           for (const exportName of Object.keys(
             // TODO: This is potentially to broad.
@@ -289,6 +290,7 @@ function getExtendedFunctionInfo(
   return undefined;
 }
 
+// 函数有没有 use server 指令
 function getFunctionInfo(node: t.Node): FunctionInfo | undefined {
   let localName: string | undefined;
   let hasUseServerDirective = false;

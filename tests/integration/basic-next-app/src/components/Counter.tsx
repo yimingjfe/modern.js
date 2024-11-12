@@ -4,7 +4,7 @@ import { increment } from './action';
 
 import { useState } from 'react';
 
-export const Counter = () => {
+const Counter = () => {
   const [count, setCount] = useState(0);
   return (
     <>
@@ -24,3 +24,5 @@ export const Counter = () => {
     </>
   );
 };
+
+export default Counter;

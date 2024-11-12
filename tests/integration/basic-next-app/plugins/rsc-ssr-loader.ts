@@ -74,7 +74,6 @@ const webpackRscSsrLoader: webpack.LoaderDefinitionFunction<webpackRscSsrLoader.
       {
         sourceFileName: this.resourcePath,
         sourceMaps: this.sourceMap,
-        // @ts-expect-error
         inputSourceMap: sourceMap,
       },
       source,
