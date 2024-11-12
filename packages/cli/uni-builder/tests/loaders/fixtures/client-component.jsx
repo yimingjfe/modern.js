@@ -36,6 +36,6 @@ function ComponentE() {
   return React.createElement(`div`);
 }
 
-export default function ComponentG() {
+export default function () {
   return null;
 }

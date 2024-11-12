@@ -57,7 +57,11 @@ export default async function rscClientLoader(
   const exportsCode = exportNames
     .map(item => {
       const name = item;
-      return `export const ${name} = createServerReference("${moduleId}#${name}", callServer);`;
+      if (name === 'default') {
+        return `export default createServerReference("${moduleId}", callServer);`;
+      } else {
+        return `export const ${name} = createServerReference("${moduleId}#${name}", callServer);`;
+      }
     })
     .join('\n');
 

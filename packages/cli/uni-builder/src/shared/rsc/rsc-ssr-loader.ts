@@ -32,7 +32,11 @@ export default async function rscSsrLoader(
 
   const exportsCode = exportedNames
     .map(name => {
-      return `export const ${name} = () => {throw new Error("Server actions must not be called during server-side rendering.")}`;
+      if (name === 'default') {
+        return `export default () => {throw new Error("Server actions must not be called during server-side rendering.")}`;
+      } else {
+        return `export const ${name} = () => {throw new Error("Server actions must not be called during server-side rendering.")}`;
+      }
     })
     .join('\n');
 

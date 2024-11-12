@@ -81,7 +81,10 @@ export const getExportNames = async (ast: Module, collectFuncOnly = false) => {
       }
     }
 
-    if (node.type === 'ExportDefaultExpression') {
+    if (
+      node.type === 'ExportDefaultExpression' ||
+      node.type === 'ExportDefaultDeclaration'
+    ) {
       exportNames.push('default');
     }
   });

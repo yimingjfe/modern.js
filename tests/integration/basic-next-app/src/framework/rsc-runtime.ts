@@ -8,7 +8,7 @@ export const handleAction = async (req: Request, distDir: string) => {
   const serverReference = req.headers.get('rsc-action');
   if (serverReference) {
     const [filepath, name] = serverReference.split('#');
-    const action = __webpack_require__(filepath)[name];
+    const action = __webpack_require__(filepath)[name || 'default'];
     if (action.$$typeof !== Symbol.for('react.server.reference')) {
       throw new Error('Invalid action');
     }

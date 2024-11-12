@@ -1,6 +1,6 @@
 'use client';
 import './Counter.css';
-import { increment } from './action';
+import increment from './action';
 
 import { useState } from 'react';
 
