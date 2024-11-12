@@ -1,6 +1,7 @@
 import type { LoaderContext } from 'webpack';
 import {
   type ServerReferencesMap,
+  type SourceMap,
   getExportNames,
   isServerModule,
   parseSource,
@@ -13,16 +14,18 @@ export type RscSsrLoaderOptions = {
 export default async function rscSsrLoader(
   this: LoaderContext<RscSsrLoaderOptions>,
   source: string,
+  sourceMap: SourceMap,
 ) {
   this.cacheable(true);
-
+  const callback = this.async();
   const { serverReferencesMap } = this.getOptions();
   const ast = await parseSource(source);
   const hasDeclareServerDirective = await isServerModule(ast);
   const resourcePath = this.resourcePath;
 
   if (!hasDeclareServerDirective) {
-    return source;
+    callback(null, source, sourceMap);
+    return;
   }
 
   const exportedNames = await getExportNames(ast, true);
@@ -46,5 +49,6 @@ export default async function rscSsrLoader(
     });
   }
 
-  return `${importsCode}\n${exportsCode}`;
+  callback(null, `${importsCode}\n${exportsCode}`, sourceMap);
+  return;
 }

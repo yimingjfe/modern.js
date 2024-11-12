@@ -16,13 +16,15 @@ import swc, {
   parse,
 } from '@swc/core';
 import { Visitor } from '@swc/core/Visitor.js';
-import { parseAsync } from 'oxc-parser';
+import type { LoaderDefinitionFunction } from 'webpack';
 
 export interface ClientReference {
   readonly id: string;
   readonly exportName: string;
   ssrId?: string | number;
 }
+
+export type SourceMap = Parameters<LoaderDefinitionFunction>[1];
 
 export type ClientReferencesMap = Map<string, ClientReference[]>;
 

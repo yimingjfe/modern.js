@@ -5,6 +5,7 @@ import {
   type ClientReference,
   type ClientReferencesMap,
   type ServerReferencesMap,
+  type SourceMap,
   getExportNames,
   isClientModule,
   parseSource,
@@ -28,8 +29,10 @@ type ServerLoaderOptions = {
 export default async function rscServerLoader(
   this: LoaderContext<ServerLoaderOptions>,
   source: string,
+  sourceMap: SourceMap,
 ) {
   this.cacheable(true);
+  const callback = this.async();
   const { clientReferencesMap, serverReferencesMap } = this.getOptions();
   const clientReferences: ClientReference[] = [];
   const { resourcePath } = this;
@@ -67,7 +70,7 @@ function createClientReferenceProxy(exportName) {
       clientReferencesMap.set(resourcePath, clientReferences);
     }
 
-    return `${importsCode}\n${exportsCode}`;
+    return callback(null, `${importsCode}\n${exportsCode}`);
   } else {
     const ast = await parseSourceWithOxc(source, resourcePath);
     const moduleUseServerInfo = getModuleUseServerInfo(ast);
@@ -97,9 +100,9 @@ function createClientReferenceProxy(exportName) {
         `\nimport { registerServerReference } from "react-server-dom-webpack/server";`,
       );
 
-      return ms.toString();
+      return callback(null, ms.toString());
     }
   }
 
-  return source;
+  return callback(null, source, sourceMap);
 }

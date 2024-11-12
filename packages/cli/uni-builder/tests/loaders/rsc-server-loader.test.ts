@@ -22,10 +22,11 @@ async function callLoader(
       getOptions: () => ({ clientReferencesMap, serverReferencesMap }),
       resourcePath,
       cacheable: vi.fn(),
+      async: () => context.callback!,
       callback: (error, content) => {
         if (error) {
           reject(error);
-        } else if (content) {
+        } else if (typeof content === 'string') {
           resolve(content);
         } else {
           reject(
@@ -37,11 +38,10 @@ async function callLoader(
       },
     };
 
-    resolve(
-      rscServerLoader.call(
-        context as LoaderContext<WebpackRscServerLoaderOptions>,
-        input.toString(`utf-8`),
-      ),
+    rscServerLoader.call(
+      context as LoaderContext<WebpackRscServerLoaderOptions>,
+      input.toString(`utf-8`),
+      '',
     );
   });
 }

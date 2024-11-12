@@ -20,24 +20,26 @@ async function callLoader(
       resourcePath,
       cacheable: vi.fn(),
       emitError,
+      async: () => context.callback!,
       callback: (error, content) => {
         if (error) {
           reject(error);
-        } else if (content !== undefined) {
+        } else if (typeof content === 'string') {
           resolve(content);
         } else {
           reject(
-            new Error(`Did not receive any content from RscClientLoader.`),
+            new Error(
+              `Did not receive any content from webpackRscServerLoader.`,
+            ),
           );
         }
       },
     };
 
-    resolve(
-      rscClientLoader.call(
-        context as webpack.LoaderContext<RscClientLoaderOptions>,
-        input.toString(`utf-8`),
-      ),
+    rscClientLoader.call(
+      context as webpack.LoaderContext<RscClientLoaderOptions>,
+      input.toString(`utf-8`),
+      '',
     );
   });
 }

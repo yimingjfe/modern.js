@@ -22,24 +22,26 @@ async function callLoader(
       getOptions: () => ({ serverReferencesMap }),
       resourcePath,
       cacheable: vi.fn(),
+      async: () => context.callback!,
       callback: (error, content) => {
         if (error) {
           reject(error);
-        } else if (content !== undefined) {
+        } else if (typeof content === 'string') {
           resolve(content);
         } else {
           reject(
-            new Error(`Did not receive any content from webpackRscSsrLoader.`),
+            new Error(
+              `Did not receive any content from webpackRscServerLoader.`,
+            ),
           );
         }
       },
     };
 
-    resolve(
-      rscSsrLoader.call(
-        context as LoaderContext<RscSsrLoaderOptions>,
-        input.toString(`utf-8`),
-      ),
+    rscSsrLoader.call(
+      context as LoaderContext<RscSsrLoaderOptions>,
+      input.toString(`utf-8`),
+      '',
     );
   });
 }
@@ -77,7 +79,7 @@ describe('rscSsrLoader', () => {
     await callLoader(resourcePath, serverReferencesMap);
 
     expect(Object.fromEntries(serverReferencesMap.entries())).toEqual({
-      [resourcePath]: { exportNames: [`foo`, `bar`, `b`] },
+      [resourcePath]: { exportNames: [`foo`, `bar`, `b`, `default`] },
     });
   });
 });
