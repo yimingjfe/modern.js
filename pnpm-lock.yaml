@@ -809,6 +809,9 @@ importers:
       react-dom:
         specifier: 18.3.0-canary-8039e6d0b-20231026
         version: 18.3.0-canary-8039e6d0b-20231026(react@18.3.0-canary-8039e6d0b-20231026)
+      react-server-dom-webpack:
+        specifier: 18.3.0-canary-8039e6d0b-20231026
+        version: 18.3.0-canary-8039e6d0b-20231026(react-dom@18.3.0-canary-8039e6d0b-20231026(react@18.3.0-canary-8039e6d0b-20231026))(react@18.3.0-canary-8039e6d0b-20231026)(webpack@5.95.0(@swc/core@1.3.42)(esbuild@0.17.19))
       terser:
         specifier: ^5.31.1
         version: 5.31.1
@@ -5593,6 +5596,9 @@ importers:
       '@modern-js/server-core':
         specifier: workspace:*
         version: link:../../../packages/server/core
+      '@modern-js/uni-builder':
+        specifier: workspace:*
+        version: link:../../../packages/cli/uni-builder
       '@rsdoctor/webpack-plugin':
         specifier: ^0.4.6
         version: 0.4.7(@rspack/core@1.0.10(@swc/helpers@0.5.13))(bufferutil@4.0.8)(utf-8-validate@5.0.10)(webpack@5.93.0(@swc/core@1.3.42)(esbuild@0.17.19))
@@ -40236,6 +40242,15 @@ snapshots:
       react: 18.3.0-canary-8039e6d0b-20231026
       react-dom: 18.3.0-canary-8039e6d0b-20231026(react@18.3.0-canary-8039e6d0b-20231026)
       webpack: 5.93.0(@swc/core@1.3.42)(esbuild@0.17.19)
+
+  react-server-dom-webpack@18.3.0-canary-8039e6d0b-20231026(react-dom@18.3.0-canary-8039e6d0b-20231026(react@18.3.0-canary-8039e6d0b-20231026))(react@18.3.0-canary-8039e6d0b-20231026)(webpack@5.95.0(@swc/core@1.3.42)(esbuild@0.17.19)):
+    dependencies:
+      acorn-loose: 8.4.0
+      loose-envify: 1.4.0
+      neo-async: 2.6.2
+      react: 18.3.0-canary-8039e6d0b-20231026
+      react-dom: 18.3.0-canary-8039e6d0b-20231026(react@18.3.0-canary-8039e6d0b-20231026)
+      webpack: 5.95.0(@swc/core@1.3.42)(esbuild@0.17.19)
 
   react-side-effect@2.1.2(react@18.3.0-canary-8039e6d0b-20231026):
     dependencies:

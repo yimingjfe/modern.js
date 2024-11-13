@@ -1,6 +1,6 @@
 import 'server-only';
 import styles from './App.module.less';
-import Counter from './Counter';
+import { Counter } from './Counter';
 import { getCountState } from './ServerState';
 
 const App = ({ name }: { name: string }) => {

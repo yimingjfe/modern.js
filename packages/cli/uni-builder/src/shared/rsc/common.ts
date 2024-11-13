@@ -16,7 +16,10 @@ import swc, {
   parse,
 } from '@swc/core';
 import { Visitor } from '@swc/core/Visitor.js';
-import type { LoaderDefinitionFunction } from 'webpack';
+import type {
+  LoaderDefinitionFunction,
+  Module as WebpackModule,
+} from 'webpack';
 
 export interface ClientReference {
   readonly id: string;
@@ -26,12 +29,75 @@ export interface ClientReference {
 
 export type SourceMap = Parameters<LoaderDefinitionFunction>[1];
 
+export interface ClientManifest {
+  [id: string]: ImportManifestEntry;
+}
+
+export interface ServerManifest {
+  [id: string]: ImportManifestEntry;
+}
+
+export interface SSRManifest {
+  moduleMap: SSRModuleMap;
+  moduleLoading: ModuleLoading | null;
+  styles: string[];
+}
+
+export interface SSRModuleMap {
+  [clientId: string]: {
+    [clientExportName: string]: ImportManifestEntry;
+  };
+}
+
+export interface ModuleLoading {
+  prefix: string;
+  crossOrigin?: 'use-credentials' | '';
+}
+
+export interface ImportManifestEntry {
+  id: string | number;
+  // chunks is a double indexed array of chunkId / chunkFilename pairs
+  chunks: (string | number)[];
+  styles?: string[];
+  name: string;
+}
+
 export type ClientReferencesMap = Map<string, ClientReference[]>;
 
 export type ServerReferencesMap = Map<string, ServerReferencesModuleInfo>;
 export interface ServerReferencesModuleInfo {
   readonly exportNames: string[];
   moduleId?: string | number;
+}
+
+const MODERN_RSC_INFO = 'modernRscInfo';
+
+export function setBuildInfo(
+  mod: WebpackModule,
+  property: Record<string, any>,
+) {
+  mod.buildInfo = mod.buildInfo || {};
+
+  Object.assign(mod.buildInfo, property);
+}
+
+export function setRscBuildInfo(
+  mod: WebpackModule,
+  property: Record<string, any>,
+) {
+  mod.buildInfo = mod.buildInfo || {};
+  const rscBuildInfo = mod.buildInfo[MODERN_RSC_INFO] || {};
+
+  Object.assign(rscBuildInfo, property);
+  setBuildInfo(mod, { [MODERN_RSC_INFO]: rscBuildInfo });
+}
+
+export function getRscBuildInfo(mod: WebpackModule) {
+  return mod.buildInfo?.[MODERN_RSC_INFO] || {};
+}
+
+export function isCssModule(mod: WebpackModule) {
+  return getRscBuildInfo(mod).isCssModule;
 }
 
 export const parseSource = async (source: string) => {

@@ -16,11 +16,6 @@ import {
   parseSourceWithOxc,
 } from './parse-with-oxc';
 
-export interface WebpackRscServerLoaderOptions {
-  readonly clientReferencesMap: ClientReferencesMap;
-  readonly serverReferencesMap: ServerReferencesMap;
-}
-
 type ServerLoaderOptions = {
   readonly clientReferencesMap: ClientReferencesMap;
   readonly serverReferencesMap: ServerReferencesMap;

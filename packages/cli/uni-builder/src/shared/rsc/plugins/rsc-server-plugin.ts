@@ -1,12 +1,12 @@
-import type { ServerManifest } from 'react-server-dom-webpack';
 import type Webpack from 'webpack';
-import { isCssModule } from './utils';
-import type {
-  ClientReferencesMap,
-  ServerReferencesMap,
-} from './webpack-rsc-server-loader.cjs';
+import {
+  type ServerManifest,
+  type ServerReferencesMap,
+  isCssModule,
+} from '../common';
+import type { ClientReferencesMap } from '../common';
 
-export interface WebpackRscServerPluginOptions {
+export interface RscServerPluginOptions {
   readonly clientReferencesMap: ClientReferencesMap;
   readonly serverReferencesMap: ServerReferencesMap;
   readonly serverManifestFilename?: string;
@@ -19,16 +19,16 @@ export interface ModuleExportsInfo {
 }
 
 export const webpackRscLayerName = `react-server`;
-export class WebpackRscServerPlugin {
+export class RscServerPlugin {
   private clientReferencesMap: ClientReferencesMap;
   private serverReferencesMap: ServerReferencesMap;
   private serverManifest: ServerManifest = {};
   private serverManifestFilename: string;
   private styles: Set<string>;
-  constructor(options: WebpackRscServerPluginOptions) {
+  constructor(options: RscServerPluginOptions) {
     this.clientReferencesMap = options.clientReferencesMap;
     this.serverReferencesMap = options.serverReferencesMap;
-    this.styles = options.styles || [];
+    this.styles = options.styles ?? new Set();
 
     this.serverManifestFilename =
       options?.serverManifestFilename || `react-server-manifest.json`;
@@ -136,7 +136,7 @@ export class WebpackRscServerPlugin {
     let needsAdditionalPass = false;
 
     compiler.hooks.finishMake.tapPromise(
-      WebpackRscServerPlugin.name,
+      RscServerPlugin.name,
       async compilation => {
         this.serverManifest = {};
         const clientReferences = [...this.clientReferencesMap.keys()];
@@ -184,7 +184,7 @@ export class WebpackRscServerPlugin {
     );
 
     compiler.hooks.thisCompilation.tap(
-      WebpackRscServerPlugin.name,
+      RscServerPlugin.name,
       (compilation, { normalModuleFactory }) => {
         compilation.dependencyFactories.set(
           ServerReferenceDependency,
@@ -199,7 +199,7 @@ export class WebpackRscServerPlugin {
         const onNormalModuleFactoryParser = (
           parser: Webpack.javascript.JavascriptParser,
         ) => {
-          parser.hooks.program.tap(WebpackRscServerPlugin.name, () => {
+          parser.hooks.program.tap(RscServerPlugin.name, () => {
             const { module } = parser.state;
             const { resource } = module;
             const isClientModule = this.clientReferencesMap.has(resource);
@@ -226,7 +226,7 @@ export class WebpackRscServerPlugin {
 
           parser.hooks.expression
             .for(RuntimeGlobals.moduleId)
-            .tap(WebpackRscServerPlugin.name, () => {
+            .tap(RscServerPlugin.name, () => {
               parser.state.module.buildInfo!.moduleArgument =
                 RuntimeGlobals.module;
 
@@ -247,12 +247,12 @@ export class WebpackRscServerPlugin {
           .tap(`HarmonyModulesPlugin`, onNormalModuleFactoryParser);
 
         compilation.hooks.needAdditionalPass.tap(
-          WebpackRscServerPlugin.name,
+          RscServerPlugin.name,
           () => !(needsAdditionalPass = !needsAdditionalPass),
         );
 
         compilation.hooks.afterOptimizeModuleIds.tap(
-          WebpackRscServerPlugin.name,
+          RscServerPlugin.name,
           modules => {
             for (const module of modules) {
               const resource = module.nameForCondition();
@@ -310,7 +310,7 @@ export class WebpackRscServerPlugin {
           },
         );
 
-        compilation.hooks.processAssets.tap(WebpackRscServerPlugin.name, () => {
+        compilation.hooks.processAssets.tap(RscServerPlugin.name, () => {
           compilation.emitAsset(
             this.serverManifestFilename,
             new RawSource(JSON.stringify(this.serverManifest, null, 2), false),

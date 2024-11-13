@@ -1,10 +1,10 @@
 'use client';
 import './Counter.css';
-import increment from './action';
+import { increment } from './action';
 
 import { useState } from 'react';
 
-const Counter = () => {
+export const Counter = () => {
   const [count, setCount] = useState(0);
   return (
     <>
@@ -24,5 +24,3 @@ const Counter = () => {
     </>
   );
 };
-
-export default Counter;

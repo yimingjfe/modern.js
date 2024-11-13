@@ -6,7 +6,7 @@
     "dev": "BUNDLER=webpack NODE_OPTIONS='--conditions=react-server --inspect' modern dev",
     "build": "BUNDLER=webpack modern build",
     "inspect": "BUNDLER=webpack NODE_OPTIONS='--conditions=react-server' modern inspect",
-    "serve": "modern serve",
+    "serve": "NODE_OPTIONS='--conditions=react-server' modern serve",
     "new": "modern new",
     "lint": "modern lint"
   },
@@ -53,6 +53,7 @@
     "ts-node": "^10.9.1",
     "tsx": "^3.12.7",
     "typescript": "^5",
-    "webpack": "5.93.0"
+    "webpack": "5.93.0",
+    "@modern-js/uni-builder": "workspace:*"
   }
 }
