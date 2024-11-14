@@ -123,6 +123,7 @@ export class WebpackRscClientPlugin {
                 this.clientReferencesMap.has(dependency.request),
             ),
           );
+          console.log('addClientReferencesChunks basic-next-app');
 
           addClientReferencesChunks(entryModule);
         }
@@ -178,7 +179,6 @@ export class WebpackRscClientPlugin {
         compilation.hooks.processAssets.tap(WebpackRscClientPlugin.name, () => {
           const clientManifest: ClientManifest = {};
           const { chunkGraph, moduleGraph, modules } = compilation;
-
           for (const module of modules) {
             const resourcePath = module.nameForCondition();
 

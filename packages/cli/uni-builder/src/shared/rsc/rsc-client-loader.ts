@@ -1,13 +1,13 @@
 import type { LoaderContext } from 'webpack';
 import {
-  type ServerReferencesMap,
+  type ServerReferencesModuleInfo,
   type SourceMap,
   isServerModule,
   parseSource,
+  sharedData,
 } from './common';
 
-type ClientLoaderOptions = {
-  serverReferencesMap: ServerReferencesMap;
+export type ClientLoaderOptions = {
   callServerImport?: string;
 };
 
@@ -26,10 +26,18 @@ export default async function rscClientLoader(
     return;
   }
 
-  const { serverReferencesMap, callServerImport = `@modern-js/runtime/rsc` } =
-    this.getOptions();
+  const { callServerImport = `@modern-js/runtime/rsc` } = this.getOptions();
 
-  const moduleInfo = serverReferencesMap.get(this.resourcePath);
+  const buildInfo = sharedData.get<ServerReferencesModuleInfo>(
+    this.resourcePath,
+  );
+
+  const moduleInfo = buildInfo
+    ? {
+        moduleId: buildInfo?.moduleId,
+        exportNames: buildInfo?.exportNames,
+      }
+    : null;
 
   if (!moduleInfo) {
     this.emitError(
@@ -51,6 +59,11 @@ export default async function rscClientLoader(
       ),
     );
 
+    callback(null, '');
+    return;
+  }
+
+  if (!exportNames) {
     callback(null, '');
     return;
   }

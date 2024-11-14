@@ -5,11 +5,11 @@ import {
   getExportNames,
   isServerModule,
   parseSource,
+  setRscBuildInfo,
+  sharedData,
 } from './common';
 
-export type RscSsrLoaderOptions = {
-  readonly serverReferencesMap: ServerReferencesMap;
-};
+export type RscSsrLoaderOptions = {};
 
 export default async function rscSsrLoader(
   this: LoaderContext<RscSsrLoaderOptions>,
@@ -18,7 +18,6 @@ export default async function rscSsrLoader(
 ) {
   this.cacheable(true);
   const callback = this.async();
-  const { serverReferencesMap } = this.getOptions();
   const ast = await parseSource(source);
   const hasDeclareServerDirective = await isServerModule(ast);
   const resourcePath = this.resourcePath;
@@ -44,7 +43,9 @@ export default async function rscSsrLoader(
     .join('\n');
 
   if (exportedNames.length > 0) {
-    serverReferencesMap.set(resourcePath, {
+    setRscBuildInfo(this._module!, {
+      type: 'server',
+      resourcePath,
       exportNames: exportedNames,
     });
   }

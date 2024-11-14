@@ -2,13 +2,13 @@ import type Webpack from 'webpack';
 import {
   type ServerManifest,
   type ServerReferencesMap,
+  getRscBuildInfo,
   isCssModule,
+  sharedData,
 } from '../common';
 import type { ClientReferencesMap } from '../common';
 
 export interface RscServerPluginOptions {
-  readonly clientReferencesMap: ClientReferencesMap;
-  readonly serverReferencesMap: ServerReferencesMap;
   readonly serverManifestFilename?: string;
   readonly styles?: Set<string>;
 }
@@ -20,14 +20,12 @@ export interface ModuleExportsInfo {
 
 export const webpackRscLayerName = `react-server`;
 export class RscServerPlugin {
-  private clientReferencesMap: ClientReferencesMap;
-  private serverReferencesMap: ServerReferencesMap;
+  private clientReferencesMap: ClientReferencesMap = new Map();
+  private serverReferencesMap: ServerReferencesMap = new Map();
   private serverManifest: ServerManifest = {};
   private serverManifestFilename: string;
   private styles: Set<string>;
   constructor(options: RscServerPluginOptions) {
-    this.clientReferencesMap = options.clientReferencesMap;
-    this.serverReferencesMap = options.serverReferencesMap;
     this.styles = options.styles ?? new Set();
 
     this.serverManifestFilename =
@@ -138,16 +136,57 @@ export class RscServerPlugin {
     compiler.hooks.finishMake.tapPromise(
       RscServerPlugin.name,
       async compilation => {
+        const processModules = (modules: Webpack.Compilation['modules']) => {
+          let hasChangeReference = false;
+
+          for (const module of modules) {
+            if ('resource' in module && isCssModule(module)) {
+              this.styles.add(module.resource as string);
+            }
+
+            const buildInfo = getRscBuildInfo(module);
+            if (!buildInfo || !buildInfo.resourcePath) {
+              continue;
+            }
+
+            sharedData.set(buildInfo?.resourcePath, buildInfo);
+            const currentReference =
+              buildInfo?.type === 'client'
+                ? this.clientReferencesMap.get(buildInfo.resourcePath)
+                : this.serverReferencesMap.get(buildInfo.resourcePath);
+
+            if (buildInfo?.type === 'client' && !currentReference) {
+              hasChangeReference = true;
+              this.clientReferencesMap.set(
+                buildInfo.resourcePath,
+                buildInfo.clientReferences,
+              );
+            } else if (buildInfo?.type === 'server' && !currentReference) {
+              hasChangeReference = true;
+              this.serverReferencesMap.set(
+                buildInfo.resourcePath,
+                buildInfo.exportNames,
+              );
+            }
+          }
+
+          return hasChangeReference;
+        };
+
         this.serverManifest = {};
+        let hasChangeReference = processModules(compilation.modules);
+
         const clientReferences = [...this.clientReferencesMap.keys()];
         const serverReferences = [...this.serverReferencesMap.keys()];
         const referencesBefore = [...clientReferences, ...serverReferences];
+
         await Promise.all([
           ...clientReferences.map(async resource => {
             try {
               await includeModule(compilation, resource);
             } catch (error) {
               console.error('error', error);
+              hasChangeReference = true;
               this.clientReferencesMap.delete(resource);
             }
           }),
@@ -156,10 +195,14 @@ export class RscServerPlugin {
               await includeModule(compilation, resource, webpackRscLayerName);
             } catch (error) {
               console.error('error', error);
+              hasChangeReference = true;
               this.serverReferencesMap.delete(resource);
             }
           }),
         ]);
+
+        hasChangeReference =
+          processModules(compilation.modules) || hasChangeReference;
 
         const referencesAfter = [
           ...this.clientReferencesMap.keys(),
@@ -168,20 +211,20 @@ export class RscServerPlugin {
 
         if (
           referencesBefore.length !== referencesAfter.length ||
-          !referencesAfter.every(reference =>
+          (!referencesAfter.every(reference =>
             referencesBefore.includes(reference),
-          )
+          ) &&
+            hasChangeReference)
         ) {
           needsAdditionalPass = true;
         }
-
-        for (const module of compilation.modules) {
-          if ('resource' in module && isCssModule(module)) {
-            this.styles.add(module.resource as string);
-          }
-        }
       },
     );
+
+    compiler.hooks.done.tap(RscServerPlugin.name, () => {
+      sharedData.set('serverReferencesMap', this.serverReferencesMap);
+      sharedData.set('clientReferencesMap', this.clientReferencesMap);
+    });
 
     compiler.hooks.thisCompilation.tap(
       RscServerPlugin.name,
@@ -202,8 +245,9 @@ export class RscServerPlugin {
           parser.hooks.program.tap(RscServerPlugin.name, () => {
             const { module } = parser.state;
             const { resource } = module;
-            const isClientModule = this.clientReferencesMap.has(resource);
-            const isServerModule = this.serverReferencesMap.has(resource);
+            const buildInfo = getRscBuildInfo(module);
+            const isClientModule = buildInfo?.type === 'client';
+            const isServerModule = buildInfo?.type === 'server';
 
             if (isServerModule && isClientModule) {
               compilation.errors.push(
@@ -267,12 +311,10 @@ export class RscServerPlugin {
                 continue;
               }
 
-              if (
-                module.layer !== webpackRscLayerName &&
-                this.clientReferencesMap.has(resource)
-              ) {
-                const clientReferences = this.clientReferencesMap.get(resource);
+              const clientReferences =
+                getRscBuildInfo(module)?.clientReferences;
 
+              if (module.layer !== webpackRscLayerName && clientReferences) {
                 if (clientReferences) {
                   for (const clientReference of clientReferences) {
                     clientReference.ssrId = moduleId;
@@ -285,9 +327,7 @@ export class RscServerPlugin {
                   );
                 }
               } else if (hasServerReferenceDependency(module)) {
-                const serverReferencesModuleInfo =
-                  this.serverReferencesMap.get(resource);
-
+                const serverReferencesModuleInfo = getRscBuildInfo(module);
                 if (serverReferencesModuleInfo) {
                   serverReferencesModuleInfo.moduleId = moduleId;
 

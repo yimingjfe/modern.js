@@ -70,7 +70,23 @@ export interface ServerReferencesModuleInfo {
   moduleId?: string | number;
 }
 
-const MODERN_RSC_INFO = 'modernRscInfo';
+export const MODERN_RSC_INFO = 'modernRscInfo';
+
+export const sharedData = {
+  store: new Map<string, any>(),
+
+  get<T>(key: string): T | undefined {
+    return this.store.get(key) as T;
+  },
+
+  set<T>(key: string, value: T): void {
+    this.store.set(key, value);
+  },
+
+  clear() {
+    this.store.clear();
+  },
+};
 
 export function setBuildInfo(
   mod: WebpackModule,
@@ -92,12 +108,17 @@ export function setRscBuildInfo(
   setBuildInfo(mod, { [MODERN_RSC_INFO]: rscBuildInfo });
 }
 
+export function removeRscBuildInfo(mod: WebpackModule) {
+  delete mod.buildInfo?.[MODERN_RSC_INFO];
+}
+
 export function getRscBuildInfo(mod: WebpackModule) {
-  return mod.buildInfo?.[MODERN_RSC_INFO] || {};
+  return mod.buildInfo?.[MODERN_RSC_INFO] || undefined;
 }
 
 export function isCssModule(mod: WebpackModule) {
-  return getRscBuildInfo(mod).isCssModule;
+  if (!mod) return false;
+  return getRscBuildInfo(mod)?.isCssModule;
 }
 
 export const parseSource = async (source: string) => {

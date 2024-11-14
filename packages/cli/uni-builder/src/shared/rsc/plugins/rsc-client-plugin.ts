@@ -1,27 +1,26 @@
 import type Webpack from 'webpack';
-import type {
-  ClientManifest,
-  ClientReferencesMap,
-  ImportManifestEntry,
-  SSRManifest,
+import {
+  type ClientManifest,
+  type ClientReferencesMap,
+  type ImportManifestEntry,
+  type SSRManifest,
+  getRscBuildInfo,
+  sharedData,
 } from '../common';
 
 export interface RscClientPluginOptions {
-  readonly clientReferencesMap: ClientReferencesMap;
   readonly clientManifestFilename?: string;
   readonly ssrManifestFilename?: string;
   readonly styles?: Set<string>;
 }
 
 export class RscClientPlugin {
-  private clientReferencesMap: ClientReferencesMap;
+  private clientReferencesMap: ClientReferencesMap = new Map();
   private clientManifestFilename: string;
   private ssrManifestFilename: string;
   private styles?: Set<string>;
 
   constructor(options: RscClientPluginOptions) {
-    this.clientReferencesMap = options.clientReferencesMap;
-
     this.clientManifestFilename =
       options.clientManifestFilename || `react-client-manifest.json`;
 
@@ -132,6 +131,9 @@ export class RscClientPlugin {
     compiler.hooks.thisCompilation.tap(
       RscClientPlugin.name,
       (compilation, { normalModuleFactory }) => {
+        this.clientReferencesMap = sharedData.get(
+          'clientReferencesMap',
+        ) as ClientReferencesMap;
         compilation.dependencyFactories.set(
           ClientReferenceDependency,
           normalModuleFactory,

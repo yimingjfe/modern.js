@@ -9,6 +9,7 @@ import {
   getExportNames,
   isClientModule,
   parseSource,
+  setRscBuildInfo,
 } from './common';
 import {
   getModuleUseServerInfo,
@@ -16,19 +17,15 @@ import {
   parseSourceWithOxc,
 } from './parse-with-oxc';
 
-type ServerLoaderOptions = {
-  readonly clientReferencesMap: ClientReferencesMap;
-  readonly serverReferencesMap: ServerReferencesMap;
-};
+export type RscServerLoaderOptions = {};
 
 export default async function rscServerLoader(
-  this: LoaderContext<ServerLoaderOptions>,
+  this: LoaderContext<RscServerLoaderOptions>,
   source: string,
   sourceMap: SourceMap,
 ) {
   this.cacheable(true);
   const callback = this.async();
-  const { clientReferencesMap, serverReferencesMap } = this.getOptions();
   const clientReferences: ClientReference[] = [];
   const { resourcePath } = this;
   const ast = await parseSource(source);
@@ -62,7 +59,11 @@ function createClientReferenceProxy(exportName) {
       .join('\n');
 
     if (clientReferences.length > 0) {
-      clientReferencesMap.set(resourcePath, clientReferences);
+      setRscBuildInfo(this._module!, {
+        type: 'client',
+        resourcePath,
+        clientReferences,
+      });
     }
 
     return callback(null, `${importsCode}\n${exportsCode}`);
@@ -75,7 +76,9 @@ function createClientReferenceProxy(exportName) {
       .filter(Boolean) as string[];
 
     if (serverReferenceExportNames.length > 0) {
-      serverReferencesMap.set(resourcePath, {
+      setRscBuildInfo(this._module!, {
+        type: 'server',
+        resourcePath,
         exportNames: serverReferenceExportNames,
       });
     }
