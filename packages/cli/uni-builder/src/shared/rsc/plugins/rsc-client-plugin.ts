@@ -235,7 +235,7 @@ export class RscClientPlugin {
                 }
 
                 clientManifest[id] = {
-                  id: moduleId!,
+                  id: ssrId!,
                   name: clientExportName,
                   chunks,
                   styles,

@@ -83,7 +83,7 @@ export default applyBaseConfig({
           }),
         );
       }
-      config.optimization.concatenateModules = false;
+      // config.optimization.concatenateModules = false;
       // delete config.cache;
     },
 
@@ -158,9 +158,7 @@ export default applyBaseConfig({
 
         chain
           .plugin('rsc-server-plugin')
-          .use(WebpackRscServerPlugin, [
-            { clientReferencesMap, serverReferencesMap, styles },
-          ]);
+          .use(WebpackRscServerPlugin, [{ styles }]);
 
         chain.module
           .rule('react-server')
@@ -205,7 +203,7 @@ export default applyBaseConfig({
 
         chain
           .plugin('rsc-client-plugin')
-          .use(WebpackRscClientPlugin, [{ clientReferencesMap, styles }]);
+          .use(WebpackRscClientPlugin, [{ styles }]);
       }
     },
   },

@@ -98,7 +98,7 @@
     "@types/lodash": "^4.14.202",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-server-dom-webpack": "18.3.0-canary-8039e6d0b-20231026",
+    "react-server-dom-webpack": "0.0.0-experimental-04b058868c-20240508",
     "terser": "^5.31.1",
     "typescript": "^5.3.0"
   },

@@ -4,9 +4,9 @@
   "version": "2.9.0",
   "scripts": {
     "dev": "BUNDLER=webpack NODE_OPTIONS='--conditions=react-server --inspect' modern dev",
-    "build": "BUNDLER=webpack modern build",
+    "build": "BUNDLER=webpack NODE_OPTIONS='--inspect' modern build",
     "inspect": "BUNDLER=webpack NODE_OPTIONS='--conditions=react-server' modern inspect",
-    "serve": "NODE_OPTIONS='--conditions=react-server' modern serve",
+    "serve": "NODE_OPTIONS='--conditions=react-server --inspect' modern serve",
     "new": "modern new",
     "lint": "modern lint"
   },
@@ -26,10 +26,10 @@
     "excerpts": "0.0.3",
     "marked": "4.2.12",
     "pg": "8.10.0",
-    "react": "18.3.0-canary-8039e6d0b-20231026",
-    "react-dom": "18.3.0-canary-8039e6d0b-20231026",
+    "react": "0.0.0-experimental-04b058868c-20240508",
+    "react-dom": "0.0.0-experimental-04b058868c-20240508",
     "react-error-boundary": "3.1.4",
-    "react-server-dom-webpack": "18.3.0-canary-8039e6d0b-20231026",
+    "react-server-dom-webpack": "0.0.0-experimental-04b058868c-20240508",
     "rsc-html-stream": "^0.0.3",
     "sanitize-html": "2.10.0",
     "server-only": "^0.0.1"

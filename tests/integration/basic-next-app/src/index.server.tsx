@@ -3,15 +3,15 @@
 import { readFileSync } from 'node:fs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import React, { use, type ReactNode } from 'react';
+import { renderToReadableStream as renderToStream } from 'react-dom/server.edge';
+import { createFromReadableStream } from 'react-server-dom-webpack/client.edge';
+import { injectRSCPayload } from 'rsc-html-stream/server';
+// import { ServerRoot, renderRsc } from './framework/ServerRoot';
+import { Router } from './framework/router';
+import { ServerRoot, handleAction, renderRsc } from './framework/rsc-runtime';
 // import { createRequestHandler } from '@modern-js/runtime/ssr/server';
 import { getModuleMap } from './renderRsc';
-import { createFromReadableStream } from 'react-server-dom-webpack/client.browser';
-import { renderToReadableStream as renderToStream } from 'react-dom/server.edge';
-import React, { use, type ReactNode } from 'react';
-import { Router } from './framework/router';
-import { renderRsc, ServerRoot } from './framework/ServerRoot';
-import { injectRSCPayload } from 'rsc-html-stream/server';
-import { handleAction } from './framework/rsc-runtime';
 export { renderRsc, ServerRoot };
 
 type Elements = Promise<ReactNode[]>;
@@ -85,7 +85,7 @@ export const handleRequest = async (request: Request): Promise<Response> => {
   const styles = collectStyles(clientManifest).concat(ssrManifest.styles);
 
   const elements: Promise<ReactNode[]> = createFromReadableStream(stream1, {
-    ssrManifest: { moduleMap: clientManifest },
+    ssrManifest: ssrManifest,
   });
 
   const htmlStream = await renderToStream(

@@ -306,15 +306,15 @@ export class RscServerPlugin {
               }
 
               const moduleId = compilation.chunkGraph.getModuleId(module);
-
               if (moduleId === null) {
                 continue;
               }
 
-              const clientReferences =
-                getRscBuildInfo(module)?.clientReferences;
-
-              if (module.layer !== webpackRscLayerName && clientReferences) {
+              if (
+                module.layer !== webpackRscLayerName &&
+                this.clientReferencesMap.has(resource)
+              ) {
+                const clientReferences = this.clientReferencesMap.get(resource);
                 if (clientReferences) {
                   for (const clientReference of clientReferences) {
                     clientReference.ssrId = moduleId;

@@ -1,10 +1,10 @@
+import { startTransition, use, useEffect, useState } from 'react';
 import { createRoot, hydrateRoot } from 'react-dom/client';
 import { ErrorBoundary, type FallbackProps } from 'react-error-boundary';
-import { useEffect, useState, use, startTransition } from 'react';
 import {
   createFromFetch,
-  encodeReply,
   createFromReadableStream,
+  encodeReply,
 } from 'react-server-dom-webpack/client';
 import { rscStream } from 'rsc-html-stream/client';
 
@@ -61,7 +61,9 @@ interface RootProps {
 }
 
 function Root({ data }: RootProps) {
-  const [root, setRoot] = useState<React.ReactNode>(use(data));
+  const res = use(data);
+  console.log('res', res);
+  const [root, setRoot] = useState<React.ReactNode>(res);
   updateRoot = setRoot;
   return <ErrorBoundary fallback={Error}>{root}</ErrorBoundary>;
 }

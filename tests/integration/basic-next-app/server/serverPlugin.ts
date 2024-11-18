@@ -1,6 +1,6 @@
-import type { Context, ServerPlugin } from '@modern-js/server-core';
-import path from 'path';
 import { pathToFileURL } from 'node:url';
+import path from 'path';
+import type { Context, ServerPlugin } from '@modern-js/server-core';
 
 const handleResponse = async (
   c: Context,

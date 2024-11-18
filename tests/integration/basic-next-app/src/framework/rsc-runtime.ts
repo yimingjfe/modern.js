@@ -1,6 +1,10 @@
 export { renderToReadableStream } from 'react-server-dom-webpack/server.edge';
 import path from 'node:path';
 import { decodeReply } from 'react-server-dom-webpack/server.edge';
+import { ServerRoot, renderRsc } from './ServerRoot';
+export { createFromReadableStream } from 'react-server-dom-webpack/client.edge';
+
+export { ServerRoot, renderRsc };
 
 declare const __webpack_require__: (path: string) => any;
 
@@ -26,7 +30,6 @@ export const handleAction = async (req: Request, distDir: string) => {
       await result;
     } catch (x) {}
 
-    const { renderRsc, ServerRoot } = await import('./ServerRoot');
     const stream = await renderRsc({
       Component: ServerRoot,
       distDir,

@@ -92,8 +92,8 @@
       }
     },
     "overrides": {
-      "react": "18.3.0-canary-8039e6d0b-20231026",
-      "react-dom": "18.3.0-canary-8039e6d0b-20231026"
+      "react": "0.0.0-experimental-04b058868c-20240508",
+      "react-dom": "0.0.0-experimental-04b058868c-20240508"
     },
     "allowedDeprecatedVersions": {
       "@babel/plugin-proposal-object-rest-spread": "7.12.1 || 7.20.7",

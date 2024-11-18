@@ -1,11 +1,11 @@
 /// <reference types="react/canary" />
 import type React from 'react';
-import { use, type ReactNode } from 'react';
+import { type ReactNode, use } from 'react';
 
 import { readFileSync } from 'node:fs';
-import { renderToReadableStream } from 'react-server-dom-webpack/server.edge';
 import path from 'node:path';
 import App from '../components/App';
+import { renderToReadableStream } from './rsc-runtime';
 
 type Elements = Promise<ReactNode[]>;
 
