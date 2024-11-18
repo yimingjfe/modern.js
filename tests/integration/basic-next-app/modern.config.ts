@@ -5,8 +5,6 @@ import {
 } from '@modern-js/uni-builder/rsc';
 import { RsdoctorWebpackPlugin } from '@rsdoctor/webpack-plugin';
 import { applyBaseConfig } from '../../utils/applyBaseConfig';
-// import { WebpackRscClientPlugin } from './plugins/rsc-client-plugin';
-// import { WebpackRscServerPlugin } from './plugins/rsc-server-plugin';
 
 const appToolsPath = require.resolve('@modern-js/app-tools');
 const uniBuilderRscPath = require.resolve('@modern-js/uni-builder/rsc', {
@@ -27,17 +25,6 @@ const rscSsrLoaderPath = path.join(
   path.dirname(uniBuilderRscPath),
   'rsc-ssr-loader',
 );
-
-// const rscClientLoaderPath = path.join(
-//   __dirname,
-//   'plugins/rsc-client-loader.ts',
-// );
-// const rscServerLoaderPath = path.join(
-//   __dirname,
-//   'plugins/rsc-server-loader.ts',
-// );
-
-// const rscSsrLoaderPath = path.join(__dirname, 'plugins/rsc-ssr-loader.ts');
 
 const clientReferencesMap = new Map();
 const serverReferencesMap = new Map();

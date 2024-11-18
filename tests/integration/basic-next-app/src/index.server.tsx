@@ -85,7 +85,8 @@ export const handleRequest = async (request: Request): Promise<Response> => {
   const styles = collectStyles(clientManifest).concat(ssrManifest.styles);
 
   const elements: Promise<ReactNode[]> = createFromReadableStream(stream1, {
-    ssrManifest: ssrManifest,
+    // Only some canary versions of react19 have this field
+    serverConsumerManifest: ssrManifest,
   });
 
   const htmlStream = await renderToStream(
