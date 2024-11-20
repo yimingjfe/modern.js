@@ -1,3 +1,15 @@
+export type {
+  ClientReference,
+  ImportManifestEntry,
+  ModuleLoading,
+  SSRManifest,
+  SSRModuleMap,
+  ClientReferencesMap,
+  ServerReferencesMap,
+  ServerManifest,
+  ServerReferencesModuleInfo,
+  ClientManifest,
+} from '@modern-js/types/server';
 import { logger } from '@modern-js/utils';
 import swc, {
   type ArrowFunctionExpression,
@@ -21,54 +33,7 @@ import type {
   Module as WebpackModule,
 } from 'webpack';
 
-export interface ClientReference {
-  readonly id: string;
-  readonly exportName: string;
-  ssrId?: string | number;
-}
-
 export type SourceMap = Parameters<LoaderDefinitionFunction>[1];
-
-export interface ClientManifest {
-  [id: string]: ImportManifestEntry;
-}
-
-export interface ServerManifest {
-  [id: string]: ImportManifestEntry;
-}
-
-export interface SSRManifest {
-  moduleMap: SSRModuleMap;
-  moduleLoading: ModuleLoading | null;
-  styles: string[];
-}
-
-export interface SSRModuleMap {
-  [clientId: string]: {
-    [clientExportName: string]: ImportManifestEntry;
-  };
-}
-
-export interface ModuleLoading {
-  prefix: string;
-  crossOrigin?: 'use-credentials' | '';
-}
-
-export interface ImportManifestEntry {
-  id: string | number;
-  // chunks is a double indexed array of chunkId / chunkFilename pairs
-  chunks: (string | number)[];
-  styles?: string[];
-  name: string;
-}
-
-export type ClientReferencesMap = Map<string, ClientReference[]>;
-
-export type ServerReferencesMap = Map<string, ServerReferencesModuleInfo>;
-export interface ServerReferencesModuleInfo {
-  readonly exportNames: string[];
-  moduleId?: string | number;
-}
 
 export const MODERN_RSC_INFO = 'modernRscInfo';
 
@@ -248,7 +213,6 @@ class ServerActionCollector extends Visitor {
   visitExportNamedDeclaration(
     node: ExportNamedDeclaration,
   ): ExportNamedDeclaration {
-    // 处理 export { baz as b } 这样的导出
     if (node.specifiers) {
       node.specifiers.forEach(specifier => {
         if (specifier.type === 'ExportSpecifier') {
@@ -269,7 +233,6 @@ class ServerActionCollector extends Visitor {
       );
       if (hasServer) {
         const serverAction = this.serverActions[this.serverActions.length - 1];
-        console.log('serverAction1111111', serverAction, node);
         if (serverAction) {
           serverAction.span = {
             start: node.span.start,

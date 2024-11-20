@@ -91,6 +91,7 @@
   },
   "devDependencies": {
     "@rsbuild/plugin-webpack-swc": "~1.0.3",
+    "@modern-js/types": "workspace:*",
     "@scripts/build": "workspace:*",
     "@scripts/vitest-config": "workspace:*",
     "@types/es-module-lexer": "^0.4.3",

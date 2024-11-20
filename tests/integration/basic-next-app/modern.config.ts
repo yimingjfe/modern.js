@@ -26,6 +26,11 @@ const rscSsrLoaderPath = path.join(
   'rsc-ssr-loader',
 );
 
+const rscCssLoaderPath = path.join(
+  path.dirname(uniBuilderRscPath),
+  'rsc-css-loader',
+);
+
 const clientReferencesMap = new Map();
 const serverReferencesMap = new Map();
 
@@ -152,7 +157,6 @@ export default applyBaseConfig({
           .issuerLayer(webpackRscLayerName)
           .resolve.conditionNames.merge(['react-server', '...']);
 
-        // TODO: 临时代码
         CSS_RULE_NAMES.forEach(ruleName => {
           const rule = chain.module.rules.get(ruleName);
           if (rule) {
@@ -160,7 +164,7 @@ export default applyBaseConfig({
               .rule(ruleName)
               .use('custom-loader')
               .before('ignore-css')
-              .loader('./plugins/rsc-css-loader.ts');
+              .loader(rscCssLoaderPath);
           }
         });
 

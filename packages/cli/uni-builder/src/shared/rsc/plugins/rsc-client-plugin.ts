@@ -4,7 +4,6 @@ import {
   type ClientReferencesMap,
   type ImportManifestEntry,
   type SSRManifest,
-  getRscBuildInfo,
   sharedData,
 } from '../common';
 
@@ -220,7 +219,6 @@ export class RscClientPlugin {
                   }
                 }
 
-                // chunks is a double indexed array of chunkId / chunkFilename pairs
                 const chunks: (string | number)[] = [];
                 const styles: string[] = [];
 

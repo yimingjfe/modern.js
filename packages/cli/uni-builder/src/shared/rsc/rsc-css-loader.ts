@@ -1,5 +1,5 @@
 import type { LoaderContext } from 'webpack';
-import { setRscBuildInfo } from './utils';
+import { setRscBuildInfo } from './common';
 
 export default function rscCssLoader(this: LoaderContext<any>, source: string) {
   this._module &&
