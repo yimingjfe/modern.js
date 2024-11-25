@@ -785,6 +785,9 @@ importers:
         specifier: 5.1.0
         version: 5.1.0(html-webpack-plugin@5.5.3(webpack@5.95.0(@swc/core@1.3.42)(esbuild@0.17.19)))(webpack@5.95.0(@swc/core@1.3.42)(esbuild@0.17.19))
     devDependencies:
+      '@modern-js/types':
+        specifier: workspace:*
+        version: link:../../toolkit/types
       '@rsbuild/plugin-webpack-swc':
         specifier: ~1.0.3
         version: 1.0.3(@rsbuild/core@1.0.13)
@@ -3022,6 +3025,40 @@ importers:
       typescript:
         specifier: ^5
         version: 5.4.5
+
+  packages/runtime/render:
+    dependencies:
+      '@modern-js/types':
+        specifier: workspace:*
+        version: link:../../toolkit/types
+      '@swc/helpers':
+        specifier: 0.5.13
+        version: 0.5.13
+      react-server-dom-webpack:
+        specifier: 19.0.0-rc-e1ef8c95-20241115
+        version: 19.0.0-rc-e1ef8c95-20241115(react-dom@19.0.0-rc-e1ef8c95-20241115(react@19.0.0-rc-e1ef8c95-20241115))(react@19.0.0-rc-e1ef8c95-20241115)(webpack@5.95.0(@swc/core@1.3.42)(esbuild@0.17.19))
+      rsc-html-stream:
+        specifier: 0.0.3
+        version: 0.0.3
+    devDependencies:
+      '@types/jest':
+        specifier: ^29
+        version: 29.5.13
+      '@types/react':
+        specifier: ^18.3.3
+        version: 18.3.11
+      '@types/react-dom':
+        specifier: ^18.3.0
+        version: 18.3.1
+      jest:
+        specifier: ^29
+        version: 29.5.0(@types/node@20.8.8)(ts-node@10.9.2(@swc/core@1.3.42)(@types/node@20.8.8)(typescript@5.4.5))
+      react:
+        specifier: '19.0.0-rc-e1ef8c95-20241115 '
+        version: 19.0.0-rc-e1ef8c95-20241115
+      react-dom:
+        specifier: '19.0.0-rc-e1ef8c95-20241115 '
+        version: 19.0.0-rc-e1ef8c95-20241115(react@19.0.0-rc-e1ef8c95-20241115)
 
   packages/server/babel-plugin-module-resolver:
     dependencies:
@@ -5526,6 +5563,9 @@ importers:
 
   tests/integration/basic-next-app:
     dependencies:
+      '@modern-js/render':
+        specifier: workspace:*
+        version: link:../../../packages/runtime/render
       '@modern-js/runtime':
         specifier: workspace:*
         version: link:../../../packages/runtime/plugin-runtime
@@ -5557,7 +5597,7 @@ importers:
         specifier: 3.1.4
         version: 3.1.4(react@19.0.0-rc-e1ef8c95-20241115)
       react-server-dom-webpack:
-        specifier: '19.0.0-rc-e1ef8c95-20241115 '
+        specifier: 19.0.0-rc-e1ef8c95-20241115
         version: 19.0.0-rc-e1ef8c95-20241115(react-dom@19.0.0-rc-e1ef8c95-20241115(react@19.0.0-rc-e1ef8c95-20241115))(react@19.0.0-rc-e1ef8c95-20241115)(webpack@5.93.0(@swc/core@1.3.42)(esbuild@0.17.19))
       rsc-html-stream:
         specifier: ^0.0.3
@@ -29535,7 +29575,7 @@ snapshots:
 
   '@swc/helpers@0.5.13':
     dependencies:
-      tslib: 2.6.2
+      tslib: 2.7.0
 
   '@swc/helpers@0.5.3':
     dependencies:

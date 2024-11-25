@@ -12,7 +12,7 @@ import { Router } from './framework/router';
 import { ServerRoot, handleAction, renderRsc } from './framework/rsc-runtime';
 // import { createRequestHandler } from '@modern-js/runtime/ssr/server';
 import { getModuleMap } from './renderRsc';
-export { renderRsc, ServerRoot };
+export { renderRsc, ServerRoot, handleAction };
 
 type Elements = Promise<ReactNode[]>;
 export function Html({

@@ -23,6 +23,8 @@ function fetchRSC() {
   return content;
 }
 
+const isUseServerAction = false;
+
 export async function callServer(id: string, args: any[]): Promise<any> {
   const response = fetch('/', {
     method: 'POST',
@@ -32,13 +34,17 @@ export async function callServer(id: string, args: any[]): Promise<any> {
     },
     body: await encodeReply(args),
   });
-  const { returnValue, root } = await createFromFetch(response, {
-    callServer,
-  });
-  startTransition(() => {
-    updateRoot(root);
-  });
-  return returnValue;
+  if (isUseServerAction) {
+    const res = createFromFetch(response, {
+      callServer,
+    });
+    return res;
+  } else {
+    const { returnValue, root } = await createFromFetch(response, {
+      callServer,
+    });
+    return returnValue;
+  }
 }
 
 const data = createFromReadableStream(rscStream);
@@ -62,10 +68,9 @@ interface RootProps {
 
 function Root({ data }: RootProps) {
   const res = use(data);
-  console.log('res', res);
   const [root, setRoot] = useState<React.ReactNode>(res);
   updateRoot = setRoot;
-  return <ErrorBoundary fallback={Error}>{root}</ErrorBoundary>;
+  return <>{root}</>;
 }
 
 hydrateRoot(document.body, <Root data={data} />);

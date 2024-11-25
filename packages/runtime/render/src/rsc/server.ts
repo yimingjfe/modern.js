@@ -1,15 +1,33 @@
+export { renderToReadableStream } from 'react-server-dom-webpack/server.edge';
+import type { ClientManifest } from '@modern-js/types/server';
 import { renderToReadableStream } from 'react-server-dom-webpack/server.edge';
-export { renderToReadableStream };
-import fs from 'node:fs';
-import path from 'node:path';
 import { decodeReply } from 'react-server-dom-webpack/server.edge';
-import { ServerRoot, renderRsc } from './ServerRoot';
-
-export { ServerRoot, renderRsc };
+export { createFromReadableStream } from 'react-server-dom-webpack/client.edge';
 
 declare const __webpack_require__: (path: string) => any;
 
-export const handleAction = async (req: Request, distDir: string) => {
+type RenderRscOptions = {
+  element: React.ReactElement;
+  clientManifest: ClientManifest;
+  returnValue?: unknown;
+};
+
+export const renderRsc = (options: RenderRscOptions) => {
+  const payload = options.returnValue
+    ? { returnValue: options.returnValue, root: options.element }
+    : options.element;
+  const readable = renderToReadableStream(payload, options.clientManifest);
+  return readable;
+};
+
+type HandleActionOptions = {
+  clientManifest: ClientManifest;
+};
+
+export const handleAction = async (
+  req: Request,
+  options: HandleActionOptions,
+) => {
   const serverReference = req.headers.get('rsc-action');
   if (serverReference) {
     const [filepath, name] = serverReference.split('#');
@@ -18,6 +36,7 @@ export const handleAction = async (req: Request, distDir: string) => {
       throw new Error('Invalid action');
     }
 
+    const { clientManifest } = options;
     const contentType = req.headers.get('content-type');
 
     let args;
@@ -29,13 +48,6 @@ export const handleAction = async (req: Request, distDir: string) => {
       args = await decodeReply(text);
     }
     const result = action.apply(null, args);
-
-    const clientManifest = JSON.parse(
-      fs.readFileSync(
-        path.resolve(distDir, './react-client-manifest.json'),
-        'utf8',
-      ),
-    );
     const stream = renderToReadableStream(result, clientManifest);
 
     const response = new Response(stream, {
@@ -47,4 +59,5 @@ export const handleAction = async (req: Request, distDir: string) => {
 
     return response;
   }
+  return null;
 };

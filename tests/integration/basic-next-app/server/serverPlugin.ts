@@ -45,6 +45,19 @@ export default (): ServerPlugin => ({
             return handleResponse(c, distDirectory);
           },
         });
+        middlewares.unshift({
+          name: 'rsc-action',
+          method: 'post',
+          path: '/',
+          handler: async (c, next) => {
+            const { handleAction } = await import(
+              path.join(distDirectory, 'bundles/main.js')
+            );
+            const res = await handleAction(c.req, distDirectory);
+            return res;
+            // return c.newResponse(res, 200);
+          },
+        });
       },
     };
   },

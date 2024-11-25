@@ -28,10 +28,11 @@
     "react": "19.0.0-rc-e1ef8c95-20241115 ",
     "react-dom": "19.0.0-rc-e1ef8c95-20241115 ",
     "react-error-boundary": "3.1.4",
-    "react-server-dom-webpack": "19.0.0-rc-e1ef8c95-20241115 ",
+    "react-server-dom-webpack": "19.0.0-rc-e1ef8c95-20241115",
     "rsc-html-stream": "^0.0.3",
     "sanitize-html": "2.10.0",
-    "server-only": "^0.0.1"
+    "server-only": "^0.0.1",
+    "@modern-js/render": "workspace:*"
   },
   "devDependencies": {
     "@babel/generator": "^7.25.6",
