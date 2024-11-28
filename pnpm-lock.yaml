@@ -2792,6 +2792,9 @@ importers:
       '@modern-js/plugin-data-loader':
         specifier: workspace:*
         version: link:../../cli/plugin-data-loader
+      '@modern-js/render':
+        specifier: workspace:*
+        version: link:../render
       '@modern-js/runtime-utils':
         specifier: workspace:*
         version: link:../../toolkit/runtime-utils
@@ -5666,6 +5669,43 @@ importers:
       webpack:
         specifier: 5.93.0
         version: 5.93.0(@swc/core@1.3.42)(esbuild@0.17.19)
+
+  tests/integration/basic-rsc-app:
+    dependencies:
+      '@modern-js/runtime':
+        specifier: workspace:*
+        version: link:../../../packages/runtime/plugin-runtime
+      react:
+        specifier: '19.0.0-rc-e1ef8c95-20241115 '
+        version: 19.0.0-rc-e1ef8c95-20241115
+      react-dom:
+        specifier: '19.0.0-rc-e1ef8c95-20241115 '
+        version: 19.0.0-rc-e1ef8c95-20241115(react@19.0.0-rc-e1ef8c95-20241115)
+    devDependencies:
+      '@modern-js/app-tools':
+        specifier: workspace:*
+        version: link:../../../packages/solutions/app-tools
+      '@modern-js/plugin-swc':
+        specifier: workspace:*
+        version: link:../../../packages/cli/plugin-swc
+      '@modern-js/uni-builder':
+        specifier: workspace:*
+        version: link:../../../packages/cli/uni-builder
+      '@types/jest':
+        specifier: ^29
+        version: 29.5.13
+      '@types/node':
+        specifier: ^14
+        version: 14.18.35
+      '@types/react':
+        specifier: ^18
+        version: 18.3.11
+      '@types/react-dom':
+        specifier: ^18
+        version: 18.3.1
+      typescript:
+        specifier: ^5
+        version: 5.4.5
 
   tests/integration/bff-express:
     dependencies:

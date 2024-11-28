@@ -1,122 +1,122 @@
-import { Transform } from 'stream';
-import { createReadableStreamFromReadable } from '@modern-js/runtime-utils/node';
+import { renderSSRStream } from '@modern-js/render/ssr';
 import checkIsBot from 'isbot';
-import { ServerStyleSheet } from 'styled-components';
+// import { renderToReadableStream } from 'react-dom/server.edge';
 import { ESCAPED_SHELL_STREAM_END_MARK } from '../../../common';
 import { RenderLevel } from '../../constants';
 import {
   type CreateReadableStreamFromElement,
   ShellChunkStatus,
+  encodeForWebStream,
   getReadableStreamFromString,
 } from './shared';
 import { getTemplates } from './template';
 
 export const createReadableStreamFromElement: CreateReadableStreamFromElement =
   async (request, rootElement, options) => {
-    const { renderToPipeableStream } = await import('react-dom/server');
-    const { runtimeContext, htmlTemplate, config, ssrConfig, entryName } =
-      options;
     let shellChunkStatus = ShellChunkStatus.START;
-
-    let renderLevel = RenderLevel.SERVER_RENDER;
-
-    const forceStream2String = Boolean(process.env.MODERN_JS_STREAM_TO_STRING);
-    // When a crawler visit the page, we should waiting for entrie content of page
-
-    const isbot = checkIsBot(request.headers.get('user-agent'));
-    const onReady = isbot || forceStream2String ? 'onAllReady' : 'onShellReady';
-
-    const sheet = new ServerStyleSheet();
-
     const chunkVec: string[] = [];
+    const { htmlTemplate, runtimeContext, config, ssrConfig, entryName } =
+      options;
 
-    const root = forceStream2String
-      ? sheet.collectStyles(rootElement)
-      : rootElement;
+    const { shellBefore, shellAfter } = await getTemplates(htmlTemplate, {
+      renderLevel: RenderLevel.SERVER_RENDER,
+      runtimeContext,
+      ssrConfig,
+      request,
+      config,
+      entryName,
+    });
 
-    return new Promise(resolve => {
-      const { pipe } = renderToPipeableStream(root, {
+    try {
+      const readableOriginal = await renderSSRStream(rootElement, {
+        request,
+        clientManifest: options.rscClientManifest,
+        ssrManifest: options.rscSSRManifest,
         nonce: config.nonce,
-        [onReady]() {
-          const styledComponentsStyleTags = forceStream2String
-            ? sheet.getStyleTags()
-            : '';
-          options[onReady]?.();
-
-          getTemplates(htmlTemplate, {
-            request,
-            ssrConfig,
-            renderLevel,
-            runtimeContext,
-            config,
-            entryName,
-            styledComponentsStyleTags,
-          }).then(({ shellAfter, shellBefore }) => {
-            const body = new Transform({
-              transform(chunk, _encoding, callback) {
-                try {
-                  if (shellChunkStatus !== ShellChunkStatus.FINISH) {
-                    chunkVec.push(chunk.toString());
-                    /**
-                     * The shell content of App may be splitted by multiple chunks to transform,
-                     * when any node value's size is larger than the React limitation, refer to:
-                     * https://github.com/facebook/react/blob/v18.2.0/packages/react-server/src/ReactServerStreamConfigNode.js#L53.
-                     * So we use the `SHELL_STREAM_END_MARK` to mark the shell content' tail.
-                     */
-                    let concatedChunk = chunkVec.join('');
-                    if (concatedChunk.includes(ESCAPED_SHELL_STREAM_END_MARK)) {
-                      concatedChunk = concatedChunk.replace(
-                        ESCAPED_SHELL_STREAM_END_MARK,
-                        '',
-                      );
-
-                      shellChunkStatus = ShellChunkStatus.FINISH;
-                      this.push(`${shellBefore}${concatedChunk}${shellAfter}`);
-                    }
-                  } else {
-                    this.push(chunk);
-                  }
-                  callback();
-                } catch (e) {
-                  if (e instanceof Error) {
-                    callback(e);
-                  } else {
-                    callback(new Error('Received unkown error when streaming'));
-                  }
-                }
-              },
-            });
-
-            const stream = createReadableStreamFromReadable(body);
-
-            resolve(stream);
-
-            pipe(body);
-          });
-        },
-
-        onShellError(error: unknown) {
-          renderLevel = RenderLevel.CLIENT_RENDER;
-          getTemplates(htmlTemplate, {
-            request,
-            ssrConfig,
-            renderLevel,
-            runtimeContext,
-            entryName,
-            config,
-          }).then(({ shellAfter, shellBefore }) => {
-            const fallbackHtml = `${shellBefore}${shellAfter}`;
-
-            const readableStream = getReadableStreamFromString(fallbackHtml);
-            resolve(readableStream);
-            options?.onShellError?.(error);
-          });
-        },
-        onError(error: unknown) {
-          renderLevel = RenderLevel.CLIENT_RENDER;
-
-          options?.onError?.(error);
+        // @ts-ignore
+        onError(error) {
+          console.error('error11111111', error);
+          options.onError?.(error);
         },
       });
-    });
+
+      // const response = new Response(readableOriginal, {
+      //   headers: {
+      //     'content-type': 'text/html; charset=utf-8',
+      //     'transfer-encoding': 'chunked',
+      //   },
+      // });
+
+      // console.log('9999999999', await response.text());
+
+      // const readableOriginal = await renderToReadableStream(rootElement, {
+      //   nonce: config.nonce,
+      //   onError(error) {
+      //     options.onError?.(error);
+      //   },
+      // });
+
+      // If rendering the shell is successful, that Promise will resolve.
+      options.onShellReady?.();
+
+      // A Promise that resolves when all rendering is complete
+      // call onAllready, when allReady is resolve.
+      readableOriginal.allReady.then(() => {
+        options?.onAllReady?.();
+      });
+
+      const isbot = checkIsBot(request.headers.get('user-agent'));
+      if (isbot) {
+        // However, when a crawler visits your page, or if you’re generating the pages at the build time,
+        // you might want to let all of the content load first and then produce the final HTML output instead of revealing it progressively.
+        // from: https://react.dev/reference/react-dom/server/renderToReadableStream#handling-different-errors-in-different-ways
+        await readableOriginal.allReady;
+      }
+
+      const reader = readableOriginal.getReader();
+
+      const stream = new ReadableStream({
+        start(controller) {
+          async function push() {
+            const { done, value } = await reader.read();
+            if (done) {
+              controller.close();
+              return;
+            }
+            if (shellChunkStatus !== ShellChunkStatus.FINISH) {
+              const chunk = new TextDecoder().decode(value);
+
+              chunkVec.push(chunk);
+
+              let concatedChunk = chunkVec.join('');
+              if (concatedChunk.endsWith(ESCAPED_SHELL_STREAM_END_MARK)) {
+                concatedChunk = concatedChunk.replace(
+                  ESCAPED_SHELL_STREAM_END_MARK,
+                  '',
+                );
+
+                shellChunkStatus = ShellChunkStatus.FINISH;
+
+                controller.enqueue(
+                  encodeForWebStream(
+                    `${shellBefore}${concatedChunk}${shellAfter}`,
+                  ),
+                );
+              }
+            } else {
+              controller.enqueue(value);
+            }
+            push();
+          }
+          push();
+        },
+      });
+      return stream;
+    } catch (e) {
+      console.error(e);
+      // Don't log error in `onShellError` callback, since it has been logged in `onError` callback
+      const fallbackHtml = `${shellBefore}${shellAfter}`;
+      const stream = getReadableStreamFromString(fallbackHtml);
+      return stream;
+    }
   };

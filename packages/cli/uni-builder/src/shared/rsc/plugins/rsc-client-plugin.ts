@@ -99,7 +99,6 @@ export class RscClientPlugin {
 
         entryModule.addBlock(block);
       });
-
       if (this.styles && this.styles.size > 0) {
         for (const style of this.styles) {
           const dep = new ClientReferenceDependency(style);
@@ -127,12 +126,9 @@ export class RscClientPlugin {
       }
     });
 
-    compiler.hooks.thisCompilation.tap(
+    compiler.hooks.compilation.tap(
       RscClientPlugin.name,
       (compilation, { normalModuleFactory }) => {
-        this.clientReferencesMap = sharedData.get(
-          'clientReferencesMap',
-        ) as ClientReferencesMap;
         compilation.dependencyFactories.set(
           ClientReferenceDependency,
           normalModuleFactory,
@@ -142,7 +138,15 @@ export class RscClientPlugin {
           ClientReferenceDependency,
           new NullDependency.Template(),
         );
+      },
+    );
 
+    compiler.hooks.thisCompilation.tap(
+      RscClientPlugin.name,
+      (compilation, { normalModuleFactory }) => {
+        this.clientReferencesMap = sharedData.get(
+          'clientReferencesMap',
+        ) as ClientReferencesMap;
         const onNormalModuleFactoryParser = (
           parser: Webpack.javascript.JavascriptParser,
         ) => {
@@ -193,11 +197,6 @@ export class RscClientPlugin {
               const ssrModuleMetaData: Record<string, ImportManifestEntry> = {};
 
               for (const { id, exportName, ssrId } of clientReferences) {
-                // Theoretically the used client and SSR export names should
-                // be used here. These might differ from the original export
-                // names that the loader has recorded. But with the current
-                // setup (i.e. how the client entries are added on both
-                // sides), the original export names are preserved.
                 const clientExportName = exportName;
                 const ssrExportName = exportName;
 

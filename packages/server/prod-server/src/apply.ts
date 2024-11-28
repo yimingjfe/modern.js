@@ -11,6 +11,7 @@ import {
 import {
   injectNodeSeverPlugin,
   injectResourcePlugin,
+  injectRscManifestPlugin,
   loadCacheConfig,
   serverStaticPlugin,
 } from '@modern-js/server-core/node';
@@ -58,6 +59,7 @@ export async function applyPlugins(
     }),
     ...(options.plugins || []),
     injectResourcePlugin(),
+    injectRscManifestPlugin(),
     serverStaticPlugin(),
     faviconPlugin(),
     renderPlugin(),

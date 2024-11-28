@@ -1,6 +1,11 @@
 import { run } from '@modern-js/runtime-utils/node';
 import { time } from '@modern-js/runtime-utils/time';
 import { parseHeaders } from '@modern-js/runtime-utils/universal/request';
+import type {
+  ClientManifest as RscClientManifest,
+  SSRManifest as RscSSRManifest,
+  ServerManifest as RscServerManifest,
+} from '@modern-js/types/server';
 import type React from 'react';
 import type { RuntimeContext } from '../../context';
 import { wrapRuntimeContextProvider } from '../../react/wrapper';
@@ -20,6 +25,9 @@ export type CreateReadableStreamFromElementOptions = {
   ssrConfig: SSRConfig;
   htmlTemplate: string;
   entryName: string;
+  rscClientManifest?: RscClientManifest;
+  rscSSRManifest?: RscSSRManifest;
+  rscServerManifest?: RscServerManifest;
   onShellReady?: () => void;
   onShellError?: (error: unknown) => void;
   onAllReady?: () => void;
@@ -80,10 +88,18 @@ export function createRenderStreaming(
         config.ssrByEntries,
       );
 
-      const rootElement = wrapRuntimeContextProvider(
+      const RSCServerRoot = ({ children }: { children: React.ReactNode }) => {
+        return <>{children}</>;
+      };
+
+      let rootElement = wrapRuntimeContextProvider(
         serverRoot,
         Object.assign(runtimeContext, { ssr: true }),
       );
+
+      // const rootElement = serverRoot;
+
+      rootElement = <RSCServerRoot>{rootElement}</RSCServerRoot>;
 
       const stream = await createReadableStreamFromElement(
         request,
@@ -94,6 +110,9 @@ export function createRenderStreaming(
           runtimeContext,
           ssrConfig,
           entryName,
+          rscClientManifest: options.rscClientManifest,
+          rscSSRManifest: options.rscSSRManifest,
+          rscServerManifest: options.rscServerManifest,
           onShellReady() {
             const cost = end();
             onTiming(SSRTimings.RENDER_SHELL, cost);

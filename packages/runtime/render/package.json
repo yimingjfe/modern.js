@@ -46,24 +46,24 @@
     "react-dom": "19.0.0-rc-e1ef8c95-20241115 "
   },
   "exports": {
-    "./browser": {
-      "types": "./dist/types/browser.d.ts",
-      "jsnext:source": "./src/browser.tsx",
-      "default": "./dist/browser.js"
+    "./ssr": {
+      "types": "./dist/types/server/ssr.d.ts",
+      "jsnext:source": "./src/server/ssr.tsx",
+      "default": "./dist/esm/server/ssr.js"
     },
-    "./server": {
-      "types": "./dist/types/server.d.ts",
-      "jsnext:source": "./src/server.ts",
-      "default": "./dist/server.js"
+    "./rsc": {
+      "types": "./dist/types/server/rsc/index.d.ts",
+      "jsnext:source": "./src/server/rsc/index.ts",
+      "default": "./dist/esm/server/rsc/index.js"
     }
   },
   "typesVersions": {
     "*": {
-      "browser": [
-        "./dist/types/browser.d.ts"
+      "ssr": [
+        "./dist/types/ssr.d.ts"
       ],
-      "server": [
-        "./dist/types/server.d.ts"
+      "rsc": [
+        "./dist/types/rsc.d.ts"
       ]
     }
   },

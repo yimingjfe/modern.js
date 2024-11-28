@@ -210,7 +210,8 @@
     "react-helmet": "^6.1.0",
     "react-is": "^18",
     "react-side-effect": "^2.1.1",
-    "styled-components": "^5.3.1"
+    "styled-components": "^5.3.1",
+    "@modern-js/render": "workspace:*"
   },
   "peerDependencies": {
     "react": ">=17",

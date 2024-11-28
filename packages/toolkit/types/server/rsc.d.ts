@@ -105,13 +105,3 @@ declare module 'react-server-dom-webpack/client.edge' {
     options: Options<T>,
   ): Promise<T>;
 }
-
-declare module 'react-dom/server.edge' {
-  export interface ReactDOMServerReadableStream extends ReadableStream {
-    allReady: Promise<void>;
-  }
-  export function renderToReadableStream(
-    children: ReactNode,
-    options?: Options,
-  ): Promise<ReactDOMServerReadableStream>;
-}

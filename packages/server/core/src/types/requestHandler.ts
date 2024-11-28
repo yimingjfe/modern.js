@@ -1,4 +1,9 @@
 import type { Logger, Metrics, Reporter, ServerRoute } from '@modern-js/types';
+import type {
+  ClientManifest as RscClientManifest,
+  SSRManifest as RscSSRManifest,
+  ServerManifest as RscServerManifest,
+} from '@modern-js/types/server';
 import type { ServerUserConfig } from './config';
 
 export type Resource = {
@@ -35,6 +40,10 @@ export type RequestHandlerOptions = {
   params: Params;
 
   loaderContext: LoaderContext;
+
+  rscServerManifest?: RscServerManifest;
+  rscClientManifest?: RscClientManifest;
+  rscSSRManifest?: RscSSRManifest;
 
   /** @deprecated  */
   locals?: Record<string, any>;

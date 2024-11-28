@@ -31,6 +31,7 @@ export default async function rscServerLoader(
   const ast = await parseSource(source);
   const isClientComponent = await isClientModule(ast);
 
+  console.log('resourcePath111111', resourcePath);
   if (isClientComponent) {
     // TODO: should be changed to runtime of modern.js
     const importsCode = `
