@@ -18,9 +18,11 @@ import {
   ENTRY_SERVER_BOOTSTRAP_FILE_NAME,
   INDEX_FILE_NAME,
   SERVER_ENTRY_POINT_FILE_NAME,
+  SERVER_ROOT_FILE_NAME,
 } from './constants';
 import * as template from './template';
 import * as serverTemplate from './template.server';
+import type { ServerRootTemplateOptions } from './template.server';
 
 function getSSRMode(
   entry: string,
@@ -46,6 +48,26 @@ function getSSRMode(
     return ssr.mode === 'stream' ? 'stream' : 'string';
   }
 }
+
+export const genServerRootCode = async (options: {
+  customEntry?: boolean;
+  internalDirectory: string;
+  entryName: string;
+  entry: string;
+  srcDirectory: string;
+  internalSrcAlias: string;
+}) => {
+  const { internalDirectory, entryName } = options;
+
+  const code = serverTemplate.serverRootTemplate(options);
+
+  const serverRootFile = path.resolve(
+    internalDirectory,
+    `./${entryName}/${SERVER_ROOT_FILE_NAME}`,
+  );
+
+  await fs.outputFile(serverRootFile, code, 'utf8');
+};
 
 export const generateCode = async (
   entrypoints: Entrypoint[],
@@ -96,7 +118,7 @@ export const generateCode = async (
           `./${entryName}/${ENTRY_POINT_FILE_NAME}`,
         );
 
-        fs.outputFileSync(indexFile, indexCode, 'utf8');
+        await fs.outputFile(indexFile, indexCode, 'utf8');
 
         const ssrMode = getSSRMode(entryName, config);
 
@@ -106,7 +128,7 @@ export const generateCode = async (
             `./${entryName}/${ENTRY_BOOTSTRAP_FILE_NAME}`,
           );
           // bootstrap.jsx
-          fs.outputFileSync(
+          await fs.outputFile(
             bootstrapFile,
             `import(/* webpackChunkName: "async-${entryName}" */ './${INDEX_FILE_NAME}');`,
             'utf8',
@@ -119,7 +141,7 @@ export const generateCode = async (
 
           if (ssrMode) {
             // bootstrap.server.jsx
-            fs.outputFileSync(
+            await fs.outputFile(
               bootstrapServerFile,
               `export const requestHandler = import('./${SERVER_ENTRY_POINT_FILE_NAME}').then((m) => m.requestHandler)`,
               'utf8',
@@ -143,7 +165,15 @@ export const generateCode = async (
             `./${entryName}/${SERVER_ENTRY_POINT_FILE_NAME}`,
           );
 
-          fs.outputFileSync(indexServerFile, indexServerCode, 'utf8');
+          await fs.outputFile(indexServerFile, indexServerCode, 'utf8');
+          await genServerRootCode({
+            customEntry: entrypoint.customEntry,
+            internalDirectory,
+            entryName,
+            entry,
+            srcDirectory,
+            internalSrcAlias,
+          });
         }
 
         // register.js
@@ -152,7 +182,7 @@ export const generateCode = async (
           internalDirectory,
           `./${entryName}/${ENTRY_POINT_REGISTER_FILE_NAME}`,
         );
-        fs.outputFileSync(registerFile, registerCode, 'utf8');
+        await fs.outputFile(registerFile, registerCode, 'utf8');
 
         // runtime-register.js
         const registerRuntimeCode = template.runtimeRegister({
@@ -167,7 +197,7 @@ export const generateCode = async (
           internalDirectory,
           `./${entryName}/${ENTRY_POINT_RUNTIME_REGISTER_FILE_NAME}`,
         );
-        fs.outputFileSync(registerRuntimeFile, registerRuntimeCode, 'utf8');
+        await fs.outputFile(registerRuntimeFile, registerRuntimeCode, 'utf8');
 
         // runtime-global-context.js
         const contextCode = template.runtimeGlobalContext({
@@ -181,7 +211,7 @@ export const generateCode = async (
           internalDirectory,
           `./${entryName}/${ENTRY_POINT_RUNTIME_GLOBAL_CONTEXT_FILE_NAME}`,
         );
-        fs.outputFileSync(contextFile, contextCode, 'utf8');
+        await fs.outputFile(contextFile, contextCode, 'utf8');
       }
     }),
   );

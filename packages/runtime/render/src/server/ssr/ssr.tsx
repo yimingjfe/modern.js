@@ -22,13 +22,15 @@ const ServerRoot = ({
   const res = use(elements);
   return (
     <>
-      <div>
+      {/* <div>
         {styles.map(style => (
           // biome-ignore lint/style/useSelfClosingElements: <explanation>
           <link key={style} rel="stylesheet" href={style}></link>
         ))}
         {res}
       </div>
+      &lt;!--&lt;?- SHELL_STREAM_END ?&gt;--&gt; */}
+      {res}
       &lt;!--&lt;?- SHELL_STREAM_END ?&gt;--&gt;
     </>
   );
@@ -66,17 +68,15 @@ export const renderSSRStream = async (
   const { clientManifest, ssrManifest } = options;
   if (clientManifest && ssrManifest) {
     try {
-      const { renderRsc } = await import('./rsc');
+      const { renderRsc } = await import('../rsc');
       const { createFromReadableStream } = await import(
         'react-server-dom-webpack/client.edge'
       );
       const { injectRSCPayload } = await import('rsc-html-stream/server');
-      console.log('222222222');
       const stream = await renderRsc({
         element,
         clientManifest,
       });
-      console.log('33333333333');
       const [stream1, stream2] = stream.tee();
       const styles = collectStyles(clientManifest).concat(ssrManifest.styles);
       const elements: Promise<ReactNode[]> = createFromReadableStream(stream1, {
@@ -99,6 +99,7 @@ export const renderSSRStream = async (
       throw error;
     }
   } else {
+    console.log('render22222222', element);
     return renderToReadableStream(element, options);
   }
 };

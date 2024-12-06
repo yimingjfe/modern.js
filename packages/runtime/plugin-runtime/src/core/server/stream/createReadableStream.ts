@@ -35,7 +35,7 @@ export const createReadableStreamFromElement: CreateReadableStreamFromElement =
         nonce: config.nonce,
         // @ts-ignore
         onError(error) {
-          console.error('error11111111', error);
+          console.error(error);
           options.onError?.(error);
         },
       });

@@ -1,5 +1,5 @@
 'use client';
-import React from 'react';
+import React, { type PropsWithChildren } from 'react';
 import { type RuntimeContext, RuntimeReactContext } from '../context';
 
 export function wrapRuntimeContextProvider(

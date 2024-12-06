@@ -114,6 +114,11 @@
       "types": "./dist/types/cli/ssr/loadable-bundler-plugin.d.ts",
       "jsnext:source": "./src/cli/ssr/loadable-bundler-plugin.ts",
       "default": "./dist/cjs/cli/ssr/loadable-bundler-plugin.js"
+    },
+    "./wrapper": {
+      "types": "./dist/types/core/react/wrapper.server.d.ts",
+      "jsnext:source": "./src/core/react/wrapper.server.tsx",
+      "default": "./dist/esm/core/react/wrapper.server.js"
     }
   },
   "typesVersions": {
@@ -171,6 +176,9 @@
       ],
       "loadable-bundler-plugin": [
         "./dist/types/cli/ssr/loadable-bundler-plugin.d.ts"
+      ],
+      "wrapper": [
+        "./dist/types/core/react/wrapper.server.d.ts"
       ]
     }
   },

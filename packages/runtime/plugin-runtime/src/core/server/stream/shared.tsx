@@ -8,7 +8,7 @@ import type {
 } from '@modern-js/types/server';
 import type React from 'react';
 import type { RuntimeContext } from '../../context';
-import { wrapRuntimeContextProvider } from '../../react/wrapper';
+// import { RuntimeContextProvider } from '../../react/wrapper.server';
 import type { HandleRequestConfig } from '../requestHandler';
 import type { RenderStreaming, SSRConfig } from '../shared';
 import {
@@ -81,25 +81,35 @@ export function createRenderStreaming(
       const onTiming = createOnTiming(options.onTiming);
 
       const { htmlTemplate, entryName } = resource;
-
       const ssrConfig = getSSRConfigByEntry(
         entryName,
         config.ssr,
         config.ssrByEntries,
       );
 
-      const RSCServerRoot = ({ children }: { children: React.ReactNode }) => {
-        return <>{children}</>;
-      };
+      // const rootElement = (
+      //   <RuntimeContextProvider>{serverRoot}</RuntimeContextProvider>
+      // );
 
-      let rootElement = wrapRuntimeContextProvider(
-        serverRoot,
-        Object.assign(runtimeContext, { ssr: true }),
-      );
+      const rootElement = serverRoot;
+
+      // const rootElement = (
+      //   <RuntimeContextProvider
+      //     contextValue={Object.assign(runtimeContext, { ssr: true })}
+      //   >
+      //     {serverRoot}
+      //   </RuntimeContextProvider>
+      // );
+
+      // const rootElement = wrapRuntimeContextProvider(
+      //   serverRoot,
+      //   Object.assign(runtimeContext, { ssr: true }),
+      // );
 
       // const rootElement = serverRoot;
+      // const rootElement = <div>hello</div>;
 
-      rootElement = <RSCServerRoot>{rootElement}</RSCServerRoot>;
+      // rootElement = <RSCServerRoot>{rootElement}</RSCServerRoot>;
 
       const stream = await createReadableStreamFromElement(
         request,

@@ -1,4 +1,3 @@
-'use client';
 import type {
   RequestHandler,
   RequestHandlerOptions,
@@ -11,13 +10,19 @@ import {
 } from '@modern-js/runtime-utils/universal/request';
 import type React from 'react';
 import { type RuntimeContext, getGlobalAppInit } from '../context';
-import { getInitialContext } from '../context/runtime';
+import { getInitialContext } from '../context/shared';
 import { createLoaderManager } from '../loader/loaderManager';
 import { getGlobalRunner } from '../plugin/runner';
 import { createRoot } from '../react';
 import type { SSRServerContext } from '../types';
 import { CHUNK_CSS_PLACEHOLDER } from './constants';
-import { getSSRConfigByEntry, getSSRMode } from './utils';
+import {
+  type ResponseProxy,
+  getSSRConfigByEntry,
+  getSSRMode,
+  run,
+  useServerRuntimeContext,
+} from './utils';
 
 export type { RequestHandlerConfig as HandleRequestConfig } from '@modern-js/app-tools';
 
@@ -37,11 +42,6 @@ export type HandleRequest = (
 export type CreateRequestHandler = (
   handleRequest: HandleRequest,
 ) => Promise<RequestHandler>;
-
-type ResponseProxy = {
-  headers: Record<string, string>;
-  code: number;
-};
 
 function createSSRContext(
   request: Request,
@@ -147,17 +147,40 @@ function createSSRContext(
 export const createRequestHandler: CreateRequestHandler =
   async handleRequest => {
     const requestHandler: RequestHandler = async (request, options) => {
-      const Root = createRoot();
-
       const runner = getGlobalRunner();
-
+      const responseProxy: ResponseProxy = {
+        headers: {},
+        code: -1,
+      };
       const { routeManifest } = options.resource;
-
+      const ssrContext = createSSRContext(request, {
+        ...options,
+        responseProxy,
+      });
       const context: RuntimeContext = getInitialContext(
         runner,
         false,
+        ssrContext.mode,
         routeManifest as any,
       );
+
+      Object.assign(context, {
+        ssrContext,
+        isBrowser: false,
+        loaderManager:
+          ssrContext.mode === 'stream'
+            ? undefined
+            : createLoaderManager(
+                {},
+                {
+                  skipNonStatic: options.staticGenerate,
+                  // if not static generate, only non-static loader can exec on prod env
+                  skipStatic:
+                    process.env.NODE_ENV === 'production' &&
+                    !options.staticGenerate,
+                },
+              ),
+      });
 
       const runBeforeRender = async (context: RuntimeContext) => {
         // when router is redirect, beforeRender will return a response
@@ -169,29 +192,7 @@ export const createRequestHandler: CreateRequestHandler =
         return init?.(context);
       };
 
-      const responseProxy: ResponseProxy = {
-        headers: {},
-        code: -1,
-      };
-
-      const ssrContext = createSSRContext(request, {
-        ...options,
-        responseProxy,
-      });
-
-      Object.assign(context, {
-        ssrContext,
-        isBrowser: false,
-        loaderManager: createLoaderManager(
-          {},
-          {
-            skipNonStatic: options.staticGenerate,
-            // if not static generate, only non-static loader can exec on prod env
-            skipStatic:
-              process.env.NODE_ENV === 'production' && !options.staticGenerate,
-          },
-        ),
-      });
+      const initialData = await runBeforeRender(context);
 
       // Handle redirects from React Router with an HTTP redirect
       const getRedirectResponse = (result: any) => {
@@ -216,8 +217,6 @@ export const createRequestHandler: CreateRequestHandler =
         return undefined;
       };
 
-      const initialData = await runBeforeRender(context);
-
       // Support data loader to return status code
       if (
         context.routerContext?.statusCode &&
@@ -234,30 +233,52 @@ export const createRequestHandler: CreateRequestHandler =
         return redirectResponse;
       }
 
-      const { htmlTemplate } = options.resource;
+      return new Promise((resolve, reject) => {
+        run(
+          {
+            request: request,
+            responseProxy,
+            runner: runner,
+            requestHandlerOptions: options,
+            runtimeContext: context,
+          },
+          async () => {
+            try {
+              // const DefaultRoot = ({
+              //   children,
+              // }: { children: React.ReactNode }) => <>{children}</>;
+              // const Root = createRoot(DefaultRoot);
 
-      options.resource.htmlTemplate = htmlTemplate.replace(
-        '</head>',
-        `${CHUNK_CSS_PLACEHOLDER}</head>`,
-      );
+              const { htmlTemplate } = options.resource;
 
-      const response = await handleRequest(request, Root, {
-        ...options,
-        runtimeContext: context,
+              options.resource.htmlTemplate = htmlTemplate.replace(
+                '</head>',
+                `${CHUNK_CSS_PLACEHOLDER}</head>`,
+              );
+
+              const response = await handleRequest(request, null, {
+                ...options,
+                runtimeContext: context,
+              });
+
+              Object.entries(responseProxy.headers).forEach(([key, value]) => {
+                response.headers.set(key, value);
+              });
+
+              if (responseProxy.code !== -1) {
+                return new Response(response.body, {
+                  status: responseProxy.code,
+                  headers: response.headers,
+                });
+              }
+
+              return resolve(response);
+            } catch (error) {
+              return reject(error);
+            }
+          },
+        );
       });
-
-      Object.entries(responseProxy.headers).forEach(([key, value]) => {
-        response.headers.set(key, value);
-      });
-
-      if (responseProxy.code !== -1) {
-        return new Response(response.body, {
-          status: responseProxy.code,
-          headers: response.headers,
-        });
-      }
-
-      return response;
     };
 
     return requestHandler;

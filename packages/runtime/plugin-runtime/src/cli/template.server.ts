@@ -34,6 +34,36 @@ export const serverIndex = (options: ServerIndexOptinos) => {
   `;
 };
 
+export type ServerRootTemplateOptions = {
+  customEntry?: boolean;
+  entry: string;
+  srcDirectory: string;
+  internalSrcAlias: string;
+};
+
+export const serverRootTemplate = (options: ServerRootTemplateOptions) => {
+  const { customEntry, entry, srcDirectory, internalSrcAlias } = options;
+  return `
+  import { createRoot } from '@modern-js/runtime/react';
+  import { Fragment, createElement } from 'react';
+  import App from '${formatImportPath(
+    customEntry
+      ? entry
+          .replace(/entry\.[tj]sx/, 'App')
+          .replace(srcDirectory, internalSrcAlias)
+      : entry.replace(srcDirectory, internalSrcAlias).replace(/\.[tj]sx/, ''),
+  )}';
+
+  export default function Root() {
+    const DefaultRoot = ({ children }) => createElement(Fragment, null, children);
+
+    const ModernRoot = createRoot(DefaultRoot);
+
+    return createElement(ModernRoot, null, createElement(App, null));
+  }
+  `;
+};
+
 type GenHandlerCodeOptions = {
   customServerEntry?: string | false;
   srcDirectory: string;

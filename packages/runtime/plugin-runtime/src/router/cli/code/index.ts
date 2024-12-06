@@ -23,7 +23,11 @@ import {
   markRoutes,
 } from '@modern-js/utils';
 import { cloneDeep } from '@modern-js/utils/lodash';
-import { ENTRY_POINT_RUNTIME_GLOBAL_CONTEXT_FILE_NAME } from '../../../cli/constants';
+import { ServerRootTemplateOptions } from 'src/cli/template.server';
+import {
+  ENTRY_POINT_RUNTIME_GLOBAL_CONTEXT_FILE_NAME,
+  SERVER_ROOT_FILE_NAME,
+} from '../../../cli/constants';
 import { FILE_SYSTEM_ROUTES_FILE_NAME } from '../constants';
 import { getClientRoutes, getClientRoutesLegacy } from './getClientRoutes';
 import { walk } from './nestedRoutes';
@@ -235,4 +239,24 @@ export function generatorRegisterCode(
     code,
     'utf8',
   );
+}
+
+export async function generateServerRootCode(options: {
+  customEntry?: boolean;
+  internalDirectory: string;
+  entryName: string;
+  entry: string;
+  srcDirectory: string;
+  internalSrcAlias: string;
+}) {
+  const { internalDirectory, entryName } = options;
+
+  const code = await templates.ServerRootCode(options);
+
+  const serverRootFile = path.resolve(
+    internalDirectory,
+    `./${entryName}/${SERVER_ROOT_FILE_NAME}`,
+  );
+
+  await fs.outputFile(serverRootFile, code, 'utf8');
 }

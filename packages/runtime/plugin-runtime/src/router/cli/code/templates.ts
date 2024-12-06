@@ -573,3 +573,25 @@ setGlobalContext({
   appConfig,
 });`;
 };
+
+export const ServerRootCode = async (options: {
+  customEntry?: boolean;
+  internalDirectory: string;
+  entryName: string;
+  entry: string;
+  srcDirectory: string;
+  internalSrcAlias: string;
+}): Promise<string> => {
+  const { customEntry, entry, srcDirectory, internalSrcAlias } = options;
+  return `
+    import { createRoot } from '@modern-js/runtime/react';
+    import { Fragment, createElement } from 'react';
+
+    export default function Root() {
+
+      const ModernRoot = createRoot();
+
+      return createElement(ModernRoot, null);
+    }
+  `;
+};

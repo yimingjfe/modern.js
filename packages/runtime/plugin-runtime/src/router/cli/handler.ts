@@ -24,7 +24,8 @@ export async function handleGeneratorEntryCode(
   const appContext = api.useAppContext();
   const { internalDirectory } = api.useAppContext();
   const resolvedConfig = api.useResolvedConfigContext();
-  const { generatorRegisterCode, generateCode } = await import('./code');
+  const { generatorRegisterCode, generateCode, generateServerRootCode } =
+    await import('./code');
   originEntrypoints = cloneDeep(entrypoints);
   await generateCode(appContext, resolvedConfig, entrypoints, api);
   await Promise.all(
@@ -41,6 +42,14 @@ export async function handleGeneratorEntryCode(
             globalApp: entrypoint.fileSystemRoutes?.globalApp,
           }),
         );
+        await generateServerRootCode({
+          customEntry: entrypoint.customEntry,
+          internalDirectory,
+          entryName: entrypoint.entryName,
+          entry: entrypoint.entry,
+          srcDirectory: appContext.srcDirectory,
+          internalSrcAlias: appContext.internalSrcAlias,
+        });
       }
     }),
   );

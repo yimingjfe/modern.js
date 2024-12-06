@@ -24,6 +24,11 @@ declare module 'react-server-dom-webpack/client.edge' {
   export * from '@modern-js/types/server/rsc';
 }
 
+declare module 'react-server-dom-webpack/server' {
+  export * from '@modern-js/types/server/rsc';
+}
+
+
 // declare module 'react-dom/server.edge' {
 //   export * from '@modern-js/types/server/rsc';
 // }

@@ -1,3 +1,4 @@
+'use client';
 import type { NestedRoute, PageRoute } from '@modern-js/types';
 import type { AppConfig } from '../../common';
 

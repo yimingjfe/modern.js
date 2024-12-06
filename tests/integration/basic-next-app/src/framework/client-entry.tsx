@@ -67,6 +67,7 @@ interface RootProps {
 }
 
 function Root({ data }: RootProps) {
+  console.log('render Root');
   const res = use(data);
   const [root, setRoot] = useState<React.ReactNode>(res);
   updateRoot = setRoot;

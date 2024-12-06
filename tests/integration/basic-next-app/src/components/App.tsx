@@ -1,6 +1,6 @@
-import 'server-only';
 import styles from './App.module.less';
 import { Counter } from './Counter';
+import { HelloClient } from './HelloClient';
 import { getCountState } from './ServerState';
 
 const App = ({ name }: { name: string }) => {
@@ -12,6 +12,7 @@ const App = ({ name }: { name: string }) => {
       style={{ border: '3px red dashed', margin: '1em', padding: '1em' }}
     >
       <h1 data-testid="app-name">{name}</h1>
+      <HelloClient />
       <Counter />
       <div>countStateFromServer: {countStateFromServer}</div>
     </div>
