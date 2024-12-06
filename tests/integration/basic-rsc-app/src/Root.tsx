@@ -20,20 +20,20 @@ export default function Root() {
   //   createElement(ModernRoot, null, createElement(App, null)),
   // );
 
-  return (
-    <ModernRoot>
-      <App />
-    </ModernRoot>
-  );
+  // return (
+  //   <ModernRoot>
+  //     <App />
+  //   </ModernRoot>
+  // );
 
   // const context = useServerRuntimeContext();
   // const runtimeContext = context.runtimeContext;
 
-  // return (
-  //   <RuntimeContextProvider>
-  //     <ModernRoot>
-  //       <App />
-  //     </ModernRoot>
-  //   </RuntimeContextProvider>
-  // );
+  return (
+    <RuntimeContextProvider>
+      <ModernRoot>
+        <App />
+      </ModernRoot>
+    </RuntimeContextProvider>
+  );
 }
