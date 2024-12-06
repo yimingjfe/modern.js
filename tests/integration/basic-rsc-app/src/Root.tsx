@@ -6,8 +6,6 @@ import { App } from './App';
 
 // app init config 都待改
 
-import react from 'react';
-
 const DefaultRoot = ({ children }: { children: ReactNode }) => <>{children}</>;
 const ModernRoot = createRoot(DefaultRoot);
 

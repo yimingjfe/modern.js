@@ -22,7 +22,7 @@ export function RuntimeContextProvider({
 }: PropsWithChildren<RuntimeProviderProps>) {
   const context = useServerRuntimeContext();
   const runtimeContext = context.runtimeContext;
-  console.log('RuntimeContextProvider11111111111');
+  console.log('RuntimeContextProvider11111111111', runtimeContext);
   return (
     <RuntimeReactContext.Provider
       value={{

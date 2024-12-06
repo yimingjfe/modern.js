@@ -8,7 +8,6 @@ import { RuntimeContextProvider } from '@modern-js/runtime';
 import { render } from '@modern-js/runtime/browser';
 import { createRoot } from '@modern-js/runtime/react';
 
-// 不使用 rsc, 不用变
 // const DefaultModernRoot = ({ children }: { children: React.ReactNode }) => (
 //   <>{children}</>
 // );
@@ -34,5 +33,3 @@ const data = createFromReadableStream(rscStream);
 // );
 
 render(<RscClientRoot data={data} />, 'root');
-
-// 不同的入口形式（开不开启 rsc）

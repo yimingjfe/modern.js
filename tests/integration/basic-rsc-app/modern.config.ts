@@ -144,7 +144,7 @@ export default applyBaseConfig({
             /render\/.*\/server\/rsc/,
             /runtime-register/,
             // /server\/requestHandler/, // 会调用 getInitialContext，getInitialContext，getGlobalAppInit 有点类似于组件入口了
-            /RootWrap/, // 引入 App.tsx 的文件
+            /RootProxy/, // 引入 App.tsx 的文件
             // /index\.server/,
             // /src\/Root/,
             // /index\.server/,
