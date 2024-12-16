@@ -145,5 +145,3 @@ export type SSGConfig =
       entryName: string,
       payload: { baseUrl?: string },
     ) => SSGSingleEntryOptions);
-
-export type { Merge } from 'type-fest';
