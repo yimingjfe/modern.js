@@ -7,6 +7,27 @@ declare global {
   }
 }
 
+export function getTimeSincePageLoadStart() {
+  if (
+    window.performance &&
+    typeof window.performance.getEntriesByType === 'function'
+  ) {
+    const navigationEntry = performance.getEntriesByType('navigation')[0];
+    if (navigationEntry) {
+      const pageLoadStartTime = navigationEntry.startTime;
+      const currentTime = performance.now();
+      const elapsed = currentTime - pageLoadStartTime;
+      return elapsed;
+    } else {
+      console.log('未找到导航性能条目。');
+      return null;
+    }
+  } else {
+    console.log('您的浏览器不支持 Performance Navigation Timing API.');
+    return null;
+  }
+}
+
 export const init = (context: RuntimeContext) => {
   window.__isBrowser = context.isBrowser;
   return context;
@@ -28,6 +49,8 @@ export const init = (context: RuntimeContext) => {
 // };
 
 export default function Layout() {
+  const diffTime = getTimeSincePageLoadStart();
+  console.log('layout diffTime', diffTime);
   return (
     <div>
       root layout
