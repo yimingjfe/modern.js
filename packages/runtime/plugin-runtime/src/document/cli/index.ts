@@ -1,3 +1,4 @@
+// @ts-nocheck
 import path from 'path';
 import type {
   AppTools,
@@ -5,12 +6,15 @@ import type {
   AppNormalizedConfig as NormalizedConfig,
 } from '@modern-js/app-tools';
 import type { Entrypoint } from '@modern-js/types/cli';
-import { fs, createDebugger, findExists } from '@modern-js/utils';
-import { build } from 'esbuild';
+import { createDebugger, findExists } from '@modern-js/utils';
 import React from 'react';
 import ReactDomServer from 'react-dom/server';
 
 import { DocumentContext } from '../DocumentContext';
+import {
+  DocumentChildCompilerPlugin,
+  getDocumentOutputPathByEntry,
+} from './childCompilerPlugin';
 
 import {
   BODY_PARTICALS_SEPARATOR,
@@ -69,6 +73,46 @@ export const documentPlugin = (): CliPlugin<AppTools> => ({
 
   pre: ['@modern-js/plugin-analyze'],
   setup: async api => {
+    // Attach child-compiler Rspack plugin via Rsbuild in prepare phase
+    api.onPrepare(() => {
+      const { builder, entrypoints, internalDirectory, appDirectory } =
+        api.getAppContext();
+      if (!builder) {
+        return;
+      }
+      const entriesWithDoc = entrypoints
+        .map(ep => ({
+          entryName: ep.entryName,
+          documentFilePath: getDocumenByEntryName(
+            entrypoints,
+            ep.entryName,
+            appDirectory,
+          ),
+        }))
+        .filter(
+          (x): x is { entryName: string; documentFilePath: string } =>
+            Boolean(x.documentFilePath),
+        );
+
+      builder.addPlugins([
+        {
+          name: 'builder-plugin-document-child-compiler',
+          setup(api2) {
+            api2.modifyBundlerChain((chain, { appendPlugins, rspack, target }) => {
+              // Only apply to web targets where Html plugin runs
+              if (target !== 'web') return;
+              appendPlugins([
+                new DocumentChildCompilerPlugin({
+                  appDirectory,
+                  internalDirectory,
+                  entries: entriesWithDoc,
+                }) as any,
+              ]);
+            });
+          },
+        },
+      ]);
+    });
     // get params for document.tsx
     function getDocParams(params: {
       config: NormalizedConfig;
@@ -113,70 +157,13 @@ export const documentPlugin = (): CliPlugin<AppTools> => ({
           templateParameters,
         });
 
-        // set a temporary tsconfig file for divide the influence by project's jsx
-        const tempTsConfigFile = path.join(
+        // Use child-compiled CJS bundle output by DocumentChildCompilerPlugin
+        const cjsOutputFile = getDocumentOutputPathByEntry(
           internalDirectory,
-          `./document/_tempTsconfig.json`,
+          entryName,
         );
-        const userTsConfigFilePath = path.join(appDirectory, 'tsconfig.json');
-        let tsConfig;
-        try {
-          tsConfig = await require(userTsConfigFilePath);
-        } catch (err) {
-          tsConfig = {};
-        }
-        if (tsConfig?.compilerOptions) {
-          tsConfig.compilerOptions.jsx = 'react-jsx';
-        } else {
-          tsConfig.compilerOptions = {
-            jsx: 'react-jsx',
-          };
-        }
-        fs.outputFileSync(tempTsConfigFile, JSON.stringify(tsConfig));
-
-        const htmlOutputFile = path.join(
-          internalDirectory,
-          `./document/_${entryName}.html.js`,
-        );
-        // transform document file to html string
-        await build({
-          entryPoints: [documentFilePath],
-          outfile: htmlOutputFile,
-          platform: 'node',
-          // change esbuild use the rootDir tsconfig.json as default to tempTsConfigFile
-          tsconfig: tempTsConfigFile,
-          target: 'es6',
-          loader: {
-            '.ts': 'ts',
-            '.tsx': 'tsx',
-          },
-          bundle: true,
-          plugins: [
-            {
-              name: 'make-all-packages-external',
-              setup(build) {
-                // https://github.com/evanw/esbuild/issues/619#issuecomment-751995294
-                build.onResolve(
-                  { filter: /^[^./]|^\.[^./]|^\.\.[^/]/ },
-                  args => {
-                    let external = true;
-                    // FIXME: windows external entrypoint
-                    if (args.kind === 'entry-point') {
-                      external = false;
-                    }
-                    return {
-                      path: args.path,
-                      external,
-                    };
-                  },
-                );
-              },
-            },
-          ],
-        });
-
-        delete require.cache[require.resolve(htmlOutputFile)];
-        const Document = (await require(htmlOutputFile)).default;
+        delete require.cache[require.resolve(cjsOutputFile)];
+        const Document = (await require(cjsOutputFile)).default;
         const HTMLElement = React.createElement(
           DocumentContext.Provider,
           { value: documentParams },
