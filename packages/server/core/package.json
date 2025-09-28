@@ -72,7 +72,7 @@
     "@modern-js/types": "workspace:*",
     "@scripts/build": "workspace:*",
     "@scripts/jest-config": "workspace:*",
-    "@rslib/core": "^0.12.4",
+    "@rslib/core": "0.14.0",
     "@types/cloneable-readable": "^2.0.3",
     "@types/jest": "^29",
     "@types/merge-deep": "^3.0.0",
