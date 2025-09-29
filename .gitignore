@@ -53,3 +53,5 @@ playground/
 .netlify/
 
 .swc/
+
+.cursor

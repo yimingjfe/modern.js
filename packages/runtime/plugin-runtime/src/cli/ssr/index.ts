@@ -131,15 +131,17 @@ export const ssrPlugin = (): CliPluginFuture<AppTools<'shared'>> => ({
         }
       })();
 
+      const runtimeNodePath = require.resolve('@modern-js/runtime-utils/node');
+      const aliasPath = runtimeNodePath
+        .replace(`${path.sep}cjs${path.sep}`, `${path.sep}esm${path.sep}`)
+        .replace(/\.js$/, '.mjs');
+
       return {
         builderPlugins: [ssrBuilderPlugin(api)],
         resolve: {
           alias: {
             // ensure that all packages use the same storage in @modern-js/runtime-utils/node
-            '@modern-js/runtime-utils/node$': require
-              .resolve('@modern-js/runtime-utils/node')
-              .replace(`${path.sep}cjs${path.sep}`, `${path.sep}esm${path.sep}`)
-              .replace(/\.js$/, '.mjs'),
+            '@modern-js/runtime-utils/node$': aliasPath,
           },
         },
         tools: {
