@@ -32,16 +32,32 @@ import {
   modifyRoutes as modifyRoutesHook,
   onBeforeCreateRoutes as onBeforeCreateRoutesHook,
 } from './hooks';
-import {
-  RSCStaticRouter,
-  createServerPayload,
-  handleRSCRedirect,
-  prepareRSCRoutes,
-} from './rsc-router';
+import type { RSCStaticRouterProps } from './rsc-router';
 import type { RouterConfig } from './types';
 import { createRouteObjectsFromConfig, renderRoutes, urlJoin } from './utils';
 
-function createRemixReuqest(request: Request) {
+let RSCStaticRouter: React.FC<RSCStaticRouterProps> | null = null;
+let importPromise: Promise<React.FC<RSCStaticRouterProps>> | null = null;
+
+async function loadRSCStaticRouter() {
+  if (RSCStaticRouter) return RSCStaticRouter;
+  if (importPromise) return importPromise;
+  if (process.env.MODERN_RSC === 'true') {
+    importPromise = import('./rsc-router').then(
+      ({ RSCStaticRouter: StaticRouter }) => {
+        RSCStaticRouter = StaticRouter;
+        return RSCStaticRouter;
+      },
+    );
+    return importPromise;
+  }
+}
+
+function getRSCStaticRouter() {
+  return RSCStaticRouter;
+}
+
+function createRemixRequest(request: Request) {
   const method = 'GET';
   const { headers } = request;
   const controller = new AbortController();
@@ -86,8 +102,10 @@ export const routerPlugin = (
         }
 
         const enableRsc = getGlobalEnableRsc();
-
-        if (enableRsc) {
+        if (process.env.MODERN_RSC === 'true') {
+          console.log('111111111');
+          const { prepareRSCRoutes } = await import('./rsc-router');
+          await loadRSCStaticRouter();
           await prepareRSCRoutes(finalRouteConfig.routes);
         }
 
@@ -111,7 +129,8 @@ export const routerPlugin = (
         await hooks.onBeforeCreateRoutes.call(context);
 
         let routes: RouteObject[] = [];
-        if (enableRsc) {
+        if (process.env.MODERN_RSC === 'true') {
+          console.log('222222222');
           routes = createRoutes
             ? createRoutes()
             : createRouteObjectsFromConfig({
@@ -139,7 +158,7 @@ export const routerPlugin = (
 
         // We can't pass post request to query,due to post request would trigger react-router submit action.
         // But user maybe do not define action for page.
-        const remixRequest = createRemixReuqest(
+        const remixRequest = createRemixRequest(
           context.ssrContext!.request.raw,
         );
 
@@ -156,7 +175,9 @@ export const routerPlugin = (
         if (routerContext instanceof Response) {
           // React Router would return a Response when redirects occur in loader.
           // Throw the Response to bail out and let the server handle it with an HTTP redirect
-          if (enableRsc && isRSCNavigation) {
+          if (process.env.MODERN_RSC === 'true' && isRSCNavigation) {
+            console.log('333333333');
+            const { handleRSCRedirect } = await import('./rsc-router');
             return interrupt(
               handleRSCRedirect(
                 routerContext.headers,
@@ -185,7 +206,8 @@ export const routerPlugin = (
         context.routerContext = routerContext;
 
         let payload: ServerPayload;
-        if (enableRsc) {
+        if (process.env.MODERN_RSC === 'true') {
+          console.log('444444444');
           // In order to execute the client loader, refer to the ServerRouter implementation of react-router.
           if (isRSCNavigation) {
             for (const match of routerContext.matches) {
@@ -195,6 +217,7 @@ export const routerPlugin = (
             }
           }
 
+          const { createServerPayload } = await import('./rsc-router');
           payload = createServerPayload(routerContext, routes);
           setServerPayload(payload);
         }
@@ -224,7 +247,22 @@ export const routerPlugin = (
             const { basename } = routerContext!;
 
             const remixRouter = createStaticRouter(routes, routerContext!);
-            if (!enableRsc) {
+            if (process.env.MODERN_RSC === 'true') {
+              console.log('555555555');
+              const RSCStaticRouter = getRSCStaticRouter();
+              if (!RSCStaticRouter) {
+                throw new Error(
+                  'RSCStaticRouter is not initialized. This should not happen when RSC is enabled.',
+                );
+              }
+              return App ? (
+                <App>
+                  <RSCStaticRouter basename={basename} />
+                </App>
+              ) : (
+                <RSCStaticRouter basename={basename} />
+              );
+            } else {
               const routerWrapper = (
                 <>
                   <StaticRouterProvider
@@ -246,14 +284,6 @@ export const routerPlugin = (
                 </>
               );
               return App ? <App>{routerWrapper}</App> : routerWrapper;
-            } else {
-              return App ? (
-                <App>
-                  <RSCStaticRouter basename={basename} />
-                </App>
-              ) : (
-                <RSCStaticRouter basename={basename} />
-              );
             }
           }) as React.FC<any>;
         };
