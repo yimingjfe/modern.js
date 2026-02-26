@@ -1,4 +1,4 @@
-import hello, { post, postHello, getHello, getImage } from '@api/index';
+import hello, { post, postHello, getHello, getImage } from '@api/lambda/index';
 import { useEffect, useState } from 'react';
 
 const Page = () => {
@@ -27,6 +27,11 @@ const Page = () => {
       },
       query: {
         user: 'modern@email.com',
+        ext: [{ from: '123' }],
+        arr: ['1', '2'],
+        obj: {
+          a: '1',
+        },
       },
       data: {
         message: '3333',

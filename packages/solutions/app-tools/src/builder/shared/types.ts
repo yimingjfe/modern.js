@@ -1,7 +1,7 @@
-import type { AppNormalizedConfig, Bundler } from '../../types';
-import type { AppToolsContext } from '../../types/new';
+import type { AppNormalizedConfig } from '../../types';
+import type { AppToolsContext } from '../../types/plugin';
 
-export type BuilderOptions<B extends Bundler> = {
-  normalizedConfig: AppNormalizedConfig<B>;
-  appContext: AppToolsContext<B>;
+export type BuilderOptions = {
+  normalizedConfig: AppNormalizedConfig;
+  appContext: AppToolsContext;
 };

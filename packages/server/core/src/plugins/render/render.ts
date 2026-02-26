@@ -1,4 +1,3 @@
-import type { IncomingMessage } from 'http';
 import type { ServerRoute } from '@modern-js/types';
 import type { NodeRequest } from '@modern-js/types/server';
 import { cutNameByHyphen } from '@modern-js/utils/universal';
@@ -23,6 +22,7 @@ import {
   parseQuery,
   sortRoutes,
 } from '../../utils';
+import { csrRscRender } from './csrRscRender';
 import { dataHandler } from './dataHandler';
 import { renderRscHandler } from './renderRscHandler';
 import { serverActionHandler } from './serverActionHandler';
@@ -37,6 +37,7 @@ interface CreateRenderOptions {
   onFallback?: OnFallback;
   metaName?: string;
   forceCSR?: boolean;
+  forceCSRMap?: Map<string, boolean>;
   nonce?: string;
 }
 
@@ -116,6 +117,7 @@ export async function createRender({
   staticGenerate,
   cacheConfig,
   forceCSR,
+  forceCSRMap,
   config,
   onFallback,
 }: CreateRenderOptions): Promise<Render> {
@@ -124,9 +126,6 @@ export async function createRender({
   return async (
     req,
     {
-      logger,
-      reporter,
-      metrics,
       monitors,
       nodeReq,
       templates,
@@ -138,6 +137,8 @@ export async function createRender({
       matchEntryName,
       matchPathname,
       loaderContext,
+      contextForceCSR,
+      reporter,
     },
   ) => {
     const forMatchpathname = matchPathname ?? getPathname(req);
@@ -152,7 +153,7 @@ export async function createRender({
 
     const fallbackWrapper: FallbackWrapper = async (reason, error?) => {
       fallbackReason = reason;
-      return onFallback?.(reason, { logger, reporter, metrics }, error);
+      return onFallback?.(reason, error);
     };
 
     if (!routeInfo) {
@@ -174,13 +175,18 @@ export async function createRender({
       });
     }
 
+    const finalForceCSR = routeInfo.entryName
+      ? (forceCSRMap?.get(routeInfo.entryName) ?? forceCSR)
+      : forceCSR;
+
     const renderMode = await getRenderMode(
       req,
       fallbackHeader,
       routeInfo.isSSR,
-      forceCSR,
+      finalForceCSR,
       nodeReq,
       fallbackWrapper,
+      contextForceCSR,
     );
 
     const headerData = parseHeaders(req);
@@ -211,11 +217,8 @@ export async function createRender({
       config,
       nodeReq,
       cacheConfig,
-      reporter,
       serverRoutes: routes,
       params,
-      logger,
-      metrics,
       monitors,
       locals,
       rscClientManifest,
@@ -225,6 +228,7 @@ export async function createRender({
       loaderContext: loaderContext || new Map(),
       onError,
       onTiming,
+      reporter,
     };
 
     if (fallbackReason) {
@@ -300,12 +304,7 @@ async function renderHandler(
     const routes = nestedRoutesJson?.[options.routeInfo.entryName!];
 
     if (routes) {
-      const urlPath = 'node:url';
-      const { pathToFileURL } = await import(urlPath);
-      const { matchRoutes } = await import(
-        pathToFileURL(require.resolve('@modern-js/runtime-utils/remix-router'))
-          .href
-      );
+      const { matchRoutes } = require('@modern-js/runtime-utils/router');
 
       const url = new URL(request.url);
       const matchedRoutes = matchRoutes(
@@ -315,14 +314,14 @@ async function renderHandler(
       );
 
       if (!matchedRoutes) {
-        response = csrRender(options.html);
+        response = await csrRender(request, options);
       } else {
         const lastMatch = matchedRoutes[matchedRoutes.length - 1];
         if (
           !lastMatch?.route?.id ||
           !ssrByRouteIds.includes(lastMatch.route.id)
         ) {
-          response = csrRender(options.html);
+          response = await csrRender(request, options);
         }
       }
     }
@@ -335,16 +334,17 @@ async function renderHandler(
       options.onError(e as Error, ErrorDigest.ERENDER);
       await fallbackWrapper('error', e);
 
-      response = csrRender(
-        injectFallbackReasonToHtml({
+      response = await csrRender(request, {
+        ...options,
+        html: injectFallbackReasonToHtml({
           html: options.html,
           reason: 'error',
           framework,
         }),
-      );
+      });
     }
   } else {
-    response = csrRender(options.html);
+    response = await csrRender(request, options);
   }
 
   const { routeInfo } = options;
@@ -366,6 +366,7 @@ async function getRenderMode(
   forceCSR?: boolean,
   nodeReq?: NodeRequest,
   onFallback?: FallbackWrapper,
+  contextForceCSR?: string,
 ): Promise<'ssr' | 'csr' | 'data' | 'rsc-action' | 'rsc-tree'> {
   const query = parseQuery(req);
   if (req.headers.get('x-rsc-action')) {
@@ -383,7 +384,8 @@ async function getRenderMode(
     const fallbackHeaderValue: string | null =
       (req.headers.get(fallbackHeader) as string) ||
       (nodeReq?.headers[fallbackHeader] as string);
-    if (forceCSR && (query.csr || fallbackHeaderValue)) {
+
+    if (forceCSR && (query.csr || fallbackHeaderValue || contextForceCSR)) {
       if (query.csr) {
         await onFallback?.('query');
       } else {
@@ -411,12 +413,20 @@ function injectFallbackReasonToHtml({
   return html.replace(/<\/head>/, `${tag}</head>`);
 }
 
-function csrRender(html: string): Response {
-  return new Response(html, {
-    status: 200,
-    headers: new Headers({
-      'content-type': 'text/html; charset=UTF-8',
-      [X_MODERNJS_RENDER]: 'client',
-    }),
-  });
+async function csrRender(
+  request: Request,
+  options: SSRRenderOptions,
+): Promise<Response> {
+  const { html } = options;
+  if (process.env.MODERN_DISABLE_INJECT_RSC_DATA || !options.routeInfo.isRSC) {
+    return new Response(html, {
+      status: 200,
+      headers: new Headers({
+        'content-type': 'text/html; charset=UTF-8',
+        [X_MODERNJS_RENDER]: 'client',
+      }),
+    });
+  } else {
+    return csrRscRender(request, options);
+  }
 }

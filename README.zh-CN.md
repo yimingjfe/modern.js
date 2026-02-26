@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="https://modernjs.dev" target="blank"><img src="https://lf3-static.bytednsdoc.com/obj/eden-cn/ylaelkeh7nuhfnuhf/modernjs-cover.png" width="260" alt="Modern.js Logo" /></a>
+  <a href="https://modernjs.dev" target="blank"><img src="./assets/modernjs-banner.png" width="260" alt="Modern.js Logo" /></a>
 </p>
 
 <h1 align="center">Modern.js</h1>
@@ -34,13 +34,10 @@ Modern.js 生态提供了以下解决方案和底层库：
 - 🐬 [Rsbuild](https://github.com/web-infra-dev/rsbuild)：基于 Rspack 的 Web 构建工具。
 - 🐹 [Rspress](https://github.com/web-infra-dev/rspress)：基于 Rspack 的静态站点生成器。
 - 🦄 [Rslib](https://github.com/web-infra-dev/rslib)：基于 Rspack 的 Library 开发工具。
-- 🐟 [Garfish](https://github.com/web-infra-dev/garfish)：一站式微前端解决方案。
-- 🦆 [Reduck](https://github.com/web-infra-dev/reduck)：基于 Redux 的状态管理库。
-- 🐴 [SWC Plugins](https://github.com/web-infra-dev/swc-plugins)：Modern.js 的 SWC 插件。
 
 ## Benchmark
 
-我们通过 [Modern.js Benchmark](https://web-infra-qos.netlify.app/) 来观测核心指标的变化情况，比如 bundle size、compile speed 和 install size。
+我们通过 [Modern.js Benchmark](https://web-infra-qos.pages.dev/) 来观测核心指标的变化情况，比如 bundle size、compile speed 和 install size。
 
 ## Roadmap
 
@@ -80,9 +77,9 @@ Modern.js 中的部分代码是参考社区中的其他项目实现的，比如 
 
 - `@modern-js/bundle-require`：修改自 [bundle-require](https://github.com/egoist/bundle-require)。
 - `@modern-js/plugin`：hook API 的实现参考了 [farrow-pipeline](https://github.com/farrow-js/farrow/tree/master/packages/farrow-pipeline)。
-- `@modern-js/plugin-testing`：jest runner 参考了 [jest-cli](https://github.com/facebook/jest/blob/fdc74af37235354e077edeeee8aa2d1a4a863032/packages/jest-cli/src/cli/index.ts#L21)。
 - `@modern-js/plugin-data-loader`：部分实现参考了 [remix](https://github.com/remix-run/remix)。
 - `@modern-js/babel-plugin-module-resolver`: 修改自 [babel-plugin-module-resolver](https://github.com/tleunen/babel-plugin-module-resolver)。
+- [Netlify](https://www.netlify.com/) 为官网提供托管服务，感谢其优质的服务与对开源的支持
 
 ## License
 

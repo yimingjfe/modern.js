@@ -5,19 +5,11 @@ import type {
   Http2ServerResponse,
 } from 'node:http2';
 import type { Server as NodeHttpsServer } from 'node:https';
+import { Readable, Writable } from 'node:stream';
 import type { NodeRequest, NodeResponse } from '@modern-js/types/server';
 import cloneable from 'cloneable-readable';
 import type { RequestHandler } from '../../types';
 import { isResFinalized } from './helper';
-import { installGlobals } from './polyfills/install';
-import {
-  createReadableStreamFromReadable,
-  writeReadableStreamToWritable,
-} from './polyfills/stream';
-
-export { writeReadableStreamToWritable } from './polyfills';
-
-installGlobals();
 
 export const createWebRequest = (
   req: NodeRequest,
@@ -64,7 +56,8 @@ export const createWebRequest = (
       init.body = body;
     } else {
       const stream = cloneableReq!.clone();
-      init.body = createReadableStreamFromReadable(stream);
+
+      init.body = Readable.toWeb(stream) as unknown as BodyInit;
     }
     (init as { duplex: 'half' }).duplex = 'half';
   }
@@ -72,16 +65,34 @@ export const createWebRequest = (
   const originalRequest = new Request(url, init);
 
   if (needsRequestBody) {
+    const interceptedMethods: Array<keyof Request> = [
+      'json',
+      'text',
+      'blob',
+      'arrayBuffer',
+      'formData',
+    ] as const;
+
     return new Proxy(originalRequest, {
-      get(target, prop) {
-        if (
-          ['json', 'text', 'blob', 'arrayBuffer', 'formData', 'body'].includes(
-            prop as string,
-          )
-        ) {
-          cloneableReq!.resume();
+      get(target: Request, prop: keyof Request) {
+        if (interceptedMethods.includes(prop)) {
+          return (...args: any[]) => {
+            cloneableReq!.resume();
+
+            return (target[prop] as Function).call(target, ...(args as [any]));
+          };
         }
-        return target[prop as keyof Request];
+        const value = target[prop];
+
+        if (prop === 'body') {
+          cloneableReq!.resume();
+          return value;
+        }
+
+        if (typeof value === 'function') {
+          return (...args: any[]) => (value as any).apply(target, args);
+        }
+        return value;
       },
     });
   }
@@ -114,7 +125,8 @@ export const sendResponse = async (response: Response, res: NodeResponse) => {
   }
 
   if (response.body) {
-    await writeReadableStreamToWritable(response.body, res);
+    const writable = Writable.toWeb(res);
+    await response.body.pipeTo(writable);
   } else {
     res.end();
   }
@@ -133,7 +145,7 @@ const handleResponseError = (e: unknown, res: NodeResponse) => {
   ) as Error & {
     code: string;
   };
-  if (err.code === 'ERR_STREAM_PREMATURE_CLOSE') {
+  if (err.code === 'ABORT_ERR' || err.code === 'ERR_STREAM_PREMATURE_CLOSE') {
     console.info('The user aborted a request.');
   } else {
     console.error(e);

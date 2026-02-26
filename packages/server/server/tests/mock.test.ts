@@ -1,6 +1,6 @@
 import path from 'path';
 import {
-  type ServerPluginLegacy,
+  type ServerPlugin,
   compatPlugin,
   createServerBase,
 } from '@modern-js/server-core';
@@ -13,7 +13,6 @@ function getDefaultConfig() {
     source: {},
     tools: {},
     server: {},
-    runtime: {},
     bff: {},
     dev: {},
     security: {},
@@ -27,55 +26,25 @@ function getDefaultAppContext() {
   };
 }
 
-function createMockPlugin(pwd: string): ServerPluginLegacy {
+function createMockPlugin(pwd: string): ServerPlugin {
   return {
     name: 'mock-plugin',
     setup(api) {
-      return {
-        async prepare() {
-          const mockMiddleware = await getMockMiddleware(pwd);
-          const { middlewares } = api.useAppContext();
+      api.onPrepare(async () => {
+        const mockMiddleware = await getMockMiddleware(pwd);
+        const { middlewares } = api.getServerContext();
 
-          middlewares.push({
-            name: 'mock',
-
-            handler: mockMiddleware,
-          });
-        },
-      };
+        middlewares.push({
+          name: 'mock',
+          handler: mockMiddleware,
+        });
+      });
     },
   };
 }
 
 describe('should mock middleware work correctly', () => {
   const pwd = path.join(__dirname, './fixtures/mock');
-
-  it('support cjs', async () => {
-    const server = createServerBase({
-      config: getDefaultConfig(),
-      appContext: getDefaultAppContext(),
-      pwd: '',
-    });
-
-    server.addPlugins([
-      compatPlugin(),
-      createMockPlugin(path.join(pwd, 'cjs')),
-    ]);
-
-    await server.init();
-
-    const response = await server.request('/api/getInfo');
-    const data = await response.json();
-
-    expect(data).toEqual({
-      data: [1, 2, 3, 4],
-    });
-
-    const response1 = await server.request('/api/getExample');
-    const data1 = await response1.json();
-
-    expect(data1).toEqual({ id: 1 });
-  });
 
   it('should not handle if no config mock dir', async () => {
     const server = createServerBase({

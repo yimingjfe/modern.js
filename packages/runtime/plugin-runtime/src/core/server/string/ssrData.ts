@@ -1,16 +1,17 @@
 import type { IncomingHttpHeaders } from 'http';
 import { serializeJson } from '@modern-js/runtime-utils/node';
-import type { StaticHandlerContext } from '@modern-js/runtime-utils/remix-router';
+import type { StaticHandlerContext } from '@modern-js/runtime-utils/router';
 import type { HeadersData } from '@modern-js/runtime-utils/universal/request';
 import { ROUTER_DATA_JSON_ID, SSR_DATA_JSON_ID } from '../../constants';
+import type { TRuntimeContext } from '../../context';
 import type { SSRContainer, SSRServerContext } from '../../types';
 import type { SSRConfig } from '../shared';
 import { attributesToString, serializeErrors } from '../utils';
 import type { ChunkSet, Collector } from './types';
 
 export interface SSRDataCreatorOptions {
+  runtimeContext: TRuntimeContext;
   request: Request;
-  prefetchData: Record<string, any>;
   chunkSet: ChunkSet;
   ssrContext: SSRServerContext;
   ssrConfig?: SSRConfig;
@@ -43,7 +44,7 @@ export class SSRDataCollector implements Collector {
   }
 
   #getSSRData(): SSRContainer {
-    const { prefetchData, chunkSet, ssrConfig, ssrContext } = this.#options;
+    const { chunkSet, ssrConfig, ssrContext, runtimeContext } = this.#options;
 
     const { reporter, request } = ssrContext;
 
@@ -61,7 +62,10 @@ export class SSRDataCollector implements Collector {
         : undefined;
 
     return {
-      data: prefetchData,
+      data: {
+        initialData: runtimeContext.initialData,
+        i18nData: runtimeContext.__i18nData__ as Record<string, unknown>,
+      },
       context: {
         request: {
           params: request.params,

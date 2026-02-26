@@ -1,5 +1,5 @@
 import path from 'path';
-import type { CLIPluginAPI } from '@modern-js/plugin-v2';
+import type { CLIPluginAPI } from '@modern-js/plugin';
 import { createProdServer } from '@modern-js/prod-server';
 import {
   SERVER_DIR,
@@ -17,7 +17,7 @@ type ExtraServerOptions = {
 };
 
 export const serve = async (
-  api: CLIPluginAPI<AppTools<'shared'>>,
+  api: CLIPluginAPI<AppTools>,
   serverOptions?: ExtraServerOptions,
 ) => {
   const appContext = api.getAppContext();
@@ -31,7 +31,6 @@ export const serve = async (
     port,
     metaName,
     serverRoutes,
-    serverConfigFile,
   } = appContext;
 
   const { isCrossProjectServer } = (userConfig?.bff as any) || {};
@@ -63,7 +62,8 @@ export const serve = async (
     config: {
       ...userConfig,
       dev: userConfig.dev as any,
-      // server-core can't get RegExp & Function output.enableInlineScripts by JSON.stringy;
+      tools: userConfig.tools as any,
+      // server-core can't get RegExp & Function output.inlineScripts by JSON.stringy;
       output: {
         path: userConfig.output.distPath?.root,
         ...(userConfig.output || {}),
@@ -71,7 +71,6 @@ export const serve = async (
     },
     routes: serverRoutes,
     plugins: pluginInstances,
-    serverConfigFile,
     serverConfigPath,
     appContext: {
       appDirectory,
@@ -104,7 +103,7 @@ export const serve = async (
     await printInstructions(
       hooks,
       appContext,
-      userConfig as AppNormalizedConfig<'shared'>,
+      userConfig as AppNormalizedConfig,
     );
   });
 };

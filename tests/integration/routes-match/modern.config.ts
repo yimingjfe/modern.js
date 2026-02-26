@@ -1,23 +1,18 @@
 import { appTools, defineConfig } from '@modern-js/app-tools';
 
-const bundler = process.env.BUNDLER;
-
 export default defineConfig({
-  plugins: [
-    appTools({
-      bundler: bundler === 'rspack' ? 'rspack' : 'webpack',
-    }),
-  ],
-  runtime: {
-    router: false,
-    state: false,
-  },
+  plugins: [appTools()],
   server: {
-    ssr: true,
+    ssr: {
+      mode: 'string',
+    },
     routes: {
       a: '/detail/:id',
       b: '/detail/1',
       c: '/detail/12',
     },
+  },
+  performance: {
+    buildCache: false,
   },
 });

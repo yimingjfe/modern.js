@@ -5,9 +5,8 @@ import {
   SERVER_DIR,
   fs as fse,
   getMeta,
-  isDepExists,
 } from '@modern-js/utils';
-import type { AppToolsContext } from '../../types/new';
+import type { AppToolsContext } from '../../types/plugin';
 
 export type ServerAppContext = {
   sharedDirectory: string;
@@ -17,9 +16,7 @@ export type ServerAppContext = {
   bffRuntimeFramework: string;
 };
 
-export const serverAppContenxtTemplate = (
-  appContext: AppToolsContext<'shared'>,
-) => {
+export const serverAppContenxtTemplate = (appContext: AppToolsContext) => {
   const {
     appDirectory,
     sharedDirectory,
@@ -98,9 +95,5 @@ export const getProjectUsage = (
     return fse.existsSync(`${serverConfigPath}${ex}`);
   });
 
-  const useWebServer =
-    isDepExists(appDirectory, '@modern-js/plugin-server') ||
-    isServerConfigExists;
-
-  return { useSSR, useAPI, useWebServer };
+  return { useSSR, useAPI, useWebServer: isServerConfigExists };
 };

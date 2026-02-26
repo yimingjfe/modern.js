@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="https://modernjs.dev" target="blank"><img src="https://lf3-static.bytednsdoc.com/obj/eden-cn/ylaelkeh7nuhfnuhf/modernjs-cover.png" width="260" alt="Modern.js Logo" /></a>
+  <a href="https://modernjs.dev" target="blank"><img src="./assets/modernjs-banner.png" width="260" alt="Modern.js Logo" /></a>
 </p>
 
 <h1 align="center">Modern.js</h1>
@@ -34,13 +34,10 @@ The following solutions and libraries are available within the Modern.js ecosyst
 - 🐬 [Rsbuild](https://github.com/web-infra-dev/rsbuild): An Rspack-based build tool for the web, rebranded from Modern.js Builder.
 - 🐹 [Rspress](https://github.com/web-infra-dev/rspress): A fast Rspack-based static site generator.
 - 🦄 [Rslib](https://github.com/web-infra-dev/rslib): An Rspack-based library development tool.
-- 🐟 [Garfish](https://github.com/web-infra-dev/garfish): A powerful micro front-end framework.
-- 🦆 [Reduck](https://github.com/web-infra-dev/reduck): An redux-based state management library.
-- 🐴 [SWC Plugins](https://github.com/web-infra-dev/swc-plugins): Built-in SWC plugins for Modern.js.
 
 ## Benchmark
 
-We use [Modern.js Benchmark](https://web-infra-qos.netlify.app/) to observe the trend of key metrics, such as bundle size, compile speed and install size.
+We use [Modern.js Benchmark](https://web-infra-qos.pages.dev/) to observe the trend of key metrics, such as bundle size, compile speed and install size.
 
 ## Roadmap
 
@@ -79,9 +76,9 @@ Some implementations of Modern.js are modified from existing projects, such as [
 
 - `@modern-js/bundle-require`: is modified from [bundle-require](https://github.com/egoist/bundle-require).
 - `@modern-js/plugin`: the hooks API is referenced from [farrow-pipeline](https://github.com/farrow-js/farrow/tree/master/packages/farrow-pipeline).
-- `@modern-js/plugin-testing`: the jest runner is referenced from [jest-cli](https://github.com/facebook/jest/blob/fdc74af37235354e077edeeee8aa2d1a4a863032/packages/jest-cli/src/cli/index.ts#L21).
 - `@modern-js/plugin-data-loader`: some code is referenced from [remix](https://github.com/remix-run/remix).
 - `@modern-js/babel-plugin-module-resolver`: is modified from [babel-plugin-module-resolver](https://github.com/tleunen/babel-plugin-module-resolver).
+- [Netlify](https://www.netlify.com/) for hosting this site, Thanks for the great service and support for open source.
 
 ## License
 

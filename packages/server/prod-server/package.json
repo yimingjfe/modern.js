@@ -15,27 +15,31 @@
     "modern",
     "modern.js"
   ],
-  "version": "2.68.0",
-  "jsnext:source": "./src/index.ts",
+  "version": "3.0.3",
   "types": "./src/index.ts",
   "main": "./dist/cjs/index.js",
-  "module": "./dist/es/index.js",
   "scripts": {
     "prepublishOnly": "only-allow-pnpm",
-    "new": "modern-lib new",
-    "build": "modern-lib build",
-    "dev": "modern-lib build --watch",
-    "test": "jest"
+    "build": "rslib build",
+    "dev": "rslib build --watch",
+    "test": "rstest --passWithNoTests"
   },
   "exports": {
     ".": {
       "types": "./dist/types/index.d.ts",
-      "jsnext:source": "./src/index.ts",
+      "modern:source": "./src/index.ts",
+      "node": {
+        "import": "./dist/esm-node/index.mjs",
+        "require": "./dist/cjs/index.js"
+      },
       "default": "./dist/cjs/index.js"
     },
     "./netlify": {
       "types": "./dist/types/netlify.d.ts",
-      "jsnext:source": "./src/netlify.ts",
+      "node": {
+        "import": "./dist/esm-node/netlify.mjs",
+        "require": "./dist/cjs/netlify.js"
+      },
       "default": "./dist/cjs/netlify.js"
     }
   },
@@ -43,6 +47,9 @@
     "*": {
       ".": [
         "./dist/types/index.d.ts"
+      ],
+      "netlify": [
+        "./dist/types/netlify.d.ts"
       ]
     }
   },
@@ -53,20 +60,18 @@
     "@swc/helpers": "^0.5.17"
   },
   "devDependencies": {
+    "@modern-js/rslib": "workspace:*",
     "@modern-js/types": "workspace:*",
-    "@scripts/build": "workspace:*",
-    "@scripts/jest-config": "workspace:*",
-    "@types/jest": "^29",
-    "@types/merge-deep": "^3.0.0",
-    "@types/node": "~16.11.7",
-    "jest": "^29",
+    "@rslib/core": "0.19.6",
+    "@scripts/rstest-config": "workspace:*",
+    "@types/merge-deep": "^3.0.3",
+    "@types/node": "^20",
     "lint-staged": "~13.3.0",
-    "tsx": "^3.12.7",
-    "typescript": "~5.0.4"
+    "typescript": "^5"
   },
   "sideEffects": [],
   "engines": {
-    "node": ">=16.2.0"
+    "node": ">=20"
   },
   "publishConfig": {
     "access": "public",
@@ -75,12 +80,18 @@
     "exports": {
       ".": {
         "types": "./dist/types/index.d.ts",
-        "jsnext:source": "./src/index.ts",
+        "node": {
+          "import": "./dist/esm-node/index.mjs",
+          "require": "./dist/cjs/index.js"
+        },
         "default": "./dist/cjs/index.js"
       },
       "./netlify": {
         "types": "./dist/types/netlify.d.ts",
-        "jsnext:source": "./src/netlify.ts",
+        "node": {
+          "import": "./dist/esm-node/netlify.mjs",
+          "require": "./dist/cjs/netlify.js"
+        },
         "default": "./dist/cjs/netlify.js"
       }
     }

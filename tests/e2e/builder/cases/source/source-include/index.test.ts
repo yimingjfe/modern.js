@@ -1,5 +1,5 @@
 import path from 'path';
-import { expect, test } from '@modern-js/e2e/playwright';
+import { expect, test } from '@playwright/test';
 import { build, proxyConsole } from '@scripts/shared';
 
 test('should not compile file which outside of project by default', async () => {
@@ -11,6 +11,9 @@ test('should not compile file which outside of project by default', async () => 
       builderConfig: {
         source: {
           exclude: [path.resolve(__dirname, '../test.js')],
+        },
+        output: {
+          overrideBrowserslist: ['> 0.01%', 'not dead', 'not op_mini all'],
         },
         security: {
           checkSyntax: true,

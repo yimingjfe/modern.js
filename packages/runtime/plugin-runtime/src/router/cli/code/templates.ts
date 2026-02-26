@@ -91,7 +91,8 @@ export const routesForServer = ({
   let routesCode = `
   export const routes = [
   `;
-  for (const route of routesForServerLoaderMatches) {
+  for (let i = 0; i < routesForServerLoaderMatches.length; i++) {
+    const route = routesForServerLoaderMatches[i];
     if ('type' in route) {
       const keywords = ['loader', 'action'];
       const regs = keywords.map(createMatchReg);
@@ -102,6 +103,10 @@ export const routesForServer = ({
         .replace(/\\"/g, '"');
     } else {
       routesCode += `${JSON.stringify(route, null, 2)}`;
+    }
+
+    if (i < routesForServerLoaderMatches.length - 1) {
+      routesCode += ',';
     }
   }
   routesCode += `\n];`;
@@ -142,6 +147,7 @@ export const fileSystemRoutes = async ({
   entryName,
   internalDirectory,
   splitRouteChunks = true,
+  isRscClient = false,
 }: {
   metaName: string;
   routes: RouteLegacy[] | (NestedRouteForCli | PageRoute)[];
@@ -150,6 +156,7 @@ export const fileSystemRoutes = async ({
   entryName: string;
   internalDirectory: string;
   splitRouteChunks?: boolean;
+  isRscClient?: boolean;
 }) => {
   const components: string[] = [];
   const loadings: string[] = [];
@@ -224,18 +231,23 @@ export const fileSystemRoutes = async ({
     eager?: boolean;
   }) => {
     const importOptions = webpackChunkName
-      ? `/* webpackChunkName: "${routeId}" */ `
+      ? `/* webpackChunkName: "${routeId}" */  `
       : eager
-        ? `/* webpackMode: "eager" */ `
+        ? `/* webpackMode: "eager" */  `
         : '';
 
     return `() => import(${importOptions}'${componentPath}').then(routeModule => handleRouteModule(routeModule, "${routeId}")).catch(handleRouteModuleError)`;
   };
 
-  const traverseRouteTree = (route: NestedRouteForCli | PageRoute): Route => {
+  const traverseRouteTree = (
+    route: NestedRouteForCli | PageRoute,
+    isRscClient: boolean,
+  ): Route => {
     let children: Route['children'];
     if ('children' in route && route.children) {
-      children = route?.children?.map(traverseRouteTree);
+      children = route?.children?.map(child =>
+        traverseRouteTree(child, isRscClient),
+      );
     }
     let loading: string | undefined;
     let error: string | undefined;
@@ -322,9 +334,8 @@ export const fileSystemRoutes = async ({
       }
     }
 
-    const finalRoute = {
+    const finalRoute: any = {
       ...route,
-      lazyImport,
       loading,
       loader,
       action,
@@ -332,7 +343,10 @@ export const fileSystemRoutes = async ({
       error,
       children,
     };
-    if (route._component) {
+    if (!isRscClient) {
+      finalRoute.lazyImport = lazyImport;
+    }
+    if (route._component && !isRscClient) {
       finalRoute.component = component;
     }
     /**
@@ -355,7 +369,7 @@ export const fileSystemRoutes = async ({
   `;
   for (const route of routes) {
     if ('type' in route) {
-      const newRoute = traverseRouteTree(route);
+      const newRoute = traverseRouteTree(route, isRscClient);
       const routeStr = JSON.stringify(newRoute, null, 2);
       const keywords = [
         'component',
@@ -460,7 +474,7 @@ export const fileSystemRoutes = async ({
   await fs.writeJSON(loadersMapFile, loadersMap);
 
   const importRuntimeRouterCode = `
-    import { createShouldRevalidate, handleRouteModule,  handleRouteModuleError} from '@${metaName}/runtime/router';
+    import { createShouldRevalidate, handleRouteModule,  handleRouteModuleError} from '@${metaName}/runtime/routerHelper';
   `;
   const routeModulesCode = `
     if(typeof document !== 'undefined'){
@@ -470,9 +484,9 @@ export const fileSystemRoutes = async ({
 
   return `
     ${importLazyCode}
-    ${importComponentsCode}
+    ${!isRscClient ? importComponentsCode : ''}
     ${importRuntimeRouterCode}
-    ${rootLayoutCode}
+    ${!isRscClient ? rootLayoutCode : ''}
     ${importLoadingCode}
     ${importErrorComponentsCode}
     ${importLoadersCode}
@@ -485,8 +499,8 @@ export const fileSystemRoutes = async ({
 export function ssrLoaderCombinedModule(
   entrypoints: Entrypoint[],
   entrypoint: Entrypoint,
-  config: AppNormalizedConfig<'shared'>,
-  appContext: AppToolsContext<'shared'>,
+  config: AppNormalizedConfig,
+  appContext: AppToolsContext,
 ) {
   const { entryName, isMainEntry } = entrypoint;
   const { packageName, internalDirectory } = appContext;
@@ -543,6 +557,8 @@ export const runtimeGlobalContext = async ({
   nestedRoutesEntry,
   internalSrcAlias,
   globalApp,
+  rscType = false,
+  basename,
 }: {
   entryName: string;
   metaName: string;
@@ -550,6 +566,8 @@ export const runtimeGlobalContext = async ({
   nestedRoutesEntry?: string;
   internalSrcAlias: string;
   globalApp?: string | false;
+  rscType?: 'server' | 'client' | false;
+  basename?: string;
 }) => {
   const imports = [
     `import { setGlobalContext } from '@${metaName}/runtime/context';`,
@@ -566,29 +584,21 @@ export const runtimeGlobalContext = async ({
         source: rootLayout.toString(),
         filename: rootLayoutFile,
       });
-      const hasAppConfig = moduleExports.some(e => e.n === APP_CONFIG_NAME);
       const hasAppInit = moduleExports.some(e => e.n === APP_INIT_EXPORTED);
       const layoutPath = formatImportPath(
         getPathWithoutExt(
           replaceWithAlias(srcDirectory, rootLayoutFile, internalSrcAlias),
         ),
       );
-      if (hasAppConfig) {
-        imports.push(`import { config as appConfig } from '${layoutPath}';`);
-      } else {
-        imports.push(`let appConfig;`);
-      }
       if (hasAppInit) {
         imports.push(`import { init as appInit } from '${layoutPath}';`);
       } else {
         imports.push(`let appInit;`);
       }
     } else {
-      imports.push(`let appConfig;`);
       imports.push(`let appInit;`);
     }
   } else {
-    imports.push(`let appConfig;`);
     imports.push(`let appInit;`);
   }
 
@@ -601,16 +611,42 @@ export const runtimeGlobalContext = async ({
   } else {
     imports.push(`let layoutApp;`);
   }
-  return `${imports.join('\n')}
 
-import { routes } from './routes';
+  const isClient = rscType === 'client';
+  const enableRsc = Boolean(rscType);
 
-const entryName = '${entryName}';
-setGlobalContext({
-  entryName,
-  layoutApp,
-  routes,
-  appInit,
-  appConfig,
-});`;
+  if (isClient) {
+    return `${imports.join('\n')}
+
+    import { routes } from './routes';
+
+    const entryName = '${entryName}';
+    const basename = '${basename || '/'}';
+      setGlobalContext({
+        entryName,
+        layoutApp,
+        routes,
+        appInit,
+        basename,
+        isRscClient: true,
+        enableRsc: true,
+      });
+    `;
+  } else {
+    return `${imports.join('\n')}
+
+    import { routes } from './routes';
+
+    const entryName = '${entryName}';
+    const basename = '${basename || '/'}';
+      setGlobalContext({
+        entryName,
+        layoutApp,
+        routes,
+        appInit,
+        basename,
+        enableRsc: ${enableRsc},
+      });
+    `;
+  }
 };

@@ -7,26 +7,6 @@ declare global {
   }
 }
 
-export const init = (context: RuntimeContext) => {
-  window.__isBrowser = context.isBrowser;
-  return context;
-};
-
-// export const config = (): AppConfig => {
-//   return {
-//     router: {
-//       createRoutes() {
-//         return [
-//           {
-//             path: 'yyy/xxx',
-//             element: <div>yyy/xxx</div>,
-//           },
-//         ];
-//       },
-//     },
-//   }
-// };
-
 export default function Layout() {
   return (
     <div>

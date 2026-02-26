@@ -3,7 +3,7 @@ import { normalizePathname } from '@modern-js/runtime-utils/url';
 import type React from 'react';
 import type { Root } from 'react-dom/client';
 import { RenderLevel } from '../constants';
-import type { RuntimeContext } from '../context/runtime';
+import type { TRuntimeContext } from '../context/runtime';
 import { wrapRuntimeContextProvider } from '../react/wrapper';
 import { WithCallback } from './withCallback';
 
@@ -11,14 +11,14 @@ export const isReact18 = () => process.env.IS_REACT18 === 'true';
 
 export function hydrateRoot(
   App: React.ReactElement,
-  context: RuntimeContext,
+  context: TRuntimeContext,
   ModernRender: (App: React.ReactElement) => Promise<HTMLElement | Root>,
   ModernHydrate: (
     App: React.ReactElement,
     callback?: () => void,
   ) => Promise<HTMLElement | Root>,
 ) {
-  const hydrateContext: RuntimeContext & { __hydration?: boolean } = {
+  const hydrateContext: TRuntimeContext & { __hydration?: boolean } = {
     ...context,
     get routes() {
       return context.routes;
@@ -59,10 +59,7 @@ export function hydrateRoot(
 
   function stringSSRHydrate() {
     // client render and server prefetch use same logic
-    if (
-      renderLevel === RenderLevel.CLIENT_RENDER ||
-      renderLevel === RenderLevel.SERVER_PREFETCH
-    ) {
+    if (renderLevel === RenderLevel.CLIENT_RENDER) {
       return ModernRender(wrapRuntimeContextProvider(App, context));
     } else if (renderLevel === RenderLevel.SERVER_RENDER) {
       return new Promise<Root | HTMLElement>(resolve => {

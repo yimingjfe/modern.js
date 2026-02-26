@@ -1,5 +1,131 @@
 # @modern-js/plugin-bff
 
+## 3.0.3
+
+### Patch Changes
+
+- Updated dependencies [a270428]
+- Updated dependencies [ece3967]
+  - @modern-js/builder@3.0.3
+  - @modern-js/bff-core@3.0.3
+  - @modern-js/server-core@3.0.3
+  - @modern-js/create-request@3.0.3
+  - @modern-js/server-utils@3.0.3
+  - @modern-js/utils@3.0.3
+
+## 3.0.2
+
+### Patch Changes
+
+- Updated dependencies [dcf43b8]
+- Updated dependencies [28cf50a]
+  - @modern-js/builder@3.0.2
+  - @modern-js/bff-core@3.0.2
+  - @modern-js/server-core@3.0.2
+  - @modern-js/create-request@3.0.2
+  - @modern-js/server-utils@3.0.2
+  - @modern-js/utils@3.0.2
+
+## 3.0.1
+
+### Patch Changes
+
+- Updated dependencies [7a278a6]
+  - @modern-js/builder@3.0.1
+  - @modern-js/bff-core@3.0.1
+  - @modern-js/server-core@3.0.1
+  - @modern-js/create-request@3.0.1
+  - @modern-js/server-utils@3.0.1
+  - @modern-js/utils@3.0.1
+
+## 3.0.0
+
+### Minor Changes
+
+- ecd247c: feat: esm runtime
+
+### Patch Changes
+
+- 96b5424: fix: dev hono context error
+  fix: 修复 dev 环境 hono context
+- Updated dependencies [96b5424]
+- Updated dependencies [eecb927]
+- Updated dependencies [ecd247c]
+- Updated dependencies [952f6fe]
+- Updated dependencies [e21ac60]
+- Updated dependencies [79f0efd]
+  - @modern-js/server-core@3.0.0
+  - @modern-js/bff-core@3.0.0
+  - @modern-js/create-request@3.0.0
+  - @modern-js/server-utils@3.0.0
+  - @modern-js/builder@3.0.0
+  - @modern-js/utils@3.0.0
+
+## 3.0.0-alpha.2
+
+### Minor Changes
+
+- ecd247c: feat: esm runtime
+
+### Patch Changes
+
+- 96b5424: fix: dev hono context error
+  fix: 修复 dev 环境 hono context
+- Updated dependencies [96b5424]
+- Updated dependencies [eecb927]
+- Updated dependencies [ecd247c]
+- Updated dependencies [952f6fe]
+- Updated dependencies [e21ac60]
+- Updated dependencies [79f0efd]
+  - @modern-js/server-core@3.0.0-alpha.2
+  - @modern-js/bff-core@3.0.0-alpha.2
+  - @modern-js/create-request@3.0.0-alpha.2
+  - @modern-js/server-utils@3.0.0-alpha.2
+  - @modern-js/builder@3.0.0-alpha.2
+  - @modern-js/utils@3.0.0-alpha.2
+
+## 3.0.0-alpha.1
+
+### Patch Changes
+
+- Updated dependencies [eecb927]
+- Updated dependencies [952f6fe]
+- Updated dependencies [79f0efd]
+  - @modern-js/server-core@3.0.0-alpha.1
+  - @modern-js/server-utils@3.0.0-alpha.1
+  - @modern-js/builder@3.0.0-alpha.1
+  - @modern-js/bff-core@3.0.0-alpha.1
+  - @modern-js/create-request@3.0.0-alpha.1
+  - @modern-js/utils@3.0.0-alpha.1
+
+## 3.0.0-alpha.0
+
+### Patch Changes
+
+- Updated dependencies [eecb927]
+- Updated dependencies [952f6fe]
+  - @modern-js/server-core@3.0.0-alpha.0
+  - @modern-js/server-utils@3.0.0-alpha.0
+  - @modern-js/builder@3.0.0-alpha.0
+  - @modern-js/bff-core@3.0.0-alpha.0
+  - @modern-js/create-request@3.0.0-alpha.0
+  - @modern-js/utils@3.0.0-alpha.0
+
+## 2.68.1
+
+### Patch Changes
+
+- e64d5f9: feat: hono bff supports return custom res
+  feat: hono bff 支持返回自定义响应
+- Updated dependencies [e64d5f9]
+- Updated dependencies [0d98723]
+- Updated dependencies [0d98723]
+  - @modern-js/create-request@2.68.1
+  - @modern-js/server-core@2.68.1
+  - @modern-js/server-utils@2.68.1
+  - @modern-js/bff-core@2.68.1
+  - @modern-js/utils@2.68.1
+
 ## 2.68.0
 
 ### Patch Changes

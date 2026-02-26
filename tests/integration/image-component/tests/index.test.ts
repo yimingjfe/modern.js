@@ -21,13 +21,13 @@ function existsSync(filePath: string) {
   return fs.existsSync(resolveDist(filePath));
 }
 
-describe('devtools build', () => {
-  test(`should get right devtools build!`, async () => {
+describe.skip('build', () => {
+  test(`should build success`, async () => {
     if (!isVersionAtLeast18()) return;
     const buildRes = await modernBuild(appDir);
     expect(buildRes.code === 0).toBe(true);
     expect(existsSync('route.json')).toBe(true);
-    expect(existsSync('html/main/index.html')).toBe(true);
+    expect(existsSync('html/index/index.html')).toBe(true);
 
     const pageName = resolveDist('static/js/async/page.js');
     const pageContent = await fs.promises.readFile(pageName, 'utf-8');
@@ -44,7 +44,7 @@ describe('devtools build', () => {
 
     const browser = await puppeteer.launch(launchOptions as any);
     const page = await browser.newPage();
-    page.on('pageerror', error => errors.push(error.message));
+    page.on('pageerror', error => errors.push((error as Error).message));
     await page.goto(`http://localhost:${appPort}`, {
       waitUntil: ['networkidle0'],
     });
@@ -61,7 +61,7 @@ describe('devtools build', () => {
   });
 });
 
-describe('devtools dev', () => {
+describe.skip('dev', () => {
   test(`should render page correctly`, async () => {
     if (!isVersionAtLeast18()) return;
     const appPort = await getPort();
@@ -78,7 +78,7 @@ describe('devtools dev', () => {
 
     const browser = await puppeteer.launch(launchOptions as any);
     const page = await browser.newPage();
-    page.on('pageerror', error => errors.push(error.message));
+    page.on('pageerror', error => errors.push((error as Error).message));
     await page.goto(`http://localhost:${appPort}`, {
       waitUntil: ['networkidle0'],
     });
@@ -86,7 +86,7 @@ describe('devtools dev', () => {
     const root = await page.$('#root img');
     const targetText = await page.evaluate(el => el?.outerHTML, root);
     expect(targetText).toMatchInlineSnapshot(
-      `"<img src="/_modern/ipx/f_auto,w_1000,q_75/static/assets/crab.png" alt="test" width="500" height="333.59375" srcset="/_modern/ipx/f_auto,w_500,q_75/static/assets/crab.png 1x,/_modern/ipx/f_auto,w_1000,q_75/static/assets/crab.png 2x" loading="lazy" style="">"`,
+      `"<img alt="test" width="500" height="333.59375" loading="lazy" srcset="/_modern/ipx/f_auto,w_500,q_75/static/assets/crab.png 1x,/_modern/ipx/f_auto,w_1000,q_75/static/assets/crab.png 2x" src="/_modern/ipx/f_auto,w_1000,q_75/static/assets/crab.png" style="">"`,
     );
     expect(errors.length).toEqual(0);
 

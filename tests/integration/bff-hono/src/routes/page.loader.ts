@@ -1,5 +1,5 @@
-import { useHonoContext } from '@modern-js/plugin-bff/hono';
 import { defer } from '@modern-js/runtime/router';
+import { useHonoContext } from '@modern-js/server-runtime';
 
 interface Ctx {
   path: string;

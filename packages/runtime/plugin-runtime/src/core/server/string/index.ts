@@ -1,11 +1,10 @@
-import type { OnError, OnTiming } from '@modern-js/app-tools';
-import type { StaticHandlerContext } from '@modern-js/runtime-utils/remix-router';
+import type { StaticHandlerContext } from '@modern-js/runtime-utils/router';
 import { time } from '@modern-js/runtime-utils/time';
-import { parseHeaders } from '@modern-js/runtime-utils/universal/request';
 import type React from 'react';
 import ReactDomServer from 'react-dom/server';
 import ReactHelmet from 'react-helmet';
 import { RenderLevel } from '../../constants';
+import { getGlobalInternalRuntimeContext } from '../../context';
 import { wrapRuntimeContextProvider } from '../../react/wrapper';
 import {
   CHUNK_CSS_PLACEHOLDER,
@@ -18,9 +17,7 @@ import { type BuildHtmlCb, type RenderString, buildHtml } from '../shared';
 import { SSRErrors, SSRTimings, type Tracer } from '../tracer';
 import { getSSRConfigByEntry, safeReplace } from '../utils';
 import { LoadableCollector } from './loadable';
-import { prefetch } from './prefetch';
 import { SSRDataCollector } from './ssrData';
-import { StyledCollector } from './styledComponent';
 import type { ChunkSet, Collector } from './types';
 
 export const renderString: RenderString = async (
@@ -49,24 +46,7 @@ export const renderString: RenderString = async (
     cssChunk: '',
   };
 
-  let prefetchData = {};
-
-  try {
-    prefetchData = await prefetch(
-      serverRoot,
-      request,
-      options,
-      ssrConfig,
-      tracer,
-    );
-    chunkSet.renderLevel = RenderLevel.SERVER_PREFETCH;
-  } catch (e) {
-    chunkSet.renderLevel = RenderLevel.CLIENT_RENDER;
-    tracer.onError(e, SSRErrors.PRERENDER);
-  }
-
-  const collectors = [
-    new StyledCollector(chunkSet),
+  const collectors: Collector[] = [
     new LoadableCollector({
       stats: loadableStats,
       nonce: config.nonce,
@@ -77,8 +57,8 @@ export const renderString: RenderString = async (
       config,
     }),
     new SSRDataCollector({
+      runtimeContext,
       request,
-      prefetchData,
       ssrConfig,
       ssrContext: runtimeContext.ssrContext!,
       chunkSet,
@@ -87,6 +67,17 @@ export const renderString: RenderString = async (
       useJsonScript: config.useJsonScript,
     }),
   ];
+
+  const internalRuntimeContext = getGlobalInternalRuntimeContext();
+  const hooks = internalRuntimeContext.hooks;
+
+  const extraCollectors = hooks.extendStringSSRCollectors.call({
+    chunkSet,
+  });
+
+  for (const c of extraCollectors) {
+    if (c) collectors.unshift(c);
+  }
 
   const rootElement = wrapRuntimeContextProvider(
     serverRoot,
@@ -123,10 +114,8 @@ async function generateHtml(
   try {
     const end = time();
     // react render to string
-    if (chunkSet.renderLevel >= RenderLevel.SERVER_PREFETCH) {
-      html = ReactDomServer.renderToString(finalApp);
-      chunkSet.renderLevel = RenderLevel.SERVER_RENDER;
-    }
+    html = ReactDomServer.renderToString(finalApp);
+    chunkSet.renderLevel = RenderLevel.SERVER_RENDER;
     helmetData = ReactHelmet.renderStatic();
 
     const cost = end();

@@ -1,19 +1,6 @@
 import { useRouteLoaderData as useRouteData } from '@modern-js/runtime-utils/router';
-import { routerPlugin } from './plugin';
-import type { RouterConfig, SingleRouteConfig } from './types';
 
 export * from '@modern-js/runtime-utils/router';
-
-export type { SingleRouteConfig, RouterConfig };
-export { renderRoutes } from './utils';
-
-export { routerPlugin };
-export default routerPlugin;
-
-export { modifyRoutes } from './plugin';
-export type { RouterExtendsHooks } from './hooks';
-
-export * from './withRouter';
 
 export { Link, NavLink } from './PrefetchLink';
 export type { LinkProps, NavLinkProps } from './PrefetchLink';
@@ -23,10 +10,6 @@ export const useRouteLoaderData: typeof useRouteData = (routeId: string) => {
   return useRouteData(realRouteId);
 };
 
-export {
-  createShouldRevalidate,
-  handleRouteModule,
-  handleRouteModuleError,
-} from './routeModule';
+export * from './withRouter';
 
 export type { LoaderFunction, LoaderFunctionArgs } from './types';

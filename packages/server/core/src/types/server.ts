@@ -11,10 +11,13 @@ import type {
   SSRManifest as RscSSRManifest,
   ServerManifest as RscServerManifest,
 } from '@modern-js/types/server';
+import type { SSRRenderOptions } from '../plugins/render/ssrRender';
 import type {
   RequestHandler as BundleRequestHandler,
   OnError,
   OnTiming,
+  RequestHandlerOptions,
+  Resource,
 } from './requestHandler';
 
 export type RequestHandler = (
@@ -39,15 +42,24 @@ export type ServerLoaderBundle = {
   }) => Promise<any>;
 };
 
+export type RscPayloadHandlerOptions = Omit<
+  RequestHandlerOptions,
+  'resource'
+> & {
+  resource: Omit<Resource, 'htmlTemplate'>;
+};
+
 type ServerRenderBundle = {
   requestHandler?: Promise<BundleRequestHandler>;
-  handleAction?: (
+  handleAction?: (req: Request) => Promise<Response>;
+  rscPayloadHandler?: (
     req: Request,
-    options: { clientManifest: RscClientManifest },
+    options: RscPayloadHandlerOptions,
   ) => Promise<Response>;
-  rscRequestHandler?: (options: {
-    clientManifest: RscClientManifest;
-  }) => Promise<Response>;
+  renderRscStreamHandler?: (
+    req: Request,
+    options: RscPayloadHandlerOptions,
+  ) => Promise<Response>;
 };
 
 export type ServerManifest = {
@@ -94,7 +106,8 @@ type ServerVariables = {
   /**
    * The current matched route, now only expose entryName field.
    */
-  route: Required<Pick<ServerRoute, 'entryName'>>;
+  route: Required<Pick<ServerRoute, 'entryName' | 'urlPath'>>;
+  forceCSR?: string;
 };
 
 export type ServerEnv = {

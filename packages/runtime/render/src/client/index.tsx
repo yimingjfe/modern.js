@@ -1,12 +1,14 @@
+import React from 'react';
+import { type ReactNode, createContext, useContext, useState } from 'react';
 import {
   createFromReadableStream,
   createServerReference,
-} from '@modern-js/utils/react-server-dom-webpack/client.browser';
-import { type ReactNode, createContext, use, useState } from 'react';
-export { rscStream } from 'rsc-html-stream/client';
+  setServerCallback,
+} from 'react-server-dom-rspack/client.browser';
+export { rscStream } from '../rsc-html-stream/client';
 export { createFromReadableStream, createServerReference };
 export { callServer } from './callServer';
-export { createFromFetch } from '@modern-js/utils/react-server-dom-webpack/client.browser';
+export { createFromFetch } from 'react-server-dom-rspack/client.browser';
 
 declare global {
   interface Window {
@@ -14,22 +16,32 @@ declare global {
   }
 }
 
-interface RootProps {
-  data: Promise<React.ReactNode>;
-}
+export const ResetRootContext = createContext<
+  | {
+      setRoot: (root: React.ReactNode) => void;
+    }
+  | undefined
+>(undefined);
 
-export function RscClientRoot({ data }: RootProps) {
-  const elements = use(data);
+export { setServerCallback };
+
+export function RscClientRoot({
+  rscPayload,
+}: { rscPayload: Promise<React.ReactNode> }) {
+  const elements = React.use(rscPayload);
   const [root, setRoot] = useState<React.ReactNode>(elements);
-  return <>{root}</>;
+  return (
+    <ResetRootContext.Provider value={{ setRoot }}>
+      {root}
+    </ResetRootContext.Provider>
+  );
 }
 
 type Elements = Promise<ReactNode[]>;
 
-const ElementsContext = createContext<Elements | null>(null);
+export const ElementsContext = createContext<Elements | null>(null);
 
 // For users to pass an element, not a Component.
-const JSX_SHELL_STREAM_END_MARK = '<!--<?- SHELL_STREAM_END ?>-->';
 export const ServerElementsProvider = ({
   elements,
   children,
@@ -42,12 +54,11 @@ export const ServerElementsProvider = ({
       <ElementsContext.Provider value={elements}>
         {children}
       </ElementsContext.Provider>
-      {JSX_SHELL_STREAM_END_MARK}
     </>
   );
 };
 
 export const RSCServerSlot = () => {
-  const elements = use(ElementsContext);
+  const elements = React.use(ElementsContext);
   return elements;
 };

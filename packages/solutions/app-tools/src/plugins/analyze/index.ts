@@ -8,13 +8,10 @@ import {
   isDevCommand,
   minimist,
 } from '@modern-js/utils';
+import { getMeta } from '@modern-js/utils';
 import { createBuilderGenerator } from '../../builder';
 import { initialNormalizedConfig } from '../../config';
-import type {
-  AppNormalizedConfig,
-  AppTools,
-  CliPluginFuture,
-} from '../../types';
+import type { AppNormalizedConfig, AppTools, CliPlugin } from '../../types';
 import { emitResolvedConfig } from '../../utils/config';
 import { getSelectedEntries } from '../../utils/getSelectedEntries';
 import { printInstructions } from '../../utils/printInstructions';
@@ -23,21 +20,17 @@ import { checkIsBuildCommands, checkIsServeCommand } from './utils';
 
 const debug = createDebugger('plugin-analyze');
 
-export default ({
-  bundler,
-}: {
-  bundler: 'webpack' | 'rspack';
-}): CliPluginFuture<AppTools<'shared'>> => ({
+export default (): CliPlugin<AppTools> => ({
   name: '@modern-js/plugin-analyze',
   post: ['@modern-js/runtime'],
   setup: api => {
     let pagesDir: string[] = [];
     let nestedRouteEntries: string[] = [];
+    const routesConfigFiles: string[] = [];
 
     api.onPrepare(async () => {
       let appContext = api.getAppContext();
-      const resolvedConfig =
-        api.getNormalizedConfig() as AppNormalizedConfig<'shared'>;
+      const resolvedConfig = api.getNormalizedConfig() as AppNormalizedConfig;
       const hooks = api.getHooks();
 
       try {
@@ -53,7 +46,6 @@ export default ({
         resolvedConfig.source?.entriesDir,
         appContext.apiDirectory,
       );
-      await hooks.addRuntimeExports.call();
 
       const [{ getProdServerRoutes }] = await Promise.all([
         import('./getServerRoutes.js'),
@@ -128,6 +120,35 @@ export default ({
         .filter((entry: any) => entry && !path.extname(entry))
         .concat(nestedRouteEntries);
 
+      const meta = getMeta(api.getAppContext().metaName);
+      const possibleNames = [
+        `${meta}.routes.ts`,
+        `${meta}.routes.mts`,
+        `${meta}.routes.tsx`,
+        `${meta}.routes.js`,
+        `${meta}.routes.mjs`,
+        `${meta}.routes.jsx`,
+      ];
+
+      await Promise.all(
+        entrypoints.map(async entrypoint => {
+          const { absoluteEntryDir } = entrypoint;
+          if (!absoluteEntryDir) {
+            return;
+          }
+          for (const filename of possibleNames) {
+            const filePath = path.resolve(absoluteEntryDir, filename);
+
+            if (await fs.pathExists(filePath)) {
+              const stats = await fs.stat(filePath);
+              if (stats.isFile()) {
+                routesConfigFiles.push(filePath);
+              }
+            }
+          }
+        }),
+      );
+
       const { partialsByEntrypoint, htmlTemplates } = await getHtmlTemplate(
         entrypoints,
         hooks,
@@ -167,8 +188,8 @@ export default ({
         await hooks.generateEntryCode.call({ entrypoints });
 
         const normalizedConfig =
-          api.getNormalizedConfig() as AppNormalizedConfig<'shared'>;
-        const createBuilderForModern = await createBuilderGenerator(bundler);
+          api.getNormalizedConfig() as AppNormalizedConfig;
+        const createBuilderForModern = await createBuilderGenerator();
         const builder = await createBuilderForModern({
           normalizedConfig: normalizedConfig as any,
           appContext: appContext as any,
@@ -244,15 +265,14 @@ export default ({
     });
 
     api.addWatchFiles(() => {
-      return { files: pagesDir, isPrivate: true };
+      return { files: [...pagesDir, ...routesConfigFiles], isPrivate: true };
     });
 
     api.modifyResolvedConfig((resolved: any) => {
       const appContext = api.getAppContext();
       const config = initialNormalizedConfig(
-        resolved as AppNormalizedConfig<'shared'>,
+        resolved as AppNormalizedConfig,
         appContext,
-        bundler,
       );
       return config;
     });

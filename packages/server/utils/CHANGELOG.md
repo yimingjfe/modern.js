@@ -1,5 +1,62 @@
 # @modern-js/server-utils
 
+## 3.0.3
+
+### Patch Changes
+
+- @modern-js/utils@3.0.3
+
+## 3.0.2
+
+### Patch Changes
+
+- @modern-js/utils@3.0.2
+
+## 3.0.1
+
+### Patch Changes
+
+- @modern-js/utils@3.0.1
+
+## 3.0.0
+
+### Patch Changes
+
+- @modern-js/utils@3.0.0
+
+## 3.0.0-alpha.2
+
+### Patch Changes
+
+- @modern-js/utils@3.0.0-alpha.2
+
+## 3.0.0-alpha.1
+
+### Patch Changes
+
+- @modern-js/utils@3.0.0-alpha.1
+- @modern-js/babel-preset@3.0.0-alpha.1
+- @modern-js/babel-plugin-module-resolver@3.0.0-alpha.1
+- @modern-js/babel-compiler@3.0.0-alpha.1
+
+## 3.0.0-alpha.0
+
+### Patch Changes
+
+- @modern-js/utils@3.0.0-alpha.0
+- @modern-js/babel-preset@3.0.0-alpha.0
+- @modern-js/babel-plugin-module-resolver@3.0.0-alpha.0
+- @modern-js/babel-compiler@3.0.0-alpha.0
+
+## 2.68.1
+
+### Patch Changes
+
+- @modern-js/babel-preset@2.68.1
+- @modern-js/babel-plugin-module-resolver@2.68.1
+- @modern-js/babel-compiler@2.68.1
+- @modern-js/utils@2.68.1
+
 ## 2.68.0
 
 ### Patch Changes

@@ -1,35 +1,26 @@
-import path from 'path';
-import { initAppDir } from '@modern-js/plugin-v2/cli';
-import { run as CLIPluginRun } from '@modern-js/plugin-v2/run';
+import { initAppDir } from '@modern-js/plugin/cli';
+import { run as CLIPluginRun } from '@modern-js/plugin/run';
 import type { InternalPlugins } from '@modern-js/types';
 import { chalk, minimist } from '@modern-js/utils';
 import { handleSetupResult } from '../compat/hooks';
-import { PACKAGE_JSON_CONFIG_NAME, STATE_PLUGIN_NAME } from '../constants';
 import { getConfigFile } from '../utils/getConfigFile';
-import { getUserConfig } from '../utils/getUserConfig';
 import { loadInternalPlugins } from '../utils/loadPlugins';
 
 export interface RunOptions {
   cwd?: string;
   configFile?: string;
   metaName?: string;
-  packageJsonConfig?: string;
   statePluginName?: string;
-  internalPlugins?: {
-    cli?: InternalPlugins;
-    autoLoad?: InternalPlugins;
-  };
+  internalPlugins?: InternalPlugins;
   initialLog?: string;
   version: string;
 }
-export async function run({
+export async function createRunOptions({
   cwd,
   initialLog,
   metaName = 'modern-js',
   version,
   internalPlugins,
-  packageJsonConfig = PACKAGE_JSON_CONFIG_NAME,
-  statePluginName = STATE_PLUGIN_NAME,
   configFile,
 }: RunOptions) {
   const nodeVersion = process.versions.node;
@@ -74,6 +65,7 @@ export async function run({
     'start',
     'serve',
     'inspect',
+    'info',
     'upgrade',
   ];
 
@@ -87,65 +79,22 @@ export async function run({
     customConfigFile = cliParams['config-file'];
   }
 
-  // set NODE_ENV value because configFile may use
-  if (!process.env.NODE_ENV) {
-    if (['build', 'serve', 'deploy', 'analyze'].includes(command)) {
-      process.env.NODE_ENV = 'production';
-    } else if (command === 'test') {
-      process.env.NODE_ENV = 'test';
-    } else {
-      process.env.NODE_ENV = 'development';
-    }
-  }
-
   const appDirectory = await initAppDir(cwd);
   const finalConfigFile: string = customConfigFile || getConfigFile(configFile);
-  const userConfig = await getUserConfig(
-    appDirectory,
-    finalConfigFile,
-    packageJsonConfig,
-    metaName,
-  );
-  const plugins = await loadInternalPlugins(
-    appDirectory,
-    internalPlugins?.cli,
-    internalPlugins?.autoLoad,
-    userConfig.autoLoadPlugins,
-  );
 
-  // We need exclude warning when use legacy state plugin, it's a inhouse logic.
-  if (
-    !userConfig.autoLoadPlugins &&
-    userConfig.runtime &&
-    typeof userConfig.runtime !== 'boolean' &&
-    (userConfig.runtime?.state === true ||
-      (typeof userConfig.runtime?.state === 'object' &&
-        !userConfig.runtime?.state?.legacy))
-  ) {
-    if (!userConfig.plugins.find(plugin => plugin.name === statePluginName)) {
-      console.warn(
-        `${chalk.red('\n[Warning]')} We will no longer support built-in \`runtime.state\`. If you want to use Reduck, you must run ${chalk.yellow.bold(`\`pnpm add ${statePluginName}@${version}\``)} to install the state plugin dependency and manually register the plugin. After install state plugin, please add the following code to ${chalk.yellow.bold(`\`${path.basename(finalConfigFile)}\``)}:
+  const plugins = await loadInternalPlugins(appDirectory, internalPlugins);
 
-${chalk.yellow.bold(`import { statePlugin } from '${statePluginName}';
-
-export default defineConfig({
-  plugins: [
-    ...,
-    statePlugin(),
-  ],
-});
-        `)}`,
-      );
-    }
-  }
-
-  await CLIPluginRun({
+  return {
     cwd,
     initialLog: initialLog || `Modern.js Framework v${version}`,
     configFile: finalConfigFile,
     metaName,
-    packageJsonConfig: packageJsonConfig,
     internalPlugins: plugins,
     handleSetupResult,
-  });
+  };
+}
+
+export async function run(options: RunOptions) {
+  const runOptions = await createRunOptions(options);
+  await CLIPluginRun(runOptions);
 }

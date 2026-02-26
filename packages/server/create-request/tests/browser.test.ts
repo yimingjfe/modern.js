@@ -1,8 +1,4 @@
-/**
- * @jest-environment jsdom
- */
 import nock from 'nock';
-import 'isomorphic-fetch';
 import { configure, createRequest } from '../src/browser';
 
 describe('configure', () => {
@@ -28,7 +24,7 @@ describe('configure', () => {
   test('should support custom request', async () => {
     nock(url).get(path).reply(200, response);
 
-    const customRequest = jest.fn((requestPath: RequestInfo) => {
+    const customRequest = rs.fn((requestPath: RequestInfo) => {
       const finalUrl = `${url}${requestPath as string}`;
       return fetch(finalUrl);
     });
@@ -55,7 +51,7 @@ describe('configure', () => {
       })
       .reply(200, response);
 
-    const customRequest = jest.fn((requestPath: RequestInfo) => {
+    const customRequest = rs.fn((requestPath: RequestInfo) => {
       const finalUrl = `${url}${requestPath as string}`;
       return fetch(finalUrl);
     });
@@ -80,7 +76,7 @@ describe('configure', () => {
   test('should support interceptor', async () => {
     nock(url).get(path).reply(200, response);
 
-    const interceptor = jest.fn(request => (requestPath: RequestInfo) => {
+    const interceptor = rs.fn(request => (requestPath: RequestInfo) => {
       const finalUrl = `${url}${requestPath as string}`;
       return request(finalUrl);
     });
@@ -101,12 +97,12 @@ describe('configure', () => {
   test('should has correct order', async () => {
     nock(url).get(path).reply(200, response);
 
-    const customRequest = jest.fn((requestPath: RequestInfo) => {
+    const customRequest = rs.fn((requestPath: RequestInfo) => {
       const finalUrl = `${url}${requestPath as string}`;
       return fetch(finalUrl);
     });
 
-    const interceptor = jest.fn(request => (requestPath: RequestInfo) => {
+    const interceptor = rs.fn(request => (requestPath: RequestInfo) => {
       const finalUrl = `${url}${requestPath as string}`;
       return request(finalUrl);
     });
@@ -129,7 +125,7 @@ describe('configure', () => {
   test('should support params', async () => {
     nock(url).get(`${path}/modernjs`).reply(200, response);
 
-    const interceptor = jest.fn(request => (requestPath: RequestInfo) => {
+    const interceptor = rs.fn(request => (requestPath: RequestInfo) => {
       const finalUrl = `${url}${requestPath as string}`;
       return request(finalUrl);
     });
@@ -149,7 +145,7 @@ describe('configure', () => {
   test('should support params with schema', async () => {
     nock(url).get(`${path}/modernjs`).reply(200, response);
 
-    const interceptor = jest.fn(request => (requestPath: RequestInfo) => {
+    const interceptor = rs.fn(request => (requestPath: RequestInfo) => {
       const finalUrl = `${url}${requestPath as string}`;
       return request(finalUrl);
     });

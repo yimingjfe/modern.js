@@ -1,5 +1,6 @@
 import dns from 'node:dns';
 import path from 'path';
+import { isVersionAtLeast1819 } from '@modern-js/utils';
 import puppeteer, { type Browser, type Page } from 'puppeteer';
 import {
   getPort,
@@ -9,8 +10,6 @@ import {
   modernBuild,
   modernServe,
 } from '../../../utils/modernTestUtils';
-import 'isomorphic-fetch';
-import { isVersionAtLeast20, isVersionAtLeast1819 } from '@modern-js/utils';
 
 const appDir = path.resolve(__dirname, '../');
 dns.setDefaultResultOrder('ipv4first');
@@ -26,16 +25,7 @@ if (isVersionAtLeast1819()) {
     beforeAll(async () => {
       jest.setTimeout(1000 * 60 * 2);
       port = await getPort();
-      app = await launchApp(
-        appDir,
-        port,
-        {},
-        isVersionAtLeast20()
-          ? {
-              NODE_OPTIONS: '--no-experimental-require-module',
-            }
-          : {},
-      );
+      app = await launchApp(appDir, port);
       browser = await puppeteer.launch(launchOptions as any);
       page = await browser.newPage();
     });

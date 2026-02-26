@@ -2,12 +2,15 @@ import path from 'path';
 import type {
   AppTools,
   AppToolsNormalizedConfig,
-  CliPluginFuture,
+  CliPlugin,
   ServerUserConfig,
 } from '@modern-js/app-tools';
-import type { CLIPluginAPI } from '@modern-js/plugin-v2';
+import type { CLIPluginAPI } from '@modern-js/plugin';
+import type { Entrypoint } from '@modern-js/types';
 import { LOADABLE_STATS_FILE, isUseSSRBundle } from '@modern-js/utils';
 import type { RsbuildPlugin } from '@rsbuild/core';
+import LoadableBundlerPlugin from './loadable-bundler-plugin';
+import { resolveSSRMode } from './mode';
 
 const hasStringSSREntry = (userConfig: AppToolsNormalizedConfig): boolean => {
   const isStreaming = (ssr: ServerUserConfig['ssr']) =>
@@ -16,7 +19,15 @@ const hasStringSSREntry = (userConfig: AppToolsNormalizedConfig): boolean => {
   const { server, output } = userConfig;
 
   // ssg need use stringSSR.
-  if ((server?.ssr || output.ssg) && !isStreaming(server.ssr)) {
+  if (output?.ssg) {
+    return true;
+  }
+
+  if (output?.ssgByEntries && Object.keys(output.ssgByEntries).length > 0) {
+    return true;
+  }
+
+  if (server?.ssr && !isStreaming(server.ssr)) {
     return true;
   }
 
@@ -34,16 +45,37 @@ const hasStringSSREntry = (userConfig: AppToolsNormalizedConfig): boolean => {
   return false;
 };
 
-const checkUseStringSSR = (config: AppToolsNormalizedConfig): boolean => {
-  const { output } = config;
+/**
+ * Check if any entry uses string SSR mode.
+ * Returns true if at least one entry uses 'string' SSR mode.
+ */
+const checkUseStringSSR = (
+  config: AppToolsNormalizedConfig,
+  appDirectory?: string,
+  entrypoints?: Entrypoint[],
+): boolean => {
+  // If entrypoints are provided, check each entry
+  if (entrypoints && entrypoints.length > 0) {
+    for (const entrypoint of entrypoints) {
+      const ssrMode = resolveSSRMode({
+        entry: entrypoint.entryName,
+        config,
+        appDirectory,
+        nestedRoutesEntry: entrypoint.nestedRoutesEntry,
+      });
+      if (ssrMode === 'string') {
+        return true;
+      }
+    }
+    return false;
+  }
 
-  // ssg is not support streaming ssr.
-  // so we assumes use String SSR when using ssg.
-  return Boolean(output?.ssg) || hasStringSSREntry(config);
+  return true;
 };
 
 const ssrBuilderPlugin = (
-  modernAPI: CLIPluginAPI<AppTools<'shared'>>,
+  modernAPI: CLIPluginAPI<AppTools>,
+  outputModule: boolean,
 ): RsbuildPlugin => ({
   name: '@modern-js/builder-plugin-ssr',
 
@@ -59,10 +91,13 @@ const ssrBuilderPlugin = (
           ? 'edge'
           : 'node';
 
+      const appContext = modernAPI.getAppContext();
+      const { appDirectory, entrypoints } = appContext;
+
       const useLoadablePlugin =
         isUseSSRBundle(userConfig) &&
         !isServerEnvironment &&
-        checkUseStringSSR(userConfig);
+        checkUseStringSSR(userConfig, appDirectory, entrypoints);
 
       return mergeEnvironmentConfig(config, {
         source: {
@@ -73,10 +108,12 @@ const ssrBuilderPlugin = (
             'process.env.MODERN_SSR_ENV': JSON.stringify(ssrEnv),
           },
         },
+        output: {
+          module: isServerEnvironment && outputModule,
+        },
         tools: {
           bundlerChain: useLoadablePlugin
             ? chain => {
-                const LoadableBundlerPlugin = require('./loadable-bundler-plugin.js');
                 chain
                   .plugin('loadable')
                   .use(LoadableBundlerPlugin, [
@@ -90,73 +127,55 @@ const ssrBuilderPlugin = (
   },
 });
 
-export const ssrPlugin = (): CliPluginFuture<AppTools<'shared'>> => ({
+export const ssrPlugin = (): CliPlugin<AppTools> => ({
   name: '@modern-js/plugin-ssr',
 
   required: ['@modern-js/runtime'],
 
   setup: api => {
     const appContext = api.getAppContext();
+    const exportLoadablePath = `@${appContext.metaName}/runtime/loadable`;
+    const runtimeUtilsPath = require.resolve('@modern-js/runtime-utils/node');
+    const aliasPath = runtimeUtilsPath
+      .replace(`${path.sep}cjs${path.sep}`, `${path.sep}esm${path.sep}`)
+      .replace(/\.js$/, '.mjs');
 
     api.config(() => {
-      const { bundlerType = 'webpack' } = api.getAppContext();
-      const babelHandler = (() => {
-        // In webpack build, we should let `useLoader` support CSR & SSR both.
-        if (bundlerType === 'webpack') {
-          return (config: any) => {
-            const userConfig = api.getNormalizedConfig();
-            // Add id for useLoader method,
-            // The useLoader can be used even if the SSR is not enabled
-            config.plugins?.push(
-              path.join(__dirname, './babel-plugin-ssr-loader-id'),
-            );
-
-            if (isUseSSRBundle(userConfig) && checkUseStringSSR(userConfig)) {
-              config.plugins?.push(require.resolve('@loadable/babel-plugin'));
-            }
-          };
-        } else if (bundlerType === 'rspack') {
-          // In Rspack build, we need transform the babel-loader again.
-          // It would increase performance overhead,
-          // so we only use useLoader in CSR on Rspack build temporarily.
-          return (config: any) => {
-            const userConfig = api.useResolvedConfigContext();
-            if (isUseSSRBundle(userConfig) && checkUseStringSSR(userConfig)) {
-              config.plugins?.push(
-                path.join(__dirname, './babel-plugin-ssr-loader-id'),
-              );
-              config.plugins?.push(require.resolve('@loadable/babel-plugin'));
-            }
-          };
-        }
-      })();
-
       return {
-        builderPlugins: [ssrBuilderPlugin(api)],
+        builderPlugins: [
+          ssrBuilderPlugin(api, appContext.moduleType === 'module'),
+        ],
         resolve: {
           alias: {
             // ensure that all packages use the same storage in @modern-js/runtime-utils/node
-            '@modern-js/runtime-utils/node$': require
-              .resolve('@modern-js/runtime-utils/node')
-              .replace(
-                `${path.sep}cjs${path.sep}`,
-                `${path.sep}esm${path.sep}`,
-              ),
+            '@modern-js/runtime-utils/node$': aliasPath,
           },
         },
         tools: {
-          babel: babelHandler,
-          bundlerChain: (chain, { isServer }) => {
-            if (isServer && appContext.moduleType === 'module') {
-              chain.output.libraryTarget('module').set('chunkFormat', 'module');
-              chain.output.library({
-                type: 'module',
-              });
-              chain.experiments({
-                ...chain.get('experiments'),
-                outputModule: true,
-              });
-            }
+          swc: {
+            jsc: {
+              experimental: {
+                plugins: [
+                  [
+                    require.resolve('@swc/plugin-loadable-components'),
+                    {
+                      signatures: [
+                        { name: 'default', from: '@loadable/component' },
+                        { name: 'lazy', from: '@loadable/component' },
+                        {
+                          name: 'default',
+                          from: exportLoadablePath,
+                        },
+                        {
+                          name: 'lazy',
+                          from: exportLoadablePath,
+                        },
+                      ],
+                    },
+                  ],
+                ],
+              },
+            },
           },
         },
       };

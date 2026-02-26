@@ -6,24 +6,45 @@ import {
   ENTRY_POINT_RUNTIME_REGISTER_FILE_NAME,
 } from './constants';
 
+const genRenderStatement = ({
+  enableRsc,
+  mountId,
+  isNestedRouter,
+}: {
+  enableRsc?: boolean;
+  mountId?: string;
+  isNestedRouter?: boolean;
+}) => {
+  if (enableRsc) {
+    if (!isNestedRouter) {
+      return `render(<ModernRoot>
+                  <RscClientRoot rscPayload={data} />
+                </ModernRoot>, '${mountId || 'root'}');`;
+    }
+    return `render(<ModernRoot rscPayload={data} />, '${mountId || 'root'}');`;
+  }
+
+  return `render(<ModernRoot />, '${mountId || 'root'}');`;
+};
+
 const genRenderCode = ({
   srcDirectory,
   internalSrcAlias,
   metaName,
   entry,
   customEntry,
-  customBootstrap,
   mountId,
   enableRsc,
+  isNestedRouter,
 }: {
   srcDirectory: string;
   internalSrcAlias: string;
   metaName: string;
   entry: string;
   customEntry?: boolean;
-  customBootstrap?: string | false;
   mountId?: string;
   enableRsc?: boolean;
+  isNestedRouter?: boolean;
 }) => {
   if (customEntry) {
     return `import '${formatImportPath(
@@ -35,9 +56,11 @@ import { render } from '@${metaName}/runtime/browser';
 
 ${
   enableRsc
-    ? `import { RscClientRoot, createFromReadableStream, rscStream, callServer } from '@${metaName}/runtime/rsc/client';`
+    ? `import { RscClientRoot, createFromReadableStream, rscStream, callServer, setServerCallback } from '@${metaName}/runtime/rsc/client';`
     : ''
 }
+
+${enableRsc ? `setServerCallback(callServer);` : ''}
 
 ${
   enableRsc
@@ -47,29 +70,13 @@ ${
     : ''
 }
 
-${
-  customBootstrap
-    ? `import customBootstrap from '${formatImportPath(
-        customBootstrap.replace(srcDirectory, internalSrcAlias),
-      )}';`
-    : ''
-}
-
-
-
 const ModernRoot = createRoot();
 
-${
-  customBootstrap
-    ? `customBootstrap(ModernRoot, () => render(<ModernRoot />, '${
-        mountId || 'root'
-      }'));`
-    : enableRsc
-      ? `render(<ModernRoot>
-                  <RscClientRoot data={data} />
-                </ModernRoot>, '${mountId || 'root'}');`
-      : `render(<ModernRoot />, '${mountId || 'root'}');`
-}`;
+${genRenderStatement({
+  enableRsc,
+  mountId,
+  isNestedRouter,
+})}`;
 };
 
 export const entryForCSRWithRSC = ({
@@ -77,11 +84,13 @@ export const entryForCSRWithRSC = ({
   entryName,
   urlPath = '/',
   mountId = 'root',
+  isNestedRouter,
 }: {
   metaName: string;
   entryName: string;
   urlPath?: string;
   mountId?: string;
+  isNestedRouter?: string;
 }) => {
   return `
   import '@${metaName}/runtime/registry/${entryName}';
@@ -90,25 +99,69 @@ export const entryForCSRWithRSC = ({
 
   import {
     RscClientRoot,
-    createFromFetch
+    createFromFetch,
+    isRedirectResponse,
+    rscStream,
+    callServer,
+    setServerCallback,
+    createFromReadableStream
   } from '@${metaName}/runtime/rsc/client';
 
-  const content = createFromFetch(
-    fetch('${urlPath}', {
-      headers: {
-        'x-rsc-tree': 'true',
-      },
-    }),
-  );
+  setServerCallback(callServer);
+
+  const handleRedirectResponse = (res: Response) => {
+    const { headers } = res;
+    const location = headers.get('X-Modernjs-Redirect');
+    const baseUrl = headers.get('X-Modernjs-BaseUrl');
+    if (location) {
+      if (baseUrl !== '/') {
+        window.location.replace(baseUrl + location);
+      } else {
+        window.location.replace(location);
+      }
+      return;
+    }
+    return res;
+  };
+
+  ${
+    process.env.MODERN_DISABLE_INJECT_RSC_DATA
+      ? `
+      const data = createFromFetch(
+        fetch(location.pathname, {
+          headers: {
+            'x-rsc-tree': 'true',
+          },
+        }).then(handleRedirectResponse),
+      )
+      `
+      : `
+      const data = createFromReadableStream(rscStream, {
+        callServer: callServer,
+      });
+      `
+  }
 
   const ModernRoot = createRoot();
 
-  render(
-    <ModernRoot>
-      <RscClientRoot data={content} />
-    </ModernRoot>,
-    '${mountId}',
-  );
+  ${
+    isNestedRouter
+      ? `
+      render(
+        <ModernRoot rscPayload={data}>
+        </ModernRoot>,
+        '${mountId}',
+      );
+      `
+      : `
+      render(
+        <ModernRoot>
+          <RscClientRoot rscPayload={data} />
+        </ModernRoot>,
+        '${mountId}',
+      );
+      `
+  }
   `;
 };
 
@@ -119,9 +172,9 @@ export const index = ({
   entry,
   entryName,
   customEntry,
-  customBootstrap,
   mountId,
   enableRsc,
+  isNestedRouter,
 }: {
   srcDirectory: string;
   internalSrcAlias: string;
@@ -129,9 +182,9 @@ export const index = ({
   entry: string;
   entryName: string;
   customEntry?: boolean;
-  customBootstrap?: string | false;
   mountId?: string;
   enableRsc?: boolean;
+  isNestedRouter?: boolean;
 }) =>
   `import '@${metaName}/runtime/registry/${entryName}';
 ${genRenderCode({
@@ -140,9 +193,9 @@ ${genRenderCode({
   metaName,
   entry,
   customEntry,
-  customBootstrap,
   mountId,
   enableRsc,
+  isNestedRouter,
 })}
 `;
 
@@ -172,13 +225,12 @@ const runtimeConfig = typeof modernRuntime === 'function' ? modernRuntime(getCur
 
 const getRegisterRuntimePluginCode = (
   entryName: string,
-  name: string,
+  configName: string,
   config: Record<string, any>,
 ) => {
-  const configName = name === 'garfish' ? 'masterApp' : name;
-  return `plugins.push(${name}Plugin(mergeConfig(${JSON.stringify(
+  return `plugins.push(${configName}Plugin(mergeConfig(${JSON.stringify(
     config,
-  )}, (runtimeConfig || {})['${configName}'], ((runtimeConfig || {})['${configName}ByEntries'] || {})['${entryName}'], (getGlobalAppConfig() || {})['${configName}'])));`;
+  )}, (runtimeConfig || {})['${configName}'])));`;
 };
 
 export const runtimeRegister = ({
@@ -196,7 +248,7 @@ export const runtimeRegister = ({
   runtimeConfigFile: string | false;
   runtimePlugins: RuntimePluginConfig[];
 }) => `import { registerPlugin, mergeConfig } from '@${metaName}/runtime/plugin';
-import { getGlobalAppConfig, getGlobalLayoutApp, getCurrentEntryName } from '@${metaName}/runtime/context';
+import { getGlobalLayoutApp, getCurrentEntryName } from '@${metaName}/runtime/context';
 
 ${getImportRuntimeConfigCode(srcDirectory, internalSrcAlias, runtimeConfigFile)}
 
@@ -220,6 +272,7 @@ export const runtimeGlobalContext = ({
   metaName,
   entry,
   customEntry,
+  basename,
 }: {
   entryName: string;
   srcDirectory: string;
@@ -227,6 +280,7 @@ export const runtimeGlobalContext = ({
   metaName: string;
   entry: string;
   customEntry?: boolean;
+  basename?: string;
 }) => {
   return `import { setGlobalContext } from '@${metaName}/runtime/context'
 
@@ -242,9 +296,11 @@ import App from '${
   }';
 
 const entryName = '${entryName}';
+const basename = '${basename || '/'}';
 setGlobalContext({
   entryName,
   App,
+  basename,
 });`;
 };
 

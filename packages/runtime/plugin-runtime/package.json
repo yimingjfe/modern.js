@@ -15,117 +15,119 @@
     "modern",
     "modern.js"
   ],
-  "version": "2.68.0",
+  "version": "3.0.3",
   "engines": {
-    "node": ">=14.17.6"
+    "node": ">=20"
   },
-  "jsnext:source": "./src/index.ts",
   "types": "./src/index.ts",
   "main": "./dist/cjs/index.js",
-  "module": "./dist/esm/index.js",
+  "module": "./dist/esm/index.mjs",
   "exports": {
     ".": {
       "types": "./dist/types/index.d.ts",
-      "react-server": "./dist/esm/react-server.js",
-      "jsnext:source": "./src/index.ts",
-      "default": "./dist/esm/index.js"
+      "react-server": "./dist/esm/react-server.mjs",
+      "default": "./dist/esm/index.mjs"
+    },
+    "./react-server": {
+      "types": "./dist/types/react-server.d.ts",
+      "default": "./dist/esm/react-server.mjs"
+    },
+    "./internal": {
+      "types": "./dist/types/internal.d.ts",
+      "default": "./dist/esm/internal.mjs"
     },
     "./package.json": "./package.json",
-    "./types": "./types/index.d.ts",
-    "./types/index": "./types/index.d.ts",
-    "./types/router": "./types/router.d.ts",
     "./context": {
       "types": "./dist/types/core/context/index.d.ts",
-      "jsnext:source": "./src/core/context/index.ts",
-      "default": "./dist/esm/core/context/index.js"
+      "default": "./dist/esm/core/context/index.mjs"
     },
     "./plugin": {
       "types": "./dist/types/core/plugin/index.d.ts",
-      "jsnext:source": "./src/core/plugin/index.ts",
-      "default": "./dist/esm/core/plugin/index.js"
+      "default": "./dist/esm/core/plugin/index.mjs"
     },
     "./react": {
       "types": "./dist/types/core/react/index.d.ts",
-      "jsnext:source": "./src/core/react/index.ts",
-      "default": "./dist/esm/core/react/index.js"
+      "default": "./dist/esm/core/react/index.mjs"
     },
     "./browser": {
       "types": "./dist/types/core/browser/index.d.ts",
-      "jsnext:source": "./src/core/browser/index.ts",
-      "default": "./dist/esm/core/browser/index.js"
+      "default": "./dist/esm/core/browser/index.mjs"
     },
     "./loadable": {
       "types": "./dist/types/exports/loadable.d.ts",
-      "jsnext:source": "./src/exports/loadable.ts",
-      "default": "./dist/esm/exports/loadable.js"
+      "default": "./dist/esm/exports/loadable.mjs"
     },
     "./head": {
       "types": "./dist/types/exports/head.d.ts",
-      "jsnext:source": "./src/exports/head.ts",
-      "default": "./dist/esm/exports/head.js"
-    },
-    "./styled": {
-      "types": "./dist/types/exports/styled.d.ts",
-      "jsnext:source": "./src/exports/styled.ts",
-      "default": "./dist/esm/exports/styled.js"
-    },
-    "./server": {
-      "types": "./dist/types/exports/server.d.ts",
-      "jsnext:source": "./src/exports/server.ts",
-      "node": "./dist/cjs/exports/server.js",
-      "default": "./dist/esm/exports/server.js"
+      "default": "./dist/esm/exports/head.mjs"
     },
     "./ssr": {
       "types": "./dist/types/core/server/index.d.ts",
-      "jsnext:source": "./src/core/server/index.ts",
-      "default": "./dist/esm/core/server/index.js"
+      "default": "./dist/esm/core/server/index.mjs"
     },
     "./ssr/server": {
       "types": "./dist/types/core/server/server.d.ts",
-      "jsnext:source": "./src/core/server/server.ts",
-      "default": "./dist/esm/core/server/server.js"
+      "default": "./dist/esm/core/server/server.mjs"
     },
     "./document": {
       "types": "./dist/types/document/index.d.ts",
-      "jsnext:source": "./src/document/index.ts",
-      "node": "./dist/cjs/document/index.js",
-      "default": "./dist/esm/document/index.js"
+      "default": "./dist/esm/document/index.mjs"
     },
     "./cli": {
       "types": "./dist/types/cli/index.d.ts",
-      "jsnext:source": "./src/cli/index.ts",
+      "node": {
+        "import": "./dist/esm-node/cli/index.mjs",
+        "require": "./dist/cjs/cli/index.js"
+      },
       "default": "./dist/cjs/cli/index.js"
     },
     "./router": {
       "types": "./dist/types/router/index.d.ts",
-      "jsnext:source": "./src/router/index.ts",
-      "default": "./dist/esm/router/index.js"
+      "react-server": {
+        "types": "./dist/types/router/runtime/rsc.d.ts",
+        "default": "./dist/esm/router/runtime/rsc.mjs"
+      },
+      "default": "./dist/esm/router/index.mjs"
     },
     "./router/server": {
       "types": "./dist/types/router/runtime/server.d.ts",
-      "jsnext:source": "./src/router/runtime/server.ts",
-      "default": "./dist/esm/router/runtime/server.js"
+      "default": "./dist/esm/router/runtime/server.mjs"
+    },
+    "./router/internal": {
+      "types": "./dist/types/router/internal.d.ts",
+      "default": "./dist/esm/router/internal.mjs"
+    },
+    "./routerHelper": {
+      "types": "./dist/types/router/runtime/routerHelper.d.ts",
+      "default": "./dist/esm/router/runtime/routerHelper.mjs"
     },
     "./loadable-bundler-plugin": {
       "types": "./dist/types/cli/ssr/loadable-bundler-plugin.d.ts",
-      "jsnext:source": "./src/cli/ssr/loadable-bundler-plugin.ts",
+      "node": {
+        "import": "./dist/esm-node/cli/ssr/loadable-bundler-plugin.mjs",
+        "require": "./dist/cjs/cli/ssr/loadable-bundler-plugin.js"
+      },
       "default": "./dist/cjs/cli/ssr/loadable-bundler-plugin.js"
     },
     "./rsc/server": {
       "types": "./dist/types/rsc/server.d.ts",
-      "jsnext:source": "./src/rsc/server.ts",
-      "default": "./dist/esm/rsc/server.js"
+      "default": "./dist/esm/rsc/server.mjs"
     },
     "./rsc/client": {
       "types": "./dist/types/rsc/client.d.ts",
-      "jsnext:source": "./src/rsc/client.ts",
-      "default": "./dist/esm/rsc/client.js"
+      "default": "./dist/esm/rsc/client.mjs"
     },
     "./cache": {
       "types": "./dist/types/cache/index.d.ts",
-      "jsnext:source": "./src/cache/index.ts",
-      "require": "./dist/cjs/cache/index.js",
-      "default": "./dist/esm/cache/index.js"
+      "default": "./dist/esm/cache/index.mjs"
+    },
+    "./config-routes": {
+      "types": "./dist/types/exports/config-routes.d.ts",
+      "node": {
+        "import": "./dist/esm-node/exports/config-routes.mjs",
+        "require": "./dist/cjs/exports/config-routes.js"
+      },
+      "default": "./dist/cjs/exports/config-routes.js"
     }
   },
   "typesVersions": {
@@ -133,8 +135,11 @@
       ".": [
         "./dist/types/index.d.ts"
       ],
-      "types": [
-        "./types/index.d.ts"
+      "react-server": [
+        "./dist/types/react-server.d.ts"
+      ],
+      "internal": [
+        "./dist/types/internal.d.ts"
       ],
       "loadable": [
         "./dist/types/exports/loadable.d.ts"
@@ -157,12 +162,6 @@
       "head": [
         "./dist/types/exports/head.d.ts"
       ],
-      "styled": [
-        "./dist/types/exports/styled.d.ts"
-      ],
-      "server": [
-        "./dist/types/exports/server.d.ts"
-      ],
       "document": [
         "./dist/types/document/index.d.ts"
       ],
@@ -178,6 +177,12 @@
       "router/server": [
         "./dist/types/router/runtime/server.d.ts"
       ],
+      "router/internal": [
+        "./dist/types/router/internal.d.ts"
+      ],
+      "routerHelper": [
+        "./dist/types/router/runtime/routerHelper.d.ts"
+      ],
       "loadable-bundler-plugin": [
         "./dist/types/cli/ssr/loadable-bundler-plugin.d.ts"
       ],
@@ -189,74 +194,67 @@
       ],
       "cache": [
         "./dist/types/cache/index.d.ts"
+      ],
+      "config-routes": [
+        "./dist/types/exports/config-routes.d.ts"
       ]
     }
   },
   "scripts": {
-    "dev": "modern-lib build --watch",
+    "dev": "rslib build --watch",
     "prepublishOnly": "only-allow-pnpm",
-    "new": "modern-lib new",
-    "build": "modern-lib build && pnpm run gen-static",
+    "build": "rslib build && pnpm run gen-static",
     "gen-static": "ts-node ./scripts/gen-static.ts",
-    "test": "jest"
+    "test": "rstest"
   },
   "dependencies": {
-    "@babel/core": "^7.26.0",
-    "@babel/types": "^7.26.0",
-    "@loadable/babel-plugin": "5.15.3",
-    "@loadable/component": "5.15.3",
-    "@loadable/server": "5.15.3",
+    "@loadable/component": "5.16.7",
+    "@loadable/server": "5.16.7",
     "@modern-js/plugin": "workspace:*",
     "@modern-js/plugin-data-loader": "workspace:*",
-    "@modern-js/plugin-v2": "workspace:*",
     "@modern-js/render": "workspace:*",
     "@modern-js/runtime-utils": "workspace:*",
     "@modern-js/types": "workspace:*",
     "@modern-js/utils": "workspace:*",
     "@swc/helpers": "^0.5.17",
-    "@types/loadable__component": "^5.13.4",
-    "@types/react-helmet": "^6.1.2",
-    "@types/styled-components": "^5.1.14",
+    "@swc/plugin-loadable-components": "^11.5.0",
+    "@types/loadable__component": "^5.13.10",
+    "@types/react-helmet": "^6.1.11",
     "cookie": "0.7.2",
-    "es-module-lexer": "^1.1.0",
+    "entities": "^7.0.1",
+    "es-module-lexer": "^1.7.0",
     "esbuild": "0.25.5",
     "invariant": "^2.2.4",
-    "isbot": "3.7.1",
+    "isbot": "3.8.0",
     "react-helmet": "^6.1.0",
-    "react-is": "^18",
-    "react-side-effect": "^2.1.2",
-    "styled-components": "^5.3.1"
+    "react-is": "^18.3.1"
   },
   "peerDependencies": {
-    "react": ">=17",
-    "react-dom": ">=17"
+    "react": ">=17.0.2",
+    "react-dom": ">=17.0.2"
   },
   "devDependencies": {
     "@modern-js/app-tools": "workspace:*",
+    "@modern-js/rslib": "workspace:*",
     "@remix-run/web-fetch": "^4.1.3",
-    "@rsbuild/core": "1.4.5",
-    "@scripts/build": "workspace:*",
-    "@scripts/jest-config": "workspace:*",
-    "@testing-library/react": "^13.4.0",
+    "@rsbuild/core": "2.0.0-beta.4",
+    "@rslib/core": "0.19.6",
+    "@scripts/rstest-config": "workspace:*",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/react": "^16.3.2",
     "@types/cookie": "0.6.0",
-    "@types/invariant": "^2.2.30",
-    "@types/jest": "^29",
+    "@types/invariant": "^2.2.37",
     "@types/loadable__server": "5.12.11",
-    "@types/loadable__webpack-plugin": "^5.7.3",
-    "@types/node": "^14",
-    "@types/react-side-effect": "^1.1.1",
-    "jest": "^29",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "ts-jest": "^29.1.0",
-    "ts-node": "^10.9.1",
-    "typescript": "^5",
-    "webpack": "^5.99.8"
+    "@types/node": "^20",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "ts-node": "^10.9.2",
+    "typescript": "^5"
   },
   "sideEffects": false,
   "publishConfig": {
     "registry": "https://registry.npmjs.org/",
     "access": "public",
-    "types": "./dist/types/index"
+    "types": "./dist/types/index.d.ts"
   }
 }

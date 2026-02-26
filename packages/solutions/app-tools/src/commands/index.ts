@@ -1,23 +1,20 @@
-import type { CLIPluginAPI } from '@modern-js/plugin-v2';
-import { castArray } from '@modern-js/uni-builder';
-import { type Command, newAction, upgradeAction } from '@modern-js/utils';
+import type { CLIPluginAPI } from '@modern-js/plugin';
+import type { Command } from '@modern-js/utils';
 import { i18n, localeKeys } from '../locale';
 import type { AppTools } from '../types';
 import type {
   BuildOptions,
   DeployOptions,
   DevOptions,
+  InfoOptions,
   InspectOptions,
 } from '../utils/types';
 
 export const devCommand = async (
   program: Command,
-  api: CLIPluginAPI<AppTools<'shared'>>,
+  api: CLIPluginAPI<AppTools>,
 ) => {
-  const hooks = api.getHooks();
-  const devToolMetas = await hooks.registerDev.call();
-
-  const devProgram = program
+  program
     .command('dev')
     .alias('start')
     .usage('[options]')
@@ -31,33 +28,13 @@ export const devCommand = async (
       const { dev } = await import('./dev.js');
       await dev(api, options);
     });
-
-  for (const meta of devToolMetas) {
-    if (!meta.subCommands) {
-      continue;
-    }
-
-    for (const subCmd of meta.subCommands) {
-      devProgram.command(subCmd).action(async (options: DevOptions = {}) => {
-        const { appDirectory } = api.getAppContext();
-        const { isTypescript } = await import('@modern-js/utils');
-
-        await meta.action(options, {
-          isTsProject: isTypescript(appDirectory),
-        });
-      });
-    }
-  }
 };
 
 export const buildCommand = async (
   program: Command,
-  api: CLIPluginAPI<AppTools<'shared'>>,
+  api: CLIPluginAPI<AppTools>,
 ) => {
-  const hooks = api.getHooks();
-  const platformBuilders = await hooks.registerBuildPlatform.call();
-
-  const buildProgram = program
+  program
     .command('build')
     .usage('[options]')
     .description(i18n.t(localeKeys.command.build.describe))
@@ -68,25 +45,11 @@ export const buildCommand = async (
       const { build } = await import('./build.js');
       await build(api, options);
     });
-
-  for (const platformBuilder of platformBuilders) {
-    const platforms = castArray(platformBuilder.platform);
-    for (const platform of platforms) {
-      buildProgram.command(platform).action(async () => {
-        const { appDirectory } = api.getAppContext();
-        const { isTypescript } = await import('@modern-js/utils');
-
-        await platformBuilder.build(platform, {
-          isTsProject: isTypescript(appDirectory),
-        });
-      });
-    }
-  }
 };
 
 export const serverCommand = (
   program: Command,
-  api: CLIPluginAPI<AppTools<'shared'>>,
+  api: CLIPluginAPI<AppTools>,
 ) => {
   program
     .command('serve')
@@ -102,7 +65,7 @@ export const serverCommand = (
 
 export const deployCommand = (
   program: Command,
-  api: CLIPluginAPI<AppTools<'shared'>>,
+  api: CLIPluginAPI<AppTools>,
 ) => {
   program
     .command('deploy')
@@ -122,38 +85,9 @@ export const deployCommand = (
     });
 };
 
-export const newCommand = (program: Command, locale: string) => {
-  program
-    .command('new')
-    .usage('[options]')
-    .description(i18n.t(localeKeys.command.new.describe))
-    .option(
-      '--config-file <configFile>',
-      i18n.t(localeKeys.command.shared.config),
-    )
-    .option('--lang <lang>', i18n.t(localeKeys.command.new.lang))
-    .option('-c, --config <config>', i18n.t(localeKeys.command.new.config))
-    .option('-d, --debug', i18n.t(localeKeys.command.new.debug), false)
-    .option('--dist-tag <tag>', i18n.t(localeKeys.command.new.distTag))
-    .option('--registry', i18n.t(localeKeys.command.new.registry))
-    .option(
-      '--no-need-install',
-      i18n.t(localeKeys.command.shared.noNeedInstall),
-    )
-    .action(async (options: any) => {
-      await newAction(
-        {
-          ...options,
-          locale: options.lang || locale,
-        },
-        'mwa',
-      );
-    });
-};
-
 export const inspectCommand = (
   program: Command,
-  api: CLIPluginAPI<AppTools<'shared'>>,
+  api: CLIPluginAPI<AppTools>,
 ) => {
   program
     .command('inspect')
@@ -176,12 +110,15 @@ export const inspectCommand = (
     });
 };
 
-export const upgradeCommand = (program: Command) => {
+export const infoCommand = (program: Command, api: CLIPluginAPI<AppTools>) => {
   program
-    .command('upgrade')
-    .allowUnknownOption()
-    .option('-h --help', 'Show help') // In order to upgrade help work.
-    .action(async () => {
-      await upgradeAction();
+    .command('info')
+    .usage('[options]')
+    .description(i18n.t(localeKeys.command.info.describe))
+    .option('-c --config <config>', i18n.t(localeKeys.command.shared.config))
+    .option('--json', 'output as JSON format for machine reading')
+    .action(async (options: InfoOptions) => {
+      const { info } = await import('./info.js');
+      await info(api, options);
     });
 };

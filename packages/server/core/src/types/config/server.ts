@@ -17,15 +17,14 @@ export type SSR =
       forceCSR?: boolean;
       mode?: SSRMode;
       inlineScript?: boolean;
-      disablePrerender?: boolean;
       unsafeHeaders?: string[];
-      scriptLoading?: 'defer' | 'blocking' | 'module' | 'async';
       loaderFailureMode?: 'clientRender' | 'errorBoundary';
     };
 
 export type SSRByEntries = Record<string, SSR>;
 
 export interface ServerUserConfig {
+  publicDir?: string | string[];
   routes?: Routes;
   /**
    * Experimenal, it is not recommended to use it now
@@ -38,7 +37,7 @@ export interface ServerUserConfig {
   baseUrl?: string | string[];
   port?: number;
   watchOptions?: WatchOptions;
-  compiler?: 'babel' | 'typescript';
+  compiler?: 'typescript';
   /**
    * @description use json script tag instead of inline script
    * @default false

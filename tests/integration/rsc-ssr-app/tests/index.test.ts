@@ -14,7 +14,6 @@ import {
 const appDir = path.resolve(__dirname, '../');
 
 interface TestConfig {
-  bundler: 'webpack' | 'rspack';
   mode: 'dev' | 'build';
 }
 
@@ -34,8 +33,8 @@ function skipForLowerNodeVersion() {
   return false;
 }
 
-function runTests({ bundler, mode }: TestConfig) {
-  describe(`${mode} with ${bundler}`, () => {
+function runTests({ mode }: TestConfig) {
+  describe(`${mode}`, () => {
     let app: any;
     let appPort: number;
     let page: Page;
@@ -50,20 +49,9 @@ function runTests({ bundler, mode }: TestConfig) {
       appPort = await getPort();
 
       if (mode === 'dev') {
-        app = await launchApp(
-          appDir,
-          appPort,
-          {},
-          {
-            BUNDLER: bundler,
-          },
-        );
+        app = await launchApp(appDir, appPort);
       } else {
-        await modernBuild(appDir, [], {
-          env: {
-            BUNDLER: bundler,
-          },
-        });
+        await modernBuild(appDir);
         app = await modernServe(appDir, appPort, {
           cwd: appDir,
         });
@@ -74,7 +62,7 @@ function runTests({ bundler, mode }: TestConfig) {
 
       if (mode === 'build') {
         page.on('pageerror', error => {
-          errors.push(error.message);
+          errors.push((error as Error).message);
         });
       }
     });
@@ -104,6 +92,8 @@ function runTests({ bundler, mode }: TestConfig) {
         supportServerAction({ baseUrl, appPort, page }));
       it('should support response api', () =>
         supportResponseAPIForServerRoot({ baseUrl, appPort, page }));
+      it('support inject first screen css', () =>
+        supportInjectCssFirstScreen({ baseUrl, appPort, page }));
     });
   });
 }
@@ -224,7 +214,31 @@ async function supportResponseAPIForClientRoot({
   expect(redirectWithHeadersRes.headers.get('x-redirect-test')).toBe('test');
 }
 
-runTests({ bundler: 'rspack', mode: 'dev' });
-runTests({ bundler: 'rspack', mode: 'build' });
-runTests({ bundler: 'webpack', mode: 'dev' });
-runTests({ bundler: 'webpack', mode: 'build' });
+async function supportInjectCssFirstScreen({
+  baseUrl,
+  appPort,
+  page,
+}: TestOptions) {
+  await page.goto(`http://localhost:${appPort}${baseUrl}`, {
+    waitUntil: ['networkidle0', 'domcontentloaded'],
+  });
+
+  // Check if the root element has the CSS styles applied
+  const rootElement = await page.$('#root');
+  expect(rootElement).not.toBeNull();
+
+  // Use attribute selector to match CSS Modules hashed class names
+  const backgroundColor = await page.$eval('[class*="root"]', el => {
+    const styles = window.getComputedStyle(el);
+    return styles.backgroundColor;
+  });
+
+  // Check if the background color matches the CSS (rgb(195, 255, 0))
+  const isCorrectColor =
+    backgroundColor === 'rgb(195, 255, 0)' ||
+    backgroundColor === 'rgba(195, 255, 0, 1)';
+  expect(isCorrectColor).toBe(true);
+}
+
+runTests({ mode: 'dev' });
+runTests({ mode: 'build' });

@@ -1,15 +1,15 @@
 import { transformNestedRoutes } from '@modern-js/runtime-utils/browser';
+import type { DeferredData } from '@modern-js/runtime-utils/browser';
 import {
   createRequestContext,
   reporterCtx,
 } from '@modern-js/runtime-utils/node';
 import { storage } from '@modern-js/runtime-utils/node';
 import {
-  UNSAFE_DEFERRED_SYMBOL as DEFERRED_SYMBOL,
-  type UNSAFE_DeferredData as DeferredData,
+  DEFERRED_SYMBOL,
   createStaticHandler,
   isRouteErrorResponse,
-} from '@modern-js/runtime-utils/remix-router';
+} from '@modern-js/runtime-utils/router';
 import { matchEntry } from '@modern-js/runtime-utils/server';
 import { time } from '@modern-js/runtime-utils/time';
 import { parseHeaders } from '@modern-js/runtime-utils/universal/request';
@@ -52,6 +52,18 @@ function convertModernRedirectResponse(headers: Headers, basename: string) {
   });
 }
 
+export function hasFileExtension(pathname: string): boolean {
+  const lastSegment = pathname.split('/').pop() || '';
+  const dotIndex = lastSegment.lastIndexOf('.');
+
+  if (dotIndex === -1) {
+    return false;
+  }
+
+  const extension = lastSegment.substring(dotIndex).toLowerCase();
+  return extension !== '.html';
+}
+
 export const handleRequest: ServerLoaderBundle['handleRequest'] = async ({
   request,
   serverRoutes,
@@ -61,6 +73,13 @@ export const handleRequest: ServerLoaderBundle['handleRequest'] = async ({
 }): Promise<Response | void> => {
   const url = new URL(request.url);
   const routeId = url.searchParams.get(LOADER_ID_PARAM) as string;
+
+  // Check if pathname has file extension (excluding .html)
+  // Reject requests like /three/user/profile.js but allow /three/user/profile
+  if (hasFileExtension(url.pathname)) {
+    return;
+  }
+
   const entry = matchEntry(url.pathname, serverRoutes);
   // LOADER_ID_PARAM is the indicator for CSR data loader request.
   if (!routeId || !entry) {

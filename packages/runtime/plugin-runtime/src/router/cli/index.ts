@@ -1,17 +1,12 @@
 import path from 'node:path';
-import type { AppTools, CliPluginFuture } from '@modern-js/app-tools';
+import type { AppTools, CliPlugin } from '@modern-js/app-tools';
 import type {
   Entrypoint,
   NestedRouteForCli,
   PageRoute,
   ServerRoute,
 } from '@modern-js/types';
-import {
-  fs,
-  NESTED_ROUTE_SPEC_FILE,
-  createRuntimeExportsUtils,
-  getEntryOptions,
-} from '@modern-js/utils';
+import { fs, NESTED_ROUTE_SPEC_FILE } from '@modern-js/utils';
 import { filterRoutesForServer } from '@modern-js/utils';
 import { isRouteEntry } from './entry';
 import {
@@ -23,7 +18,7 @@ import {
 export { isRouteEntry } from './entry';
 export { handleFileChange, handleModifyEntrypoints } from './handler';
 
-export const routerPlugin = (): CliPluginFuture<AppTools<'shared'>> => ({
+export const routerPlugin = (): CliPlugin<AppTools> => ({
   name: '@modern-js/plugin-router',
   required: ['@modern-js/runtime'],
   setup: api => {
@@ -32,33 +27,33 @@ export const routerPlugin = (): CliPluginFuture<AppTools<'shared'>> => ({
 
     const { metaName } = api.getAppContext();
 
-    const isRouterV5 = api.isPluginExists(`@${metaName}/plugin-router-v5`);
+    api.addCommand(({ program }) => {
+      program
+        .command('routes')
+        .description('generate routes inspect report')
+        .action(async () => {
+          const { generateRoutesInspectReport } = await import(
+            './code/inspect'
+          );
+          await generateRoutesInspectReport(api);
+        });
+    });
+
     api._internalRuntimePlugins(({ entrypoint, plugins }) => {
-      const { nestedRoutesEntry, pageRoutesEntry } = entrypoint as Entrypoint;
-      const { packageName, serverRoutes, metaName } = api.getAppContext();
+      const { nestedRoutesEntry } = entrypoint as Entrypoint;
+      const { serverRoutes, metaName } = api.getAppContext();
       const serverBase = serverRoutes
         .filter(
           (route: ServerRoute) => route.entryName === entrypoint.entryName,
         )
         .map(route => route.urlPath)
         .sort((a, b) => (a.length - b.length > 0 ? -1 : 1));
-      const userConfig = api.getNormalizedConfig();
-      const routerConfig = getEntryOptions(
-        entrypoint.entryName,
-        entrypoint.isMainEntry!,
-        userConfig.runtime,
-        userConfig.runtimeByEntries,
-        packageName,
-      )?.router;
 
-      if ((nestedRoutesEntry || pageRoutesEntry) && !isRouterV5) {
+      if (nestedRoutesEntry) {
         plugins.push({
           name: 'router',
-          path: `@${metaName}/runtime/router`,
-          config:
-            typeof routerConfig === 'boolean'
-              ? { serverBase }
-              : { ...routerConfig, serverBase },
+          path: `@${metaName}/runtime/router/internal`,
+          config: { serverBase },
         });
       }
 
@@ -71,44 +66,25 @@ export const routerPlugin = (): CliPluginFuture<AppTools<'shared'>> => ({
       return {
         source: {
           include: [
-            // react-router v6 is no longer support ie 11
+            // react-router v6 and v7 is no longer support ie 11
             // so we need to compile these packages to ensure the compatibility
             // https://github.com/remix-run/react-router/commit/f6df0697e1b2064a2b3a12e8b39577326fdd945b
-            /node_modules\/react-router/,
-            /node_modules\/react-router-dom/,
-            /node_modules\/@remix-run\/router/,
+            /[\\/]node_modules[\\/]react-router[\\/]/,
+            /[\\/]node_modules[\\/]react-router-dom[\\/]/,
+            path.resolve(__dirname, '../runtime').replace('cjs', 'esm'),
           ],
-          globalVars: {
-            'process.env._MODERN_ROUTER_VERSION': 'v6',
-          },
         },
       };
     });
     api.modifyEntrypoints(async ({ entrypoints }) => {
-      const newEntryPoints = await handleModifyEntrypoints(
-        isRouterV5,
-        entrypoints,
-      );
+      const newEntryPoints = await handleModifyEntrypoints(entrypoints);
       return { entrypoints: newEntryPoints };
     });
     api.generateEntryCode(async ({ entrypoints }) => {
-      await handleGeneratorEntryCode(api, entrypoints, isRouterV5);
-    });
-    api.addRuntimeExports(() => {
-      const { internalDirectory, metaName } = api.useAppContext();
-
-      const pluginsExportsUtils = createRuntimeExportsUtils(
-        internalDirectory,
-        'plugins',
-      );
-      if (!isRouterV5) {
-        pluginsExportsUtils.addExport(
-          `export { default as router } from '@${metaName}/runtime/router'`,
-        );
-      }
+      await handleGeneratorEntryCode(api, entrypoints);
     });
     api.onFileChanged(async e => {
-      await handleFileChange(api, isRouterV5, e);
+      await handleFileChange(api, e);
     });
 
     api.modifyFileSystemRoutes(({ entrypoint, routes }) => {

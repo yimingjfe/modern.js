@@ -2,8 +2,6 @@
 
 .pnp
 .pnp.js
-.env.local
-.env.*.local
 .history
 *.log*
 
@@ -13,6 +11,7 @@ node_modules/
 .eslintcache
 
 dist/
+dist-ssg/
 doc_build/
 !**/compiled/**/dist
 coverage/
@@ -53,3 +52,9 @@ playground/
 .netlify/
 
 .swc/
+
+.swe
+.cursor
+.claude
+AGENTS.md
+.specify/

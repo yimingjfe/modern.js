@@ -15,29 +15,27 @@
     "modern",
     "modern.js"
   ],
-  "version": "2.68.0",
-  "jsnext:source": "./src/index.ts",
+  "version": "3.0.3",
   "types": "./src/index.ts",
   "main": "./dist/cjs/index.js",
-  "module": "./dist/esm/index.js",
   "exports": {
     ".": {
+      "types": "./dist/types/index.d.ts",
+      "modern:source": "./src/index.ts",
       "node": {
-        "jsnext:source": "./src/index.ts",
-        "import": "./dist/esm-node/index.js",
+        "import": "./dist/esm-node/index.mjs",
         "require": "./dist/cjs/index.js"
       },
-      "types": "./dist/types/index.d.ts",
       "default": "./dist/cjs/index.js"
     },
     "./cache": {
+      "types": "./dist/types/cache.d.ts",
       "node": {
-        "jsnext:source": "./src/cache.ts",
-        "import": "./dist/esm-node/cache.js",
+        "module": "./dist/esm/cache.mjs",
+        "import": "./dist/esm-node/cache.mjs",
         "require": "./dist/cjs/cache.js"
       },
-      "types": "./dist/types/cache.d.ts",
-      "default": "./dist/cjs/cache.js"
+      "default": "./dist/esm/cache.mjs"
     }
   },
   "typesVersions": {
@@ -52,27 +50,39 @@
   },
   "scripts": {
     "prepublishOnly": "only-allow-pnpm",
-    "new": "modern-lib new",
-    "build": "modern-lib build",
-    "test": "jest --passWithNoTests"
+    "dev": "rslib build --watch",
+    "build": "rslib build",
+    "test": "rstest --passWithNoTests"
   },
   "dependencies": {
     "@modern-js/runtime-utils": "workspace:*",
     "@modern-js/server-core": "workspace:*",
+    "@modern-js/types": "workspace:*",
     "@swc/helpers": "^0.5.17"
   },
   "devDependencies": {
-    "@scripts/build": "workspace:*",
-    "@scripts/jest-config": "workspace:*",
-    "@types/jest": "^29",
-    "@types/node": "^14",
-    "jest": "^29",
-    "ts-jest": "^29.1.0",
+    "@modern-js/rslib": "workspace:*",
+    "@rslib/core": "0.19.6",
+    "@scripts/rstest-config": "workspace:*",
+    "@types/node": "^20",
     "typescript": "^5"
   },
+  "sideEffects": false,
   "publishConfig": {
     "registry": "https://registry.npmjs.org/",
     "access": "public",
-    "types": "./dist/types/index.d.ts"
+    "types": "./dist/types/index.d.ts",
+    "exports": {
+      ".": {
+        "types": "./dist/types/index.d.ts",
+        "import": "./dist/esm-node/index.mjs",
+        "default": "./dist/cjs/index.js"
+      },
+      "./cache": {
+        "types": "./dist/types/cache.d.ts",
+        "import": "./dist/esm-node/cache.mjs",
+        "default": "./dist/cjs/cache.js"
+      }
+    }
   }
 }

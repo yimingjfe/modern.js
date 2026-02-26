@@ -1,5 +1,5 @@
 import { type Key, compile, pathToRegexp } from 'path-to-regexp';
-import { stringify } from 'query-string';
+import { stringify } from 'qs';
 import { handleRes } from './handleRes';
 import type {
   BFFRequestPayload,
@@ -48,7 +48,7 @@ export const configure = (options: IOptions) => {
       }),
     );
   }
-  realRequest.set(requestId, configuredRequest);
+  realRequest.set(requestId, configuredRequest as any);
 };
 
 export const createRequest: RequestCreator = ({

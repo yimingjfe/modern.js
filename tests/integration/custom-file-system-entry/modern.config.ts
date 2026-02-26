@@ -1,7 +1,5 @@
 import { appTools, defineConfig } from '@modern-js/app-tools';
 
-const bundler = process.env.BUNDLER;
-
 export default defineConfig({
   source: {
     entries: {
@@ -9,12 +7,8 @@ export default defineConfig({
     },
     disableDefaultEntries: true,
   },
-  runtime: {
-    router: true,
+  plugins: [appTools()],
+  performance: {
+    buildCache: false,
   },
-  plugins: [
-    appTools({
-      bundler: bundler === 'rspack' ? 'rspack' : 'webpack',
-    }),
-  ],
 });

@@ -1,3 +1,4 @@
+import { createRequire } from 'node:module';
 import { Import } from './import';
 
 export { default as fs } from '../compiled/fs-extra';
@@ -28,27 +29,47 @@ export { default as dotenvExpand } from '../compiled/dotenv-expand';
 export { default as browserslist } from '../compiled/browserslist';
 
 export { program, Command } from '../compiled/commander';
-export { Signale } from '../compiled/signale';
+
+import _signale from '../compiled/signale';
+export const { Signale } = _signale;
+
 export type { SignaleOptions } from '../compiled/signale';
 export type { IOptions as GlobOptions } from '../compiled/glob';
 export type { GlobbyOptions } from '../compiled/globby';
 export type { FSWatcher, WatchOptions } from '../compiled/chokidar';
 export type { ExecaError } from '../compiled/execa';
-export type { default as WebpackChain } from '../compiled/webpack-chain';
 
 /**
  * Lazy import some expensive modules that will slow down startup speed.
  * Notice that `csmith-tools build` can not bundle lazy imported modules.
  */
+const getNodeRequire = () => {
+  if (
+    typeof global === 'object' &&
+    typeof (global as any).require === 'function'
+  ) {
+    return (global as any).require;
+  }
+  if (
+    typeof globalThis === 'object' &&
+    typeof (globalThis as any).require === 'function'
+  ) {
+    return (globalThis as any).require;
+  }
+
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore - import.meta is only valid in ESM, but we only execute this in ESM
+  return /*#__PURE__*/ createRequire(import.meta.url);
+};
 export const mime: typeof import('../compiled/mime-types') = Import.lazy(
   '../compiled/mime-types',
-  require,
+  getNodeRequire,
 );
 export const chokidar: typeof import('../compiled/chokidar') = Import.lazy(
   '../compiled/chokidar',
-  require,
+  getNodeRequire,
 );
 export const inquirer: typeof import('../compiled/inquirer') = Import.lazy(
   '../compiled/inquirer',
-  require,
+  getNodeRequire,
 );

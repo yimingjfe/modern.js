@@ -1,26 +1,39 @@
 export const EN_LOCALE = {
-  command: {
-    description: 'create Modern.js solution project',
-    mwa: 'create mwa application using default config',
-    module: 'create module application using default config',
-    monorepo: 'create monorepo application using default config',
-    config: 'set default project config(json string)',
-    packages: 'set project specific dependency version information',
-    distTag: `use specified tag version for it's generator`,
-    registry: 'set npm registry url to run npm command',
-    debug: 'using debug mode to log something',
-    generator: 'run custom generator',
-    plugin:
-      'use generator plugin to create new solution or customize Modern.js solution',
-    noNeedInstall: 'not run install command',
-    version: 'show create tools version',
-    lang: 'set create tools language(en or zh)',
-    cleanCache: 'clean locale generator cache',
-    time: 'show run generator time log',
+  prompt: {
+    projectName: 'Please enter project name: ',
   },
-  tooltip: {
-    dir_entry: `you can execute 'cd {dirName}' to entry the project directory`,
-    dir_exists: `directory '{dirName}' already exists`,
-    clean_cache_success: 'Clean generator cache success!',
+  error: {
+    projectNameEmpty: 'Error: Project name cannot be empty',
+    directoryExists:
+      'Error: Directory "{projectName}" already exists and is not empty',
+    createFailed: 'Error creating project:',
+  },
+  message: {
+    welcome: '🚀 Welcome to Modern.js',
+    success: '✨ Created successfully!',
+    nextSteps: '📋 Next steps:',
+    step1: 'cd {projectName}',
+    step2: 'pnpm install',
+    step3: 'pnpm dev',
+  },
+  help: {
+    title: '🚀 Modern.js Project Creator',
+    description: 'Create a new Modern.js project with ease',
+    usage: '📖 Usage:',
+    usageExample: '  create [project-name] [options]',
+    options: '⚙️  Options:',
+    optionHelp: '  -h, --help     Display this help message',
+    optionVersion: '  -v, --version  Display version information',
+    optionLang: '  -l, --lang     Set the language (zh or en)',
+    optionSub: '  -s, --sub       Mark as a subproject (package in monorepo)',
+    examples: '💡 Examples:',
+    example1: '  create my-app',
+    example2: '  create my-app --lang zh',
+    example3: '  create my-app --sub',
+    example4: '  create --help',
+    moreInfo: '📚 Learn more: https://modernjs.dev',
+  },
+  version: {
+    message: '@modern-js/create version: {version}',
   },
 };

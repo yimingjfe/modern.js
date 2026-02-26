@@ -18,7 +18,8 @@ import type {
   RequestHandlerOptions,
 } from '../../types/requestHandler';
 import { getPathname, parseHeaders } from '../../utils';
-import { getCacheResult, matchCacheControl } from './ssrCache';
+import { getCacheResult, matchCacheControl, shouldUseCache } from './ssrCache';
+import { createRequestHandlerConfig } from './utils';
 
 // TODO: It's a type combine by RenderOptions and CreateRenderOptions, improve it.
 export interface SSRRenderOptions {
@@ -36,9 +37,6 @@ export interface SSRRenderOptions {
   loaderContext: Map<string, unknown>;
 
   params: Params;
-  logger: Logger;
-  metrics?: Metrics;
-  reporter?: Reporter;
   /** Produce by custom server hook */
   locals?: Record<string, any>;
   cacheConfig?: CacheConfig;
@@ -47,6 +45,7 @@ export interface SSRRenderOptions {
   monitors: Monitors;
   onError: OnError;
   onTiming: OnTiming;
+  reporter?: Reporter;
 }
 
 const SERVER_RUNTIME_ENTRY = 'requestHandler';
@@ -66,13 +65,11 @@ export async function ssrRender(
     locals,
     params,
     loaderContext,
-    reporter,
     monitors,
     cacheConfig,
-    logger,
-    metrics,
     onError,
     onTiming,
+    reporter,
   }: SSRRenderOptions,
 ): Promise<Response> {
   const { entryName } = routeInfo;
@@ -117,14 +114,11 @@ export async function ssrRender(
     rscServerManifest,
 
     locals,
-    reporter,
     staticGenerate,
-    logger,
-    metrics,
     monitors,
-
     onError,
     onTiming,
+    reporter,
   };
 
   const cacheControl = await matchCacheControl(
@@ -134,7 +128,7 @@ export async function ssrRender(
 
   let response: Response;
 
-  if (cacheControl) {
+  if (cacheControl && shouldUseCache(request)) {
     response = await getCacheResult(request, {
       cacheControl,
       container: cacheConfig?.container,
@@ -168,22 +162,4 @@ class IncomingMessgeProxy {
 
     this.url = getPathname(req);
   }
-}
-
-function createRequestHandlerConfig(
-  userConfig: UserConfig,
-): RequestHandlerConfig {
-  const { output, server, security, html, source } = userConfig;
-
-  return {
-    ssr: server?.ssr,
-    ssrByEntries: server?.ssrByEntries,
-    nonce: security?.nonce,
-    enableInlineScripts: output?.enableInlineScripts,
-    enableInlineStyles: output?.enableInlineStyles,
-    crossorigin: html?.crossorigin,
-    scriptLoading: html?.scriptLoading,
-    useJsonScript: server?.useJsonScript,
-    enableAsyncEntry: source?.enableAsyncEntry,
-  };
 }

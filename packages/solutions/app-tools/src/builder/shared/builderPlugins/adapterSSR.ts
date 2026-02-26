@@ -1,10 +1,10 @@
 import * as path from 'path';
 import {
-  type HtmlWebpackPlugin,
+  type Rspack,
   SERVICE_WORKER_ENVIRONMENT_NAME,
   isHtmlDisabled,
-} from '@modern-js/uni-builder';
-import { fs, isUseSSRBundle } from '@modern-js/utils';
+} from '@modern-js/builder';
+import { fs, isUseRsc, isUseSSRBundle } from '@modern-js/utils';
 import {
   type RsbuildPlugin,
   type RspackChain,
@@ -13,15 +13,14 @@ import {
 import { getServerCombinedModueFile } from '../../../plugins/analyze/utils';
 import type {
   AppNormalizedConfig,
-  Bundler,
   SSGMultiEntryOptions,
   ServerUserConfig,
 } from '../../../types';
 import { HtmlAsyncChunkPlugin, RouterPlugin } from '../bundlerPlugins';
 import type { BuilderOptions } from '../types';
 
-export const builderPluginAdapterSSR = <B extends Bundler>(
-  options: BuilderOptions<B>,
+export const builderPluginAdapterSSR = (
+  options: BuilderOptions,
 ): RsbuildPlugin => ({
   name: 'builder-plugin-adapter-modern-ssr',
 
@@ -30,12 +29,15 @@ export const builderPluginAdapterSSR = <B extends Bundler>(
     api.modifyRsbuildConfig(config => {
       return mergeRsbuildConfig(config, {
         html: {
-          inject: isStreamingSSR(normalizedConfig) ? 'body' : undefined,
+          inject: isStreamingSSR(normalizedConfig) ? 'head' : undefined,
         },
         server: {
           // the http-compression can't handler stream http.
           // so we disable compress when user use stream ssr temporarily.
-          compress: isStreamingSSR(normalizedConfig) ? false : undefined,
+          compress:
+            isStreamingSSR(normalizedConfig) || isUseRsc(normalizedConfig)
+              ? false
+              : undefined,
         },
       });
     });
@@ -58,7 +60,7 @@ export const builderPluginAdapterSSR = <B extends Bundler>(
           chain,
           'route-plugin',
           options,
-          HtmlBundlerPlugin as unknown as typeof HtmlWebpackPlugin,
+          HtmlBundlerPlugin as unknown as typeof Rspack.HtmlRspackPlugin,
         );
 
         const isServiceWorker =
@@ -72,7 +74,7 @@ export const builderPluginAdapterSSR = <B extends Bundler>(
           });
         }
 
-        if (isUseSSRBundle(normalizedConfig)) {
+        if (isUseSSRBundle(normalizedConfig) || isUseRsc(normalizedConfig)) {
           await applySSRLoaderEntry(chain, options, isServer);
           applySSRDataLoader(chain, options);
         }
@@ -89,9 +91,18 @@ export const builderPluginAdapterSSR = <B extends Bundler>(
   },
 });
 
-const isStreamingSSR = (userConfig: AppNormalizedConfig<'shared'>): boolean => {
-  const isStreaming = (ssr: ServerUserConfig['ssr']) =>
-    ssr && typeof ssr === 'object' && ssr.mode === 'stream';
+const isStreamingSSR = (userConfig: AppNormalizedConfig): boolean => {
+  const isStreaming = (ssr: ServerUserConfig['ssr']) => {
+    if (!ssr) {
+      return false;
+    }
+    if (typeof ssr === 'boolean') {
+      // When ssr is boolean true, default mode is 'stream'
+      return ssr;
+    }
+    // When ssr is object, default mode is 'stream' unless explicitly set to 'string'
+    return ssr.mode !== 'string';
+  };
 
   const { server } = userConfig;
 
@@ -118,21 +129,21 @@ function applyAsyncChunkHtmlPlugin({
   HtmlBundlerPlugin,
 }: {
   chain: RspackChain;
-  modernConfig: AppNormalizedConfig<'shared'>;
+  modernConfig: AppNormalizedConfig;
   HtmlBundlerPlugin: any;
 }) {
-  if (isStreamingSSR(modernConfig)) {
+  if (isStreamingSSR(modernConfig) || isUseRsc(modernConfig)) {
     chain
       .plugin('html-async-chunk')
       .use(HtmlAsyncChunkPlugin, [HtmlBundlerPlugin]);
   }
 }
 
-function applyRouterPlugin<B extends Bundler>(
+function applyRouterPlugin(
   chain: RspackChain,
   pluginName: string,
-  options: Readonly<BuilderOptions<B>>,
-  HtmlBundlerPlugin: typeof HtmlWebpackPlugin,
+  options: Readonly<BuilderOptions>,
+  HtmlBundlerPlugin: typeof Rspack.HtmlRspackPlugin,
 ) {
   const { appContext, normalizedConfig } = options;
   const { entrypoints } = appContext;
@@ -140,8 +151,6 @@ function applyRouterPlugin<B extends Bundler>(
     entrypoint => entrypoint.nestedRoutesEntry,
   );
 
-  const routerConfig: any = normalizedConfig?.runtime?.router;
-  const routerManifest = Boolean(routerConfig?.manifest);
   const workerSSR = Boolean(normalizedConfig.deploy.worker?.ssr);
 
   const { enableInlineRouteManifests, disableInlineRouteManifests } =
@@ -150,13 +159,13 @@ function applyRouterPlugin<B extends Bundler>(
     ? !disableInlineRouteManifests
     : enableInlineRouteManifests;
 
-  if (existNestedRoutes || routerManifest || workerSSR) {
+  if (existNestedRoutes || workerSSR) {
     chain.plugin(pluginName).use(RouterPlugin, [
       {
         HtmlBundlerPlugin,
         enableInlineRouteManifests: inlineRouteManifests!,
         staticJsDir: normalizedConfig.output?.distPath?.js,
-        disableFilenameHash: normalizedConfig.output?.disableFilenameHash,
+        disableFilenameHash: normalizedConfig.output?.filenameHash === false,
         scriptLoading: normalizedConfig.html?.scriptLoading,
         nonce: normalizedConfig.security?.nonce,
       },
@@ -171,7 +180,7 @@ function applyFilterEntriesBySSRConfig({
 }: {
   isProd: boolean;
   chain: RspackChain;
-  appNormalizedConfig: AppNormalizedConfig<'shared'>;
+  appNormalizedConfig: AppNormalizedConfig;
 }) {
   const { server: serverConfig, output: outputConfig } = appNormalizedConfig;
 
@@ -179,8 +188,7 @@ function applyFilterEntriesBySSRConfig({
   // if prod and ssg config is true or function
   if (
     isProd &&
-    (outputConfig?.ssg === true ||
-      typeof (outputConfig?.ssg as Array<unknown>)?.[0] === 'function')
+    (outputConfig?.ssg === true || typeof outputConfig?.ssg === 'function')
   ) {
     return;
   }
@@ -200,10 +208,10 @@ function applyFilterEntriesBySSRConfig({
 
   // collect all ssg entries
   const ssgEntries: string[] = [];
-  if (isProd && outputConfig?.ssg) {
-    const { ssg } = outputConfig;
+  if (isProd && outputConfig?.ssgByEntries) {
+    const { ssgByEntries } = outputConfig;
     entryNames.forEach(name => {
-      if ((ssg as SSGMultiEntryOptions)[name]) {
+      if (ssgByEntries[name]) {
         ssgEntries.push(name);
       }
     });
@@ -223,9 +231,9 @@ function applyFilterEntriesBySSRConfig({
   });
 }
 
-async function applySSRLoaderEntry<B extends Bundler>(
+async function applySSRLoaderEntry(
   chain: RspackChain,
-  optinos: BuilderOptions<B>,
+  optinos: BuilderOptions,
   isServer: boolean,
 ) {
   const { appContext } = optinos;
@@ -262,10 +270,7 @@ async function applySSRLoaderEntry<B extends Bundler>(
   );
 }
 
-function applySSRDataLoader<B extends Bundler>(
-  chain: RspackChain,
-  options: BuilderOptions<B>,
-) {
+function applySSRDataLoader(chain: RspackChain, options: BuilderOptions) {
   const { normalizedConfig, appContext } = options;
   const { appDirectory } = appContext;
 
@@ -286,6 +291,7 @@ function applySSRDataLoader<B extends Bundler>(
     .rule('ssr-data-loader')
     .test(reg)
     .use('data-loader')
+    // TODO: support ESM
     .loader(require.resolve('@modern-js/plugin-data-loader/loader'))
     .end();
 }

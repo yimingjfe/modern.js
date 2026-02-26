@@ -1,5 +1,5 @@
 import path from 'path';
-import { expect, test } from '@modern-js/e2e/playwright';
+import { expect, test } from '@playwright/test';
 import type { RsbuildConfig } from '@rsbuild/core';
 import { build, proxyConsole } from '@scripts/shared';
 
@@ -22,6 +22,9 @@ test('should throw error when exist syntax errors', async () => {
         ...getCommonBuildConfig(cwd),
         security: {
           checkSyntax: true,
+        },
+        output: {
+          overrideBrowserslist: ['> 0.01%', 'not dead', 'not op_mini all'],
         },
       },
     }),

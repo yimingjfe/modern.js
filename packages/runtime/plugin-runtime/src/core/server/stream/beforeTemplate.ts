@@ -1,7 +1,7 @@
 // Todo: This import will introduce router code, like remix, even if router config is false
 import { matchRoutes } from '@modern-js/runtime-utils/router';
 import ReactHelmet, { type HelmetData } from 'react-helmet';
-import type { RuntimeContext } from '../../context';
+import type { TInternalRuntimeContext } from '../../context';
 import { CHUNK_CSS_PLACEHOLDER } from '../constants';
 import { createReplaceHelemt } from '../helmet';
 import type { HandleRequestConfig } from '../requestHandler';
@@ -37,7 +37,7 @@ const checkIsInline = (
 };
 
 export interface BuildShellBeforeTemplateOptions {
-  runtimeContext: RuntimeContext;
+  runtimeContext: TInternalRuntimeContext;
   entryName: string;
   config: HandleRequestConfig;
   styledComponentsStyleTags?: string;
@@ -115,12 +115,12 @@ export async function buildShellBeforeTemplate(
           }, [] as string[])
         : [];
 
-      const { enableInlineStyles } = config;
+      const { inlineStyles } = config;
 
       const styles = await Promise.all(
         cssChunks.map(async chunk => {
           const link = `<link href="${chunk}" rel="stylesheet" />`;
-          if (checkIsNode() && checkIsInline(chunk, enableInlineStyles)) {
+          if (checkIsNode() && checkIsInline(chunk, inlineStyles)) {
             return readAsset(chunk)
               .then(content => `<style>${content}</style>`)
               .catch(_ => {

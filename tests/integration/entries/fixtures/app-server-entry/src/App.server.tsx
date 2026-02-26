@@ -1,37 +1,24 @@
-import type { RuntimeContext } from '@modern-js/runtime';
+import { RuntimeContext } from '@modern-js/runtime';
 import {
+  type StaticHandlerContext,
   StaticRouterProvider,
-  createStaticHandler,
   createStaticRouter,
-} from '@modern-js/runtime-utils/node/router';
+} from '@modern-js/runtime-utils/router';
+import { use } from 'react';
 import { routes } from './routes';
 
-function createFetchRequest(request: Request) {
-  const method = 'GET';
-  const { headers } = request;
-  const controller = new AbortController();
-
-  return new Request(request.url, {
-    method,
-    headers,
-    signal: controller.signal,
-  });
-}
-
-let routerContext: any;
 const App = () => {
-  const router = createStaticRouter(routes, routerContext);
-  return <StaticRouterProvider router={router} context={routerContext} />;
-};
-
-App.init = async (context: RuntimeContext) => {
-  const { ssrContext } = context;
-  const { query } = createStaticHandler(routes);
-  if (!ssrContext || !ssrContext.request) {
-    return null;
-  }
-  const fetchRequest = createFetchRequest(ssrContext.request as any);
-  routerContext = await query(fetchRequest);
+  const { customRouterContext } = use(RuntimeContext);
+  const router = createStaticRouter(
+    routes,
+    customRouterContext as StaticHandlerContext,
+  );
+  return (
+    <StaticRouterProvider
+      router={router}
+      context={customRouterContext as StaticHandlerContext}
+    />
+  );
 };
 
 export default App;

@@ -1,5 +1,5 @@
 import type { NodeRequest, NodeResponse } from '@modern-js/server-core/node';
-import type { BffProxyOptions, NextFunction } from './utils';
+import type { DevProxyOptions, NextFunction } from './utils';
 
 export type DevServerHttpsOptions = boolean | { key: string; cert: string };
 
@@ -14,60 +14,4 @@ export type ExposeServerApis = {
     type: string,
     data?: string | boolean | Record<string, any>,
   ) => void;
-};
-
-export type DevServerOptions = {
-  /** config of hmr client. */
-  client?: {
-    path?: string;
-    port?: string;
-    host?: string;
-    protocol?: 'ws' | 'wss';
-  };
-  /** Whether to enable gzip compression */
-  compress?: boolean;
-  devMiddleware?: {
-    writeToDisk?: boolean | ((filename: string) => boolean);
-    outputFileSystem?: Record<string, any>;
-  };
-  proxy?: BffProxyOptions;
-  headers?: Record<string, string | string[]>;
-  before?: RequestHandler[];
-  after?: RequestHandler[];
-  /** Provides the ability to execute a custom function and apply custom middlewares */
-  setupMiddlewares?: Array<
-    (
-      /** Order: `devServer.before` => `unshift` => internal middlewares => `push` => `devServer.after` */
-      middlewares: {
-        /** Use the `unshift` method if you want to run a middleware before all other middlewares */
-        unshift: (...handlers: RequestHandler[]) => void;
-        /** Use the `push` method if you want to run a middleware after all other middlewares */
-        push: (...handlers: RequestHandler[]) => void;
-      },
-      server: ExposeServerApis,
-    ) => void
-  >;
-  /** Whether to watch files change. */
-  watch?: boolean;
-  /** Whether to enable hot reload. */
-  hot?: boolean;
-  /** Whether to enable page reload. */
-  liveReload?: boolean;
-  /** Whether to enable https. */
-  https?: DevServerHttpsOptions;
-  /** see https://github.com/bripkens/connect-history-api-fallback */
-  historyApiFallback?:
-    | boolean
-    | {
-        index?: string;
-        verbose?: boolean;
-        logger?: typeof console.log;
-        htmlAcceptHeaders?: string[];
-        disableDotRule?: true;
-        rewrites?: Array<{
-          from: RegExp;
-          to: string | RegExp | function;
-        }>;
-      };
-  [propName: string]: any;
 };

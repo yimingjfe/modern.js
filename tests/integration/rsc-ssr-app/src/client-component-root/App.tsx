@@ -1,13 +1,14 @@
 'use client';
 import 'client-only';
 import {
+  RuntimeContext,
   getRequest,
   redirect,
   setHeaders,
   setStatus,
-  useRuntimeContext,
 } from '@modern-js/runtime';
 import './App.css';
+import { use } from 'react';
 import { Counter } from './components/Counter';
 
 const handleResponse = (responseType: string) => {
@@ -39,7 +40,7 @@ const handleResponse = (responseType: string) => {
 };
 
 const App = () => {
-  const context = useRuntimeContext();
+  const context = use(RuntimeContext);
   const request = getRequest();
   const url = new URL(request.url);
   const responseType = url.searchParams.get('type');
@@ -50,7 +51,9 @@ const App = () => {
     <>
       <div className="container">
         <main>
-          <div className="user-agent">{typeof context.request?.userAgent}</div>
+          <div className="user-agent">
+            {typeof context.requestContext?.request?.userAgent}
+          </div>
           <div className="logo">
             <img
               src="https://lf3-static.bytednsdoc.com/obj/eden-cn/ylaelkeh7nuhfnuhf/modernjs-cover.png"

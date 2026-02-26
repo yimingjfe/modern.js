@@ -21,8 +21,8 @@ export type RequestHandlerConfig = {
   nonce?: string;
   crossorigin?: boolean | 'anonymous' | 'use-credentials';
   scriptLoading?: 'defer' | 'blocking' | 'module' | 'async';
-  enableInlineStyles?: boolean | RegExp;
-  enableInlineScripts?: boolean | RegExp;
+  inlineStyles?: boolean | RegExp;
+  inlineScripts?: boolean | RegExp;
   ssr?: ServerUserConfig['ssr'];
   ssrByEntries?: ServerUserConfig['ssrByEntries'];
   useJsonScript?: ServerUserConfig['useJsonScript'];
@@ -44,11 +44,15 @@ export type RequestHandlerOptions = {
 
   loaderContext: LoaderContext;
 
+  html?: string;
+
   rscServerManifest?: RscServerManifest;
   rscClientManifest?: RscClientManifest;
   rscSSRManifest?: RscSSRManifest;
   RSCRoot?: any;
   rscRoot?: any;
+
+  serverPayload?: any;
 
   /** @deprecated  */
   locals?: Record<string, any>;
@@ -58,12 +62,6 @@ export type RequestHandlerOptions = {
 
   /** @deprecated ssr runtime code need reporter instance */
   reporter?: Reporter;
-
-  /** @deprecated */
-  logger: Logger;
-
-  /** @deprecated */
-  metrics?: Metrics;
 
   monitors: Monitors;
 

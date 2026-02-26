@@ -2,9 +2,9 @@ import { provider } from 'std-env';
 import type {
   AppTools,
   AppToolsNormalizedConfig,
-  CliPluginFuture,
+  CliPlugin,
 } from '../../types';
-import type { AppToolsContext } from '../../types/new';
+import type { AppToolsContext } from '../../types/plugin';
 import { createGhPagesPreset } from './platforms/gh-pages';
 import { createNetlifyPreset } from './platforms/netlify';
 import { createNodePreset } from './platforms/node';
@@ -27,7 +27,7 @@ const deployPresets: DeployPresetCreators = {
 };
 
 async function getDeployPreset(
-  appContext: AppToolsContext<'shared'>,
+  appContext: AppToolsContext,
   modernConfig: AppToolsNormalizedConfig,
   deployTarget: DeployTarget,
 ) {
@@ -50,7 +50,7 @@ async function getDeployPreset(
   return createPreset(appContext, modernConfig, needModernServer);
 }
 
-export default (): CliPluginFuture<AppTools<'shared'>> => ({
+export default (): CliPlugin<AppTools> => ({
   name: '@modern-js/plugin-deploy',
   setup: api => {
     const deployTarget = process.env.MODERNJS_DEPLOY || provider || 'node';

@@ -1,8 +1,10 @@
+import type { RuntimePluginAPI } from '@modern-js/plugin/runtime';
 import { merge } from '@modern-js/runtime-utils/merge';
-import type { RouterSubscriber } from '@modern-js/runtime-utils/remix-router';
+import type { RouterSubscriber } from '@modern-js/runtime-utils/router';
 import {
   type RouteObject,
   RouterProvider,
+  type RouterProviderProps,
   createBrowserRouter,
   createHashRouter,
   createRoutesFromElements,
@@ -11,17 +13,29 @@ import {
   useMatches,
 } from '@modern-js/runtime-utils/router';
 import { normalizePathname } from '@modern-js/runtime-utils/url';
-import type React from 'react';
-import { useContext, useMemo } from 'react';
-import { type RuntimePluginFuture, RuntimeReactContext } from '../../core';
-import { getGlobalLayoutApp, getGlobalRoutes } from '../../core/context';
+import * as React from 'react';
+import { useContext, useEffect, useMemo } from 'react';
+import { RuntimeContext, type RuntimePlugin } from '../../core';
+import {
+  InternalRuntimeContext,
+  getGlobalLayoutApp,
+  getGlobalRoutes,
+} from '../../core/context';
+import { getGlobalIsRscClient } from '../../core/context';
+import type { TInternalRuntimeContext } from '../../core/context/runtime';
 import {
   type RouterExtendsHooks,
   modifyRoutes as modifyRoutesHook,
   onBeforeCreateRoutes as onBeforeCreateRoutesHook,
 } from './hooks';
+import { createClientRouterFromPayload } from './rsc-router';
 import type { RouterConfig, Routes } from './types';
-import { deserializeErrors, renderRoutes, urlJoin } from './utils';
+import {
+  createRouteObjectsFromConfig,
+  deserializeErrors,
+  renderRoutes,
+  urlJoin,
+} from './utils';
 
 export let finalRouteConfig: RouterConfig['routesConfig'] = {
   routes: [],
@@ -41,9 +55,21 @@ export function modifyRoutes(modifyFunction: (routes: Routes) => Routes) {
   }
 }
 
+type RouterPluginAPI = RuntimePluginAPI<{
+  extendHooks: RouterExtendsHooks;
+}>;
+
+interface UseRouterCreationOptions {
+  api: RouterPluginAPI;
+  createRoutes?: RouterConfig['createRoutes'];
+  supportHtml5History: boolean;
+  selectBasePath: (pathname: string) => string;
+  basename: string;
+}
+
 export const routerPlugin = (
   userConfig: Partial<RouterConfig> = {},
-): RuntimePluginFuture<{
+): RuntimePlugin<{
   extendHooks: RouterExtendsHooks;
 }> => {
   return {
@@ -53,7 +79,9 @@ export const routerPlugin = (
       onBeforeCreateRoutes: onBeforeCreateRoutesHook,
     },
     setup: api => {
-      let routes: RouteObject[] = [];
+      const routesContainer = {
+        current: [] as RouteObject[],
+      };
 
       api.onBeforeRender(context => {
         // In some scenarios, the initial pathname and the current pathname do not match.
@@ -84,135 +112,220 @@ export const routerPlugin = (
         // Prefetch Link will use routes for match next route
         Object.defineProperty(context, 'routes', {
           get() {
-            return routes;
+            return routesContainer.current;
           },
           enumerable: true,
         });
       });
       api.wrapRoot(App => {
-        const pluginConfig: Record<string, any> = api.getRuntimeConfig();
+        const mergedConfig = merge(
+          api.getRuntimeConfig().router || {},
+          userConfig,
+        ) as RouterConfig;
         const {
           serverBase = [],
           supportHtml5History = true,
           basename = '',
           routesConfig,
           createRoutes,
-          future,
-        } = merge(pluginConfig.router || {}, userConfig) as RouterConfig;
-        const select = (pathname: string) =>
-          serverBase.find(baseUrl => pathname.search(baseUrl) === 0) || '/';
+        } = mergedConfig;
+
         finalRouteConfig = {
           routes: getGlobalRoutes(),
           globalApp: getGlobalLayoutApp(),
           ...routesConfig,
         };
 
-        // can not get routes config, skip wrapping React Router.
-        // e.g. App.tsx as the entrypoint
         if (!finalRouteConfig.routes && !createRoutes) {
           return App;
         }
 
-        const getRouteApp = () => {
-          const useCreateRouter = (props: any) => {
-            const runtimeContext = useContext(RuntimeReactContext);
-            /**
-             * _internalRouterBaseName: garfish plugin params, priority
-             * basename: modern config file config
-             */
-            const baseUrl = select(location.pathname).replace(/^\/*/, '/');
-            const _basename =
-              baseUrl === '/'
-                ? urlJoin(
-                    baseUrl,
-                    runtimeContext._internalRouterBaseName || basename,
-                  )
-                : baseUrl;
-
-            let hydrationData = window._ROUTER_DATA;
-
-            const { unstable_getBlockNavState: getBlockNavState } =
-              runtimeContext;
-
-            return useMemo(() => {
-              if (hydrationData?.errors) {
-                hydrationData = {
-                  ...hydrationData,
-                  errors: deserializeErrors(hydrationData.errors),
-                };
-              }
-
-              routes = createRoutes
-                ? createRoutes()
-                : createRoutesFromElements(
-                    renderRoutes({
-                      routesConfig: finalRouteConfig,
-                      props,
-                    }),
-                  );
-
-              const hooks = api.getHooks();
-              // inhouse private, try deprecated, different from the export function
-              routes = hooks.modifyRoutes.call(routes);
-
-              const router = supportHtml5History
-                ? createBrowserRouter(routes, {
-                    basename: _basename,
-                    hydrationData,
-                  })
-                : createHashRouter(routes, {
-                    basename: _basename,
-                    hydrationData,
-                  });
-
-              const originSubscribe = router.subscribe;
-
-              router.subscribe = (listener: RouterSubscriber) => {
-                const wrapedListener: RouterSubscriber = (...args) => {
-                  const blockRoute = getBlockNavState
-                    ? getBlockNavState()
-                    : false;
-
-                  if (blockRoute) {
-                    return;
-                  }
-                  return listener(...args);
-                };
-                return originSubscribe(wrapedListener);
-              };
-
-              return router;
-            }, [
-              finalRouteConfig,
-              props,
-              _basename,
-              hydrationData,
-              getBlockNavState,
-            ]);
-          };
-
-          const Null = () => null;
-
-          return (props => {
-            beforeCreateRouter = false;
-            const router = useCreateRouter(props);
-            const routerWrapper = (
-              // To match the node tree about https://github.com/web-infra-dev/modern.js/blob/v2.59.0/packages/runtime/plugin-runtime/src/router/runtime/plugin.node.tsx#L150-L168
-              // According to react [useId generation algorithm](https://github.com/facebook/react/pull/22644), `useId` will generate id with the react node react struct.
-              // To void hydration failed, we must guarantee that the node tree when browser hydrate must have same struct with node tree when ssr render.
-              <>
-                <RouterProvider router={router} future={future} />
-                <Null />
-                <Null />
-              </>
-            );
-
-            return App ? <App>{routerWrapper}</App> : routerWrapper;
-          }) as React.ComponentType<any>;
+        const selectBasePath = (pathname: string) => {
+          const match = serverBase.find(baseUrl =>
+            isSegmentPrefix(pathname, baseUrl),
+          );
+          return match || '/';
         };
 
-        return getRouteApp();
+        // Cache router instance in closure to avoid recreating on parent re-render
+        let cachedRouter: any = null;
+
+        const RouterWrapper = (props: any) => {
+          const routerResult = useRouterCreation(
+            {
+              ...props,
+              rscPayload: props?.rscPayload,
+            },
+            {
+              api: api as any,
+              createRoutes,
+              supportHtml5History,
+              selectBasePath,
+              basename,
+            },
+          );
+
+          // Only cache router instance, routes are always from routerResult
+          // rscPayload is stable after first render, so we only create router once
+          const router = useMemo(() => {
+            if (cachedRouter) {
+              return cachedRouter;
+            }
+
+            cachedRouter = routerResult.router;
+            return cachedRouter;
+          }, []);
+          const { routes } = routerResult;
+
+          routesContainer.current = routes;
+
+          beforeCreateRouter = false;
+
+          // To match the node tree about https://github.com/web-infra-dev/modern.js/blob/v2.59.0/packages/runtime/plugin-runtime/src/router/runtime/plugin.node.tsx#L150-L168
+          // According to react [useId generation algorithm](https://github.com/facebook/react/pull/22644), `useId` will generate id with the react node react struct.
+          // To void hydration failed, we must guarantee that the node tree when browser hydrate must have same struct with node tree when ssr render.
+          const RouterContent = () => (
+            <>
+              <RouterProvider router={router} />
+              <EmptyComponent />
+              <EmptyComponent />
+            </>
+          );
+
+          return App ? (
+            <App>
+              <RouterContent />
+            </App>
+          ) : (
+            <RouterContent />
+          );
+        };
+
+        return RouterWrapper;
       });
     },
   };
 };
+
+const EmptyComponent = () => null;
+
+const safeUse = (promise: Promise<unknown>) => {
+  const useProp = 'use';
+  const useHook = React && (React as any)[useProp];
+  if (typeof useHook === 'function') {
+    return useHook(promise);
+  }
+  return null;
+};
+
+function normalizeBase(b: string) {
+  if (b.length > 1 && b.endsWith('/')) return b.slice(0, -1);
+  return b || '/';
+}
+
+function isSegmentPrefix(pathname: string, base: string) {
+  const b = normalizeBase(base);
+  const p = pathname || '/';
+  return p === b || p.startsWith(`${b}/`);
+}
+
+function useRouterCreation(props: any, options: UseRouterCreationOptions) {
+  const { api, createRoutes, supportHtml5History, selectBasePath, basename } =
+    options;
+  const runtimeContext = useContext(InternalRuntimeContext);
+
+  const baseUrl = selectBasePath(location.pathname).replace(/^\/*/, '/');
+  const _basename =
+    baseUrl === '/'
+      ? urlJoin(
+          baseUrl,
+          runtimeContext._internalRouterBaseName || basename || '',
+        )
+      : baseUrl;
+
+  const { unstable_getBlockNavState: getBlockNavState } = runtimeContext;
+  const rscPayload = props?.rscPayload ? safeUse(props.rscPayload) : null;
+
+  let hydrationData = window._ROUTER_DATA || rscPayload;
+
+  return useMemo(() => {
+    if (hydrationData?.errors) {
+      hydrationData = {
+        ...hydrationData,
+        errors: deserializeErrors(hydrationData.errors),
+      };
+    }
+
+    const isRscClient = getGlobalIsRscClient();
+
+    let routes: RouteObject[] | null = null;
+    if (isRscClient) {
+      routes = createRoutes
+        ? createRoutes()
+        : createRouteObjectsFromConfig({
+            routesConfig: finalRouteConfig,
+          });
+    } else {
+      routes = createRoutes
+        ? createRoutes()
+        : createRoutesFromElements(
+            renderRoutes({
+              routesConfig: finalRouteConfig,
+              props,
+            }),
+          );
+    }
+
+    if (!routes) {
+      routes = [];
+    }
+
+    const hooks = api.getHooks();
+
+    if (rscPayload) {
+      try {
+        const router = createClientRouterFromPayload(
+          rscPayload,
+          routes,
+          _basename,
+        );
+
+        return {
+          router,
+          routes: router.routes || [],
+        };
+      } catch (e) {
+        console.error('Failed to create router from RSC payload:', e);
+      }
+    }
+
+    const modifiedRoutes = hooks.modifyRoutes.call(routes);
+
+    const router = supportHtml5History
+      ? createBrowserRouter(modifiedRoutes, {
+          basename: _basename,
+          hydrationData,
+        })
+      : createHashRouter(modifiedRoutes, {
+          basename: _basename,
+          hydrationData,
+        });
+
+    const originSubscribe = router.subscribe;
+    router.subscribe = (listener: RouterSubscriber) => {
+      const wrappedListener: RouterSubscriber = (...args) => {
+        const blockRoute = getBlockNavState ? getBlockNavState() : false;
+        if (blockRoute) {
+          return;
+        }
+        return listener(...args);
+      };
+      return originSubscribe(wrappedListener);
+    };
+
+    return {
+      router,
+      routes: modifiedRoutes,
+    };
+  }, [finalRouteConfig, props, _basename, hydrationData, getBlockNavState]);
+}

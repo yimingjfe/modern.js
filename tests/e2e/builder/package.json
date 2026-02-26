@@ -1,31 +1,31 @@
 {
-  "private": true,
   "name": "@e2e/builder",
   "version": "2.66.0",
+  "private": true,
   "scripts": {
-    "test": "pnpm run test:webpack && pnpm run test:rspack",
-    "test:webpack": "playwright test",
-    "test:rspack": "PROVIDE_TYPE=rspack playwright test",
-    "test:webpack-swc": "playwright test swc"
+    "test": "playwright test"
   },
   "dependencies": {
-    "lodash": "^4.17.21",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "react-router-dom": "6.22.0",
-    "vue": "^3.3.4"
+    "lodash": "^4.17.23",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "react-router-dom": "7.12.0",
+    "vue": "^3.5.28"
   },
   "devDependencies": {
-    "@modern-js/e2e": "workspace:*",
-    "@modern-js/uni-builder": "workspace:*",
+    "@modern-js/builder": "workspace:*",
     "@modern-js/utils": "workspace:*",
-    "@playwright/test": "1.33.0",
-    "@rsbuild/core": "1.4.5",
-    "@rsbuild/plugin-webpack-swc": "1.1.1",
-    "@types/lodash": "^4.14.202",
-    "@types/node": "^14",
-    "@types/react": "^18.3.11",
-    "@types/react-dom": "^18.3.1",
+    "@playwright/test": "1.58.2",
+    "@rsbuild/core": "2.0.0-beta.4",
+    "@types/connect": "^3.4.38",
+    "@types/lodash": "^4.17.23",
+    "@types/node": "^20",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@types/serve-static": "^1.15.10",
+    "connect": "^3.7.0",
+    "serve-static": "^1.16.3",
+    "tailwindcss": "^3.4.19",
     "typescript": "^5"
   }
 }

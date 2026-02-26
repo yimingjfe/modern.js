@@ -2,11 +2,8 @@ import { appTools, defineConfig } from '@modern-js/app-tools';
 import { imagePlugin } from '@modern-js/image';
 
 export default defineConfig({
-  runtime: {
-    router: true,
-  },
   source: {
-    mainEntryName: 'main',
+    mainEntryName: 'index',
   },
   output: {
     // disable polyfill and ts checker to make test faster
@@ -21,8 +18,5 @@ export default defineConfig({
   tools: {
     devServer: {},
   },
-  plugins: [
-    appTools({ bundler: 'rspack' }),
-    imagePlugin({ loader: './src/image-loader' }),
-  ],
+  plugins: [appTools(), imagePlugin({ loader: './src/image-loader' })],
 });

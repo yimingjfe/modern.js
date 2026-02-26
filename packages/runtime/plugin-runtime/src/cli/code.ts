@@ -1,6 +1,5 @@
 import path from 'path';
 import type {
-  AppNormalizedConfig,
   AppToolsContext,
   AppToolsFeatureHooks,
   AppToolsNormalizedConfig,
@@ -17,39 +16,15 @@ import {
   INDEX_FILE_NAME,
   SERVER_ENTRY_POINT_FILE_NAME,
 } from './constants';
+import { resolveSSRMode } from './ssr/mode';
 import * as template from './template';
 import * as serverTemplate from './template.server';
 
-function getSSRMode(
-  entry: string,
-  config: AppToolsNormalizedConfig,
-): 'string' | 'stream' | false {
-  const { ssr, ssrByEntries } = config.server;
-
-  if (config.output.ssg) {
-    return 'string';
-  }
-
-  return checkSSRMode(ssrByEntries?.[entry] || ssr);
-
-  function checkSSRMode(ssr: AppNormalizedConfig['server']['ssr']) {
-    if (!ssr) {
-      return false;
-    }
-
-    if (typeof ssr === 'boolean') {
-      return ssr ? 'string' : false;
-    }
-
-    return ssr.mode === 'stream' ? 'stream' : 'string';
-  }
-}
-
 export const generateCode = async (
   entrypoints: Entrypoint[],
-  appContext: AppToolsContext<'shared'>,
+  appContext: AppToolsContext,
   config: AppToolsNormalizedConfig,
-  hooks: AppToolsFeatureHooks<'shared'>,
+  hooks: AppToolsFeatureHooks,
 ) => {
   const { mountId } = config.html;
   const { enableAsyncEntry } = config.source;
@@ -68,8 +43,8 @@ export const generateCode = async (
         isAutoMount,
         entry,
         customEntry,
-        customBootstrap,
         customServerEntry,
+        nestedRoutesEntry,
       } = entrypoint;
       const { plugins: runtimePlugins } =
         await hooks._internalRuntimePlugins.call({
@@ -77,7 +52,11 @@ export const generateCode = async (
           plugins: [],
         });
       if (isAutoMount) {
-        const ssrMode = getSSRMode(entryName, config);
+        const ssrMode = resolveSSRMode({
+          entry: entryName,
+          config,
+          nestedRoutesEntry,
+        });
         let indexCode = '';
         // index.jsx
         if (!ssrMode && config.server.rsc) {
@@ -87,6 +66,7 @@ export const generateCode = async (
             mountId,
             urlPath: serverRoutes.find(route => route.entryName === entryName)
               ?.urlPath,
+            isNestedRouter: entrypoint.nestedRoutesEntry,
           });
         } else {
           indexCode = template.index({
@@ -96,9 +76,9 @@ export const generateCode = async (
             entry,
             entryName,
             customEntry,
-            customBootstrap,
             mountId,
             enableRsc: config.server.rsc,
+            isNestedRouter: !!entrypoint.nestedRoutesEntry,
           });
         }
 
@@ -161,6 +141,7 @@ export const generateCode = async (
           );
 
           const indexServerCode = serverTemplate.entryForCSRWithRSC({
+            entryName,
             metaName,
           });
           await fs.outputFile(indexServerFile, indexServerCode, 'utf8');
@@ -191,7 +172,9 @@ export const generateCode = async (
 
         // runtime-global-context.js
         let contextCode = '';
-        if (!config.server.rsc) {
+        if (!config.server.rsc || entrypoint.nestedRoutesEntry) {
+          const route = serverRoutes.find(r => r.entryName === entryName);
+          const basename = route?.urlPath || '/';
           contextCode = template.runtimeGlobalContext({
             entryName,
             srcDirectory,
@@ -199,6 +182,7 @@ export const generateCode = async (
             metaName,
             entry,
             customEntry,
+            basename,
           });
         } else {
           const AppProxyPath = path.join(

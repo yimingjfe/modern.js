@@ -1,29 +1,15 @@
 const ignoreDeps = [
-  '@types/node',
-  'antd',
-  'esbuild',
   'fs-extra',
-  'glob',
-  'minimatch',
   'react-router-dom',
   'tailwindcss',
   'tsconfig-paths',
-  'twin.macro',
-  'hono',
-  'type-fest',
   'typescript',
-  'react',
-  '@types/react',
-  'react-dom',
-  '@types/react-dom',
   'lru-cache',
-  'react-router',
-  '@rspress/shared',
-  'rspress',
+  'tsx',
 ];
 
 const command = `npx check-dependency-version-consistency@latest . ${ignoreDeps
-  .map(dep => `--ignore-dep '${dep}'`)
+  .map(dep => `--ignore-dep "${dep}"`)
   .join(' ')}`;
 
 console.log(`> ${command}`);

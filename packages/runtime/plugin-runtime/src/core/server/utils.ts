@@ -2,7 +2,7 @@ import type { ServerUserConfig } from '@modern-js/app-tools';
 import {
   type StaticHandlerContext,
   isRouteErrorResponse,
-} from '@modern-js/runtime-utils/remix-router';
+} from '@modern-js/runtime-utils/router';
 import type { SSRConfig } from './shared';
 
 export function attributesToString(attributes: Record<string, any>) {
@@ -74,8 +74,10 @@ export function getSSRConfigByEntry(
 
 export function getSSRMode(ssrConfig?: SSRConfig): 'string' | 'stream' | false {
   if (typeof ssrConfig === 'boolean') {
-    return ssrConfig ? 'string' : false;
+    const result = ssrConfig ? 'stream' : false;
+    return result;
   }
 
-  return ssrConfig?.mode === 'stream' ? 'stream' : 'string';
+  const result = ssrConfig?.mode === 'string' ? 'string' : 'stream';
+  return result;
 }

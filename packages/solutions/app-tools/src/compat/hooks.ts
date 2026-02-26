@@ -2,7 +2,7 @@ import type {
   InternalContext,
   RuntimePluginConfig,
   ServerPluginConfig,
-} from '@modern-js/plugin-v2';
+} from '@modern-js/plugin';
 import type {
   Entrypoint,
   HtmlPartials,
@@ -10,7 +10,7 @@ import type {
   PageRoute,
   ServerRoute,
 } from '@modern-js/types';
-import type { Command } from '@modern-js/utils';
+import type { Command } from '@modern-js/utils/commander';
 import { getModifyHtmlPartials } from '../plugins/analyze/getHtmlTemplate';
 import type { AppTools, AppToolsNormalizedConfig } from '../types';
 import {
@@ -23,7 +23,7 @@ import {
  * old plugin useHookRunners function result
  */
 export function getHookRunners(
-  context: InternalContext<AppTools<'shared'>>,
+  context: InternalContext<AppTools>,
 ): Record<string, any> {
   const { hooks } = context;
   return {
@@ -169,25 +169,6 @@ export function getHookRunners(
     },
     beforeRestart: async () => {
       return hooks.onBeforeRestart.call();
-    },
-
-    /**
-     * @deprecated
-     */
-    registerDev: async () => {
-      return hooks.registerDev.call();
-    },
-    /**
-     * @deprecated
-     */
-    registerBuildPlatform: async () => {
-      return hooks.registerBuildPlatform.call();
-    },
-    /**
-     * @deprecated
-     */
-    addRuntimeExports: async () => {
-      return hooks.addRuntimeExports.call();
     },
   };
 }

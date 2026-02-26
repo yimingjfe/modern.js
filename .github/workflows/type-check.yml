@@ -2,7 +2,7 @@ name: Type Check
 
 on:
   pull_request:
-    branches: [main, dev/**]
+    branches: [main]
 
   merge_group:
 
@@ -26,10 +26,10 @@ jobs:
       - name: Install Pnpm
         uses: pnpm/action-setup@v4
 
-      - name: Setup Node.js 18
+      - name: Setup Node.js 22
         uses: actions/setup-node@v3
         with:
-          node-version: 18
+          node-version: 22
           cache: 'pnpm'
 
       - name: Check skip CI

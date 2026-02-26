@@ -1,7 +1,11 @@
 import path from 'node:path';
-import type { CLIPluginAPI } from '@modern-js/plugin-v2';
+import type { CLIPluginAPI } from '@modern-js/plugin';
 import { applyPlugins } from '@modern-js/prod-server';
-import { type ApplyPlugins, createDevServer } from '@modern-js/server';
+import {
+  type ApplyPlugins,
+  type ModernDevServerOptions,
+  createDevServer,
+} from '@modern-js/server';
 import {
   type Alias,
   DEFAULT_DEV_HOST,
@@ -11,11 +15,10 @@ import {
 } from '@modern-js/utils';
 import type { ConfigChain } from '@rsbuild/core';
 import type { AppNormalizedConfig, AppTools } from '../types';
-import { buildServerConfig } from '../utils/config';
 import { setServer } from '../utils/createServer';
 import { loadServerPlugins } from '../utils/loadPlugins';
 import { printInstructions } from '../utils/printInstructions';
-import { registerCompiler } from '../utils/register';
+import { setupTsRuntime } from '../utils/register';
 import { generateRoutes } from '../utils/routes';
 import type { DevOptions } from '../utils/types';
 
@@ -24,7 +27,7 @@ interface ExtraServerOptions {
 }
 
 export const dev = async (
-  api: CLIPluginAPI<AppTools<'shared'>>,
+  api: CLIPluginAPI<AppTools>,
   options: DevOptions,
   devServerOptions?: ExtraServerOptions,
 ) => {
@@ -36,39 +39,28 @@ export const dev = async (
   const appContext = api.getAppContext();
   const hooks = api.getHooks();
 
+  const combinedAlias = ([] as unknown[])
+    .concat(normalizedConfig?.resolve?.alias ?? [])
+    .concat(normalizedConfig?.source?.alias ?? []) as ConfigChain<Alias>;
+
+  // Register Node.js module hooks for ESM TypeScript support
   if (appContext.moduleType && appContext.moduleType === 'module') {
-    const { registerEsm } = await import('../esm/register-esm.mjs');
-    await registerEsm({
+    const { registerModuleHooks } = await import('../esm/register-esm.mjs');
+    await registerModuleHooks({
       appDir: appContext.appDirectory,
       distDir: appContext.distDirectory,
-      alias: {
-        ...normalizedConfig.resolve?.alias,
-        ...normalizedConfig.source?.alias,
-      },
+      alias: {},
     });
   }
 
-  await registerCompiler(appContext.appDirectory, appContext.distDirectory, {
-    ...normalizedConfig?.source?.alias,
-    ...normalizedConfig?.resolve?.alias,
-  } as ConfigChain<Alias>);
+  // Setup ts-node and tsconfig-paths for TypeScript runtime support
+  await setupTsRuntime(
+    appContext.appDirectory,
+    appContext.distDirectory,
+    combinedAlias,
+  );
 
-  const {
-    appDirectory,
-    distDirectory,
-    port,
-    apiOnly,
-    serverConfigFile,
-    metaName,
-    serverRoutes,
-  } = appContext;
-
-  await buildServerConfig({
-    appDirectory,
-    distDirectory,
-    configFile: serverConfigFile,
-    watch: true,
-  });
+  const { appDirectory, port, apiOnly, metaName, serverRoutes } = appContext;
 
   const meta = getMeta(metaName);
   const serverConfigPath = path.resolve(
@@ -89,24 +81,11 @@ export const dev = async (
 
   const pluginInstances = await loadServerPlugins(api, appDirectory, metaName);
 
-  const toolsDevServerConfig = normalizedConfig.tools?.devServer;
-
-  const serverOptions = {
+  const serverOptions: ModernDevServerOptions = {
     metaName,
     dev: {
-      // [`normalizedConfig.tools.devServer`](https://modernjs.dev/en/configure/app/tools/dev-server.html) already deprecated, we should using `normalizedConfig.dev` instead firstly.
-      // Oterwise, the `normalizedConfig.dev` can't be apply correctly.
-      ...toolsDevServerConfig,
-      devMiddleware: {
-        writeToDisk: normalizedConfig.dev.writeToDisk,
-      },
-      port,
-      host: normalizedConfig.dev.host ?? (toolsDevServerConfig as any)?.host,
-      https: normalizedConfig.dev.https ?? (toolsDevServerConfig as any)?.https,
-      hot: normalizedConfig.dev.hmr ?? (toolsDevServerConfig as any)?.hot,
-      setupMiddlewares:
-        normalizedConfig.dev.setupMiddlewares ??
-        (toolsDevServerConfig as any)?.setupMiddlewares,
+      https: normalizedConfig.dev.https,
+      setupMiddlewares: normalizedConfig.dev.setupMiddlewares,
     },
     appContext: {
       appDirectory,
@@ -120,7 +99,6 @@ export const dev = async (
     routes: serverRoutes,
     pwd: appDirectory,
     config: normalizedConfig as any,
-    serverConfigFile,
     plugins: pluginInstances,
     ...devServerOptions,
   };
@@ -145,7 +123,7 @@ export const dev = async (
         printInstructions(
           hooks,
           appContext,
-          normalizedConfig as AppNormalizedConfig<'shared'>,
+          normalizedConfig as AppNormalizedConfig,
         );
       },
     );

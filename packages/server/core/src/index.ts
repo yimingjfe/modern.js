@@ -1,10 +1,18 @@
 export { createErrorHtml, onError, ErrorDigest } from './utils';
+export {
+  normalizePublicDir,
+  normalizePublicDirPath,
+  getPublicDirRoutePrefixes,
+  getPublicDirPatterns,
+  resolvePublicDirPaths,
+  getPublicDirConfig,
+} from './utils/publicDir';
 
 export { AGGRED_DIR } from './constants';
 
 export type { ServerBase, ServerBaseOptions } from './serverBase';
 export { createServerBase } from './serverBase';
-export { useHonoContext } from './context';
+export { run, useHonoContext } from './context';
 export { Hono } from 'hono';
 
 export type {
@@ -22,6 +30,5 @@ export { getLoaderCtx } from './helper';
 export * from './plugins';
 export * from './types/plugins';
 export * from './types/render';
-export * from '@modern-js/plugin';
 export * from './types/config';
 export * from './types/requestHandler';

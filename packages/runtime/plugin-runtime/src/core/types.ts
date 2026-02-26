@@ -1,7 +1,6 @@
 import type { OnError, OnTiming } from '@modern-js/app-tools';
 import type { BaseSSRServerContext } from '@modern-js/types';
 import type { RenderLevel } from './constants';
-import type { LoaderResult } from './loader/loaderManager';
 
 declare global {
   interface Window {
@@ -11,11 +10,11 @@ declare global {
 }
 
 export interface SSRData {
-  loadersData?: Record<string, LoaderResult | undefined>;
   initialData?: Record<string, unknown>;
-  storeState?: any;
+  i18nData?: Record<string, unknown>;
   [props: string]: any;
 }
+
 export interface RouteData {
   [routeId: string]: any;
 }
@@ -43,18 +42,15 @@ type BuildHtmlCb = (tempalte: string) => string;
 /* 在服务端获取的 SSRContext */
 export type SSRServerContext = Pick<
   BaseSSRServerContext,
-  | 'redirection'
+  | 'baseUrl'
   | 'response'
   | 'nonce'
   | 'mode'
   | 'loaderContext'
   | 'reporter'
-  | 'logger'
-  | 'metrics'
   | 'routeManifest'
 > & {
   request: BaseSSRServerContext['request'] & {
-    baseUrl: string;
     raw: Request;
   };
   htmlModifiers: BuildHtmlCb[];
@@ -64,21 +60,7 @@ export type SSRServerContext = Pick<
   useJsonScript?: boolean;
 };
 
-/* 通过 useRuntimeContext 获取的 SSRContext */
-interface TSSRBaseContext {
+export type RequestContext = {
   request: BaseSSRServerContext['request'];
-  [propName: string]: any;
-}
-
-export interface ServerContext extends TSSRBaseContext {
-  isBrowser: false;
   response: BaseSSRServerContext['response'];
-  logger: BaseSSRServerContext['logger'];
-}
-
-export interface ClientContext extends TSSRBaseContext {
-  isBrowser: true;
-}
-
-// TODO: rename it, maybe requestContext or renderContext
-export declare type TSSRContext = ServerContext | ClientContext;
+};

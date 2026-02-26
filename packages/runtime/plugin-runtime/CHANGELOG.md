@@ -1,5 +1,122 @@
 # @modern-js/runtime
 
+## 3.0.3
+
+### Patch Changes
+
+- @modern-js/plugin@3.0.3
+- @modern-js/plugin-data-loader@3.0.3
+- @modern-js/render@3.0.3
+- @modern-js/runtime-utils@3.0.3
+- @modern-js/types@3.0.3
+- @modern-js/utils@3.0.3
+
+## 3.0.2
+
+### Patch Changes
+
+- @modern-js/plugin@3.0.2
+- @modern-js/plugin-data-loader@3.0.2
+- @modern-js/render@3.0.2
+- @modern-js/runtime-utils@3.0.2
+- @modern-js/types@3.0.2
+- @modern-js/utils@3.0.2
+
+## 3.0.1
+
+### Patch Changes
+
+- @modern-js/plugin@3.0.1
+- @modern-js/plugin-data-loader@3.0.1
+- @modern-js/render@3.0.1
+- @modern-js/runtime-utils@3.0.1
+- @modern-js/types@3.0.1
+- @modern-js/utils@3.0.1
+
+## 3.0.0
+
+### Minor Changes
+
+- ecd247c: feat: esm runtime
+
+### Patch Changes
+
+- 4c5b645: refactor: update rsc, streaming ssr runtime code
+  refactor: 更新 rsc, streeaming ssr 运行时代码
+- Updated dependencies [ecd247c]
+- Updated dependencies [952f6fe]
+- Updated dependencies [4c5b645]
+  - @modern-js/runtime-utils@3.0.0
+  - @modern-js/render@3.0.0
+  - @modern-js/types@3.0.0
+  - @modern-js/plugin-data-loader@3.0.0
+  - @modern-js/plugin@3.0.0
+  - @modern-js/utils@3.0.0
+
+## 3.0.0-alpha.2
+
+### Minor Changes
+
+- ecd247c: feat: esm runtime
+
+### Patch Changes
+
+- 4c5b645: refactor: update rsc, streaming ssr runtime code
+  refactor: 更新 rsc, streeaming ssr 运行时代码
+- Updated dependencies [ecd247c]
+- Updated dependencies [952f6fe]
+- Updated dependencies [4c5b645]
+  - @modern-js/runtime-utils@3.0.0-alpha.2
+  - @modern-js/render@3.0.0-alpha.2
+  - @modern-js/types@3.0.0-alpha.2
+  - @modern-js/plugin-data-loader@3.0.0-alpha.2
+  - @modern-js/plugin@3.0.0-alpha.2
+  - @modern-js/utils@3.0.0-alpha.2
+
+## 3.0.0-alpha.1
+
+### Patch Changes
+
+- 4c5b645: refactor: update rsc, streaming ssr runtime code
+  refactor: 更新 rsc, streeaming ssr 运行时代码
+- Updated dependencies [952f6fe]
+- Updated dependencies [4c5b645]
+  - @modern-js/types@3.0.0-alpha.1
+  - @modern-js/render@3.0.0-alpha.1
+  - @modern-js/plugin-data-loader@3.0.0-alpha.1
+  - @modern-js/plugin@3.0.0-alpha.1
+  - @modern-js/runtime-utils@3.0.0-alpha.1
+  - @modern-js/utils@3.0.0-alpha.1
+
+## 3.0.0-alpha.0
+
+### Patch Changes
+
+- Updated dependencies [952f6fe]
+  - @modern-js/types@3.0.0-alpha.0
+  - @modern-js/plugin-data-loader@3.0.0-alpha.0
+  - @modern-js/render@3.0.0-alpha.0
+  - @modern-js/plugin@3.0.0-alpha.0
+  - @modern-js/runtime-utils@3.0.0-alpha.0
+  - @modern-js/utils@3.0.0-alpha.0
+
+## 2.68.1
+
+### Patch Changes
+
+- 0d98723: feat: support rsc for spa projects
+  feat: 为 SPA 项目支持 RSC
+- 0d98723: feat: inject the rsc payload into the html for csr
+  feat: 为 CSR 项目，注入 rsc payload 到 html 中
+- Updated dependencies [0d98723]
+  - @modern-js/render@2.68.1
+  - @modern-js/plugin-v2@2.68.1
+  - @modern-js/plugin-data-loader@2.68.1
+  - @modern-js/plugin@2.68.1
+  - @modern-js/runtime-utils@2.68.1
+  - @modern-js/types@2.68.1
+  - @modern-js/utils@2.68.1
+
 ## 2.68.0
 
 ### Minor Changes

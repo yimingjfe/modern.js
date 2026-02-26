@@ -24,6 +24,9 @@ export const httpCallBack2HonoMid = (handler: Handler) => {
     req.__honoRequest = context.req;
     req.__templates = context.get('templates') || {};
     req.__serverManifest = context.get('serverManifest') || {};
+    req.__rscServerManifest = context.get('rscServerManifest');
+    req.__rscClientManifest = context.get('rscClientManifest');
+    req.__rscSSRManifest = context.get('rscSSRManifest');
 
     try {
       await handler(req, res);
@@ -32,10 +35,16 @@ export const httpCallBack2HonoMid = (handler: Handler) => {
       delete req.__honoRequest;
       delete req.__templates;
       delete req.__serverManifest;
+      delete req.__rscServerManifest;
+      delete req.__rscClientManifest;
+      delete req.__rscSSRManifest;
       res.removeListener('pipe', onPipe);
     }
 
     if (isResFinalized(res)) {
+      // Fix: ensure context.res is initialized before setting finalized
+      // This prevents c.#res from being undefined in Hono
+      const _ = context.res;
       context.finalized = true;
     } else {
       await next();
@@ -86,6 +95,9 @@ export const connectMockMid2HonoMid = (
       // The function lenth < 3 means the handler is not a function with next
       if (handler.length < 3) {
         res.once('finish', () => {
+          // Fix: ensure context.res is initialized before setting finalized
+          // This prevents c.#res from being undefined in Hono
+          const _ = context.res;
           context.finalized = true;
           resolve();
         });

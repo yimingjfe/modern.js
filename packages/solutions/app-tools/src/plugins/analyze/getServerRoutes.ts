@@ -12,7 +12,7 @@ import {
   urlJoin,
 } from '@modern-js/utils';
 import type { AppNormalizedConfig } from '../../types';
-import type { AppToolsContext } from '../../types/new';
+import type { AppToolsContext } from '../../types/plugin';
 import { isMainEntry } from '../../utils/routes';
 import { walkDirectory } from './utils';
 
@@ -117,18 +117,19 @@ const applyRouteOptions = (
  */
 const collectHtmlRoutes = (
   entrypoints: Entrypoint[],
-  appContext: AppToolsContext<'shared'>,
-  config: AppNormalizedConfig<'shared'>,
+  appContext: AppToolsContext,
+  config: AppNormalizedConfig,
 ): ServerRoute[] => {
   const {
     source: { mainEntryName },
-    html: { disableHtmlFolder, outputStructure },
+    html: { outputStructure },
     output: {
       distPath: { html: htmlPath } = {},
     },
     server: { baseUrl, routes, ssr, ssrByEntries, rsc },
     deploy,
   } = config;
+
   const { packageName } = appContext;
   const workerSSR = deploy?.worker?.ssr;
 
@@ -156,9 +157,7 @@ const collectHtmlRoutes = (
         entryPath: removeLeadingSlash(
           path.posix.normalize(
             `${htmlPath}/${entryName}${
-              disableHtmlFolder || outputStructure === 'flat'
-                ? '.html'
-                : '/index.html'
+              outputStructure === 'flat' ? '.html' : '/index.html'
             }`,
           ),
         ),
@@ -206,8 +205,8 @@ const collectHtmlRoutes = (
  * @returns Static public file routes.
  */
 const collectStaticRoutes = (
-  appContext: AppToolsContext<'shared'>,
-  config: AppNormalizedConfig<'shared'>,
+  appContext: AppToolsContext,
+  config: AppNormalizedConfig,
 ): ServerRoute[] => {
   const { appDirectory } = appContext;
   const {
@@ -247,8 +246,8 @@ export const getServerRoutes = (
     appContext,
     config,
   }: {
-    appContext: AppToolsContext<'shared'>;
-    config: AppNormalizedConfig<'shared'>;
+    appContext: AppToolsContext;
+    config: AppNormalizedConfig;
   },
 ): ServerRoute[] => [
   ...collectHtmlRoutes(entrypoints, appContext, config),

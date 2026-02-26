@@ -12,20 +12,20 @@
 // So that we write a `loadable-bundler-plugin` based on it.
 
 import path from 'path';
-import type { Rspack, webpack } from '@modern-js/app-tools';
+import type { Rspack } from '@modern-js/app-tools';
 import { fs } from '@modern-js/utils';
 
 interface LoadablePluginOptions {
   filename: string;
   path?: string;
   writeToDisk?: any;
-  outputAsset: boolean;
-  chunkLoadingGlobal: string;
+  outputAsset?: boolean;
+  chunkLoadingGlobal?: string;
 }
 
-type Compiler = Rspack.Compiler | webpack.Compiler;
+type Compiler = Rspack.Compiler;
 
-type Compilation = Rspack.Compilation | webpack.Compilation;
+type Compilation = Rspack.Compilation;
 
 class LoadablePlugin {
   opts: LoadablePluginOptions;
@@ -137,4 +137,4 @@ class LoadablePlugin {
   }
 }
 
-module.exports = LoadablePlugin;
+export default LoadablePlugin;

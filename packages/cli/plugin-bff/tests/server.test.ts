@@ -1,16 +1,14 @@
 import path from 'path';
-import type { Plugin as BasePlugin } from '@modern-js/plugin-v2';
-import { server } from '@modern-js/plugin-v2/server';
+import type { Plugin as BasePlugin } from '@modern-js/plugin';
+import { server } from '@modern-js/plugin/server';
 import {
   type ServerConfig,
   type ServerPlugin,
-  type ServerPluginLegacy,
   compatPlugin,
   handleSetupResult,
 } from '@modern-js/server-core';
 import { assign } from '@modern-js/utils/lodash';
 import plugin from '../src/server';
-import './helper';
 
 const noop = () => {};
 
@@ -21,7 +19,7 @@ export async function serverInit({
   plugins,
   serverConfig,
 }: {
-  plugins?: (ServerPlugin | ServerPluginLegacy)[];
+  plugins?: ServerPlugin[];
   serverConfig?: ServerConfig;
 }) {
   const { serverContext } = await server.run({
@@ -36,7 +34,6 @@ export async function serverInit({
         tools: {},
         server: {},
         html: {},
-        runtime: {},
         bff: {},
         security: {},
       },
@@ -53,17 +50,15 @@ describe('bff server plugin', () => {
   describe('prepareApiServer', () => {
     it('should work well', async () => {
       let apiHandlerInfos = null;
-      const mockApiPlugin: ServerPluginLegacy = {
+      const mockApiPlugin: ServerPlugin = {
         name: 'mock-api',
 
         setup(api) {
-          return {
-            prepareApiServer(props, next) {
-              const appContext = api.useAppContext();
-              apiHandlerInfos = appContext.apiHandlerInfos;
-              return next(props);
-            },
-          };
+          api.prepareApiServer(((input: any, next: any) => {
+            const appContext = api.getServerContext();
+            apiHandlerInfos = appContext.apiHandlerInfos;
+            return next(input);
+          }) as any);
         },
       };
 
@@ -82,17 +77,15 @@ describe('bff server plugin', () => {
     it('should work well with prefix', async () => {
       let apiHandlerInfos = null;
 
-      const mockApiPlugin: ServerPluginLegacy = {
+      const mockApiPlugin: ServerPlugin = {
         name: 'mock-api',
 
         setup(api) {
-          return {
-            prepareApiServer(props, next) {
-              const appContext = api.useAppContext();
-              apiHandlerInfos = appContext.apiHandlerInfos;
-              return next(props);
-            },
-          };
+          api.prepareApiServer(((input: any, next: any) => {
+            const appContext = api.getServerContext();
+            apiHandlerInfos = appContext.apiHandlerInfos;
+            return next(input);
+          }) as any);
         },
       };
 

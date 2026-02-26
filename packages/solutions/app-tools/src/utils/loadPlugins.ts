@@ -1,5 +1,5 @@
-import type { CLIPluginAPI } from '@modern-js/plugin-v2';
-import type { Plugin } from '@modern-js/plugin-v2';
+import type { CLIPluginAPI } from '@modern-js/plugin';
+import type { Plugin } from '@modern-js/plugin';
 import { loadServerPlugins as loadServerPluginInstances } from '@modern-js/prod-server';
 import type { ServerPlugin as ServerPluginInstance } from '@modern-js/server-core';
 import type { ServerPlugin } from '@modern-js/types';
@@ -15,7 +15,7 @@ import type { AppTools } from '../types';
 const debug = createDebugger('load-plugins');
 
 export async function getServerPlugins(
-  api: CLIPluginAPI<AppTools<'shared'>>,
+  api: CLIPluginAPI<AppTools>,
   metaName = 'modern-js',
 ): Promise<ServerPlugin[]> {
   const hooks = api.getHooks();
@@ -34,7 +34,7 @@ export async function getServerPlugins(
 }
 
 export async function loadServerPlugins(
-  api: CLIPluginAPI<AppTools<'shared'>>,
+  api: CLIPluginAPI<AppTools>,
   appDirectory: string,
   metaName: string,
 ): Promise<ServerPluginInstance[]> {
@@ -78,15 +78,8 @@ const resolveCliPlugin = async (
 export const loadInternalPlugins = async (
   appDirectory: string,
   internalPlugins?: InternalPlugins,
-  autoLoad?: InternalPlugins,
-  autoLoadPlugins?: boolean, // user config auto load plugins
 ) => {
-  const plugins = [
-    ...(autoLoadPlugins
-      ? getInternalPlugins(appDirectory, internalPlugins)
-      : []),
-    ...(autoLoad ? getInternalPlugins(appDirectory, autoLoad) : []),
-  ];
+  const plugins = getInternalPlugins(appDirectory, internalPlugins);
 
   const loadedPlugins = await Promise.all(
     plugins.map(plugin => {

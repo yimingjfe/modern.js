@@ -1,4 +1,5 @@
 import path from 'node:path';
+import type { Rspack } from '@modern-js/builder';
 import { createServerBase } from '@modern-js/server-core';
 import {
   createNodeServer,
@@ -12,19 +13,12 @@ export async function createDevServer(
   options: ModernDevServerOptions,
   applyPlugins: ApplyPlugins,
 ) {
-  const { config, pwd, serverConfigFile, serverConfigPath, builder, metaName } =
-    options;
-  const dev = getDevOptions(options);
+  const { config, pwd, serverConfigPath, builder } = options;
+  const dev = getDevOptions(options.dev);
 
   const distDir = path.resolve(pwd, config.output.distPath?.root || 'dist');
 
-  const serverConfig =
-    (await loadServerRuntimeConfig(
-      distDir,
-      serverConfigFile,
-      serverConfigPath,
-      metaName,
-    )) || {};
+  const serverConfig = (await loadServerRuntimeConfig(serverConfigPath)) || {};
 
   const prodServerOptions = {
     ...options,
@@ -44,7 +38,7 @@ export async function createDevServer(
   const server = createServerBase(prodServerOptions);
 
   const devHttpsOption = typeof dev === 'object' && dev.https;
-  const isHttp2 = devHttpsOption && typeof dev.proxy === 'undefined';
+  const isHttp2 = !!devHttpsOption;
   let nodeServer;
   if (devHttpsOption) {
     const { genHttpsOptions } = await import('./dev-tools/https');
@@ -59,16 +53,25 @@ export async function createDevServer(
   }
 
   const promise = getDevAssetPrefix(builder);
+
+  let compiler: Rspack.Compiler | Rspack.MultiCompiler | null = null;
+
+  builder?.onAfterCreateCompiler(context => {
+    compiler = context.compiler;
+  });
+
   const builderDevServer = await builder?.createDevServer({
     runCompile: options.runCompile,
-    compiler: options.compiler,
   });
 
   server.addPlugins([
-    devPlugin({
-      ...options,
-      builderDevServer,
-    }),
+    devPlugin(
+      {
+        ...options,
+        builderDevServer,
+      },
+      compiler,
+    ),
   ]);
 
   // run after createDevServer, we can get assetPrefix from builder

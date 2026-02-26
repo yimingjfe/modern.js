@@ -1,5 +1,5 @@
 import path from 'path';
-import { expect, test } from '@modern-js/e2e/playwright';
+import { expect, test } from '@playwright/test';
 import { build } from '@scripts/shared';
 import { cases, copyPkgToNodeModules, findEntry, shareTest } from './helper';
 
@@ -18,11 +18,7 @@ test('should import with template config', async () => {
           },
         ],
       },
-      performance: {
-        chunkSplit: {
-          strategy: 'all-in-one',
-        },
-      },
+      splitChunks: false,
     },
   });
   const files = await builder.unwrapOutputJSON(false);

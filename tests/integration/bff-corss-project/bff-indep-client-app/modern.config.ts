@@ -1,13 +1,9 @@
 import { bffPlugin } from '@modern-js/plugin-bff';
-import { expressPlugin } from '@modern-js/plugin-express';
 import { applyBaseConfig } from '../../../utils/applyBaseConfig';
 
 export default applyBaseConfig({
-  bff: {
-    prefix: '/indep-web-app',
-  },
   server: {
-    ssr: true,
+    ssr: false,
   },
-  plugins: [bffPlugin(), expressPlugin()],
+  plugins: [bffPlugin()],
 });

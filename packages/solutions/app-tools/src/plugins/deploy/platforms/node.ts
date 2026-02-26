@@ -1,6 +1,5 @@
 import path from 'node:path';
 import {
-  DEFAULT_SERVER_CONFIG,
   ROUTE_SPEC_FILE,
   SERVER_DIR,
   chalk,
@@ -56,7 +55,6 @@ export const createNodePreset: CreatePreset = (appContext, config) => {
 
       const dynamicProdOptions = {
         config: serverConfig,
-        serverConfigFile: DEFAULT_SERVER_CONFIG,
       };
 
       const meta = getMeta(metaName);
@@ -105,7 +103,9 @@ export const createNodePreset: CreatePreset = (appContext, config) => {
       );
 
       const filter = (filePath: string) => {
-        return !filePath.startsWith(staticDirectory);
+        return (
+          !filePath.startsWith(staticDirectory) && !filePath.endsWith('.map')
+        );
       };
       // Because @modern-js/prod-server is an implicit dependency of the entry, so we add it to the include here.
       await handleDependencies({

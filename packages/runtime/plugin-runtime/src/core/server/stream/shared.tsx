@@ -5,8 +5,10 @@ import type {
   SSRManifest as RscSSRManifest,
   ServerManifest as RscServerManifest,
 } from '@modern-js/types/server';
+import checkIsBot from 'isbot';
 import type React from 'react';
-import type { RuntimeContext } from '../../context';
+import { JSX_SHELL_STREAM_END_MARK } from '../../../common';
+import type { TRuntimeContext } from '../../context';
 import { wrapRuntimeContextProvider } from '../../react/wrapper';
 import type { HandleRequestConfig } from '../requestHandler';
 import type { RenderStreaming, SSRConfig } from '../shared';
@@ -14,7 +16,7 @@ import { SSRErrors, SSRTimings } from '../tracer';
 import { getSSRConfigByEntry } from '../utils';
 
 export type CreateReadableStreamFromElementOptions = {
-  runtimeContext: RuntimeContext;
+  runtimeContext: TRuntimeContext;
   config: HandleRequestConfig;
   ssrConfig: SSRConfig;
   htmlTemplate: string;
@@ -39,6 +41,56 @@ export type CreateReadableStreamFromElement = (
 export enum ShellChunkStatus {
   START = 0,
   FINISH = 1,
+}
+
+const SHOULD_STREAM_ALL_HEADER = 'x-should-stream-all';
+
+function parseShouldStreamAllFlag(value: string | null): boolean | undefined {
+  if (!value) {
+    return undefined;
+  }
+  const normalized = value.trim().toLowerCase();
+
+  // if the header is set to 'false', treat it as false, runtime will not stream all.
+  // Otherwise, treat it as true.
+  if (normalized === 'false') {
+    return false;
+  }
+  return true;
+}
+
+export function resolveStreamingMode(
+  request: Request,
+  forceStreamToString: boolean,
+): {
+  onReady: 'onAllReady' | 'onShellReady';
+  waitForAllReady: boolean;
+} {
+  const shouldStreamAll = parseShouldStreamAllFlag(
+    request.headers.get(SHOULD_STREAM_ALL_HEADER),
+  );
+
+  const isSsgRender = request.headers.get('x-modern-ssg-render') === 'true';
+
+  const isBot = checkIsBot(request.headers.get('user-agent'));
+
+  if (shouldStreamAll) {
+    return { onReady: 'onAllReady', waitForAllReady: true };
+  }
+
+  if (forceStreamToString) {
+    return { onReady: 'onAllReady', waitForAllReady: true };
+  }
+
+  if (isBot) {
+    return { onReady: 'onAllReady', waitForAllReady: true };
+  }
+
+  if (isSsgRender) {
+    return { onReady: 'onAllReady', waitForAllReady: true };
+  }
+
+  return { onReady: 'onShellReady', waitForAllReady: false };
 }
 
 let encoder: TextEncoder;
@@ -81,8 +133,15 @@ export function createRenderStreaming(
       config.ssrByEntries,
     );
 
-    const RSCServerRoot = ({ children }: { children: React.ReactNode }) => {
-      return <>{children}</>;
+    const StreamServerRootWrapper = ({
+      children,
+    }: { children: React.ReactNode }) => {
+      return (
+        <>
+          {children}
+          {JSX_SHELL_STREAM_END_MARK}
+        </>
+      );
     };
 
     let rootElement = wrapRuntimeContextProvider(
@@ -90,7 +149,9 @@ export function createRenderStreaming(
       Object.assign(runtimeContext, { ssr: true }),
     );
 
-    rootElement = <RSCServerRoot>{rootElement}</RSCServerRoot>;
+    rootElement = (
+      <StreamServerRootWrapper>{rootElement}</StreamServerRootWrapper>
+    );
 
     const stream = await createReadableStreamFromElement(request, rootElement, {
       config,

@@ -1,12 +1,14 @@
 import { renderSSRStream } from '@modern-js/render/ssr';
-import checkIsBot from 'isbot';
+import { storage } from '@modern-js/runtime-utils/node';
 import { ESCAPED_SHELL_STREAM_END_MARK } from '../../../common';
 import { RenderLevel } from '../../constants';
+import { enqueueFromEntries } from './deferredScript';
 import {
   type CreateReadableStreamFromElement,
   ShellChunkStatus,
   encodeForWebStream,
   getReadableStreamFromString,
+  resolveStreamingMode,
 } from './shared';
 import { getTemplates } from './template';
 
@@ -35,10 +37,9 @@ export const createReadableStreamFromElement: CreateReadableStreamFromElement =
     try {
       const readableOriginal = await renderSSRStream(rootElement, {
         request,
-        clientManifest: options.rscClientManifest,
-        ssrManifest: options.rscSSRManifest,
         nonce: config.nonce,
-        rscRoot,
+        rscRoot: rscRoot!,
+        routes: runtimeContext.routes,
         onError(error: unknown) {
           options.onError?.(error);
         },
@@ -53,11 +54,20 @@ export const createReadableStreamFromElement: CreateReadableStreamFromElement =
         options?.onAllReady?.();
       });
 
-      const isbot = checkIsBot(request.headers.get('user-agent'));
-      if (isbot) {
-        // However, when a crawler visits your page, or if you’re generating the pages at the build time,
-        // you might want to let all of the content load first and then produce the final HTML output instead of revealing it progressively.
-        // from: https://react.dev/reference/react-dom/server/renderToReadableStream#handling-different-errors-in-different-ways
+      // However, when a crawler visits your page, or if you're generating the pages at the build time,
+      // you might want to let all of the content load first and then produce the final HTML output instead of revealing it progressively.
+      // from: https://react.dev/reference/react-dom/server/renderToReadableStream#handling-different-errors-in-different-ways
+      const forceStreamToString = Boolean(
+        typeof process !== 'undefined' &&
+          process.env?.MODERN_JS_STREAM_TO_STRING,
+      );
+      const { waitForAllReady } = resolveStreamingMode(
+        request,
+        forceStreamToString,
+      );
+
+      if (waitForAllReady) {
+        // Prefer to wait for full content when instructed by middleware marker/env/isbot.
         await readableOriginal.allReady;
       }
 
@@ -65,38 +75,107 @@ export const createReadableStreamFromElement: CreateReadableStreamFromElement =
 
       const stream = new ReadableStream({
         start(controller) {
-          async function push() {
-            const { done, value } = await reader.read();
-            if (done) {
-              controller.close();
-              return;
+          const pendingScripts: string[] = [];
+          let isClosed = false;
+
+          const safeEnqueue = (chunk: Uint8Array | unknown) => {
+            if (isClosed) return;
+            try {
+              controller.enqueue(chunk as Uint8Array);
+            } catch {
+              isClosed = true;
             }
-            if (shellChunkStatus !== ShellChunkStatus.FINISH) {
-              const chunk = new TextDecoder().decode(value);
+          };
 
-              chunkVec.push(chunk);
-
-              let concatedChunk = chunkVec.join('');
-              if (concatedChunk.includes(ESCAPED_SHELL_STREAM_END_MARK)) {
-                concatedChunk = concatedChunk.replace(
-                  ESCAPED_SHELL_STREAM_END_MARK,
-                  '',
-                );
-
-                shellChunkStatus = ShellChunkStatus.FINISH;
-
-                controller.enqueue(
-                  encodeForWebStream(
-                    `${shellBefore}${concatedChunk}${shellAfter}`,
-                  ),
-                );
+          const closeController = () => {
+            if (!isClosed) {
+              isClosed = true;
+              try {
+                controller.close();
+              } catch {
+                // Controller already closed
               }
-            } else {
-              controller.enqueue(value);
             }
-            push();
+          };
+
+          const flushPendingScripts = () => {
+            for (const s of pendingScripts) {
+              safeEnqueue(encodeForWebStream(s));
+            }
+            pendingScripts.length = 0;
+          };
+
+          const enqueueScript = (script: string) => {
+            if (shellChunkStatus === ShellChunkStatus.FINISH) {
+              safeEnqueue(encodeForWebStream(script));
+            } else {
+              pendingScripts.push(script);
+            }
+          };
+
+          const storageContext = storage.useContext?.();
+          const activeDeferreds = storageContext?.activeDeferreds;
+          /**
+           * activeDeferreds is injected into storageContext by @modern-js/runtime.
+           * @see packages/toolkit/runtime-utils/src/browser/nestedRoutes.tsx
+           */
+          const entries: Array<[string, unknown]> =
+            activeDeferreds instanceof Map
+              ? Array.from(activeDeferreds.entries())
+              : [];
+
+          if (entries.length > 0) {
+            enqueueFromEntries(entries, config.nonce, enqueueScript);
+          }
+
+          async function push() {
+            try {
+              const { done, value } = await reader.read();
+              if (done) {
+                closeController();
+                return;
+              }
+
+              if (isClosed) return;
+
+              if (shellChunkStatus !== ShellChunkStatus.FINISH) {
+                chunkVec.push(new TextDecoder().decode(value));
+                const concatedChunk = chunkVec.join('');
+
+                if (concatedChunk.includes(ESCAPED_SHELL_STREAM_END_MARK)) {
+                  shellChunkStatus = ShellChunkStatus.FINISH;
+                  safeEnqueue(
+                    encodeForWebStream(
+                      `${shellBefore}${concatedChunk.replace(
+                        ESCAPED_SHELL_STREAM_END_MARK,
+                        '',
+                      )}${shellAfter}`,
+                    ),
+                  );
+                  flushPendingScripts();
+                }
+              } else {
+                safeEnqueue(value);
+              }
+
+              if (!isClosed) push();
+            } catch (error) {
+              if (!isClosed) {
+                isClosed = true;
+                try {
+                  controller.error(error);
+                } catch {
+                  // Controller already closed
+                }
+              }
+            }
           }
           push();
+        },
+        cancel(reason) {
+          reader.cancel(reason).catch(() => {
+            // Ignore cancellation errors
+          });
         },
       });
       return stream;

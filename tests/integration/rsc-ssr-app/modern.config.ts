@@ -2,10 +2,6 @@ import path from 'path';
 import { applyBaseConfig } from '../../utils/applyBaseConfig';
 
 export default applyBaseConfig({
-  runtime: {
-    state: false,
-    router: false,
-  },
   server: {
     ssr: {
       mode: 'stream',
@@ -14,6 +10,9 @@ export default applyBaseConfig({
   },
   output: {
     minify: false,
+  },
+  performance: {
+    buildCache: false,
   },
   tools: {
     bundlerChain(chain) {

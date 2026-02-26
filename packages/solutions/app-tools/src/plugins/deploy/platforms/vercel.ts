@@ -1,6 +1,5 @@
 import path from 'node:path';
 import {
-  DEFAULT_SERVER_CONFIG,
   ROUTE_SPEC_FILE,
   SERVER_DIR,
   fs as fse,
@@ -66,13 +65,18 @@ export const createVercelPreset: CreatePreset = (
       if (!needModernServer) {
         const {
           source: { mainEntryName },
+          html: { outputStructure },
         } = modernConfig;
         entrypoints.forEach(entry => {
           const isMain = isMainEntry(entry.entryName, mainEntryName);
+          const htmlPath =
+            outputStructure === 'flat'
+              ? `/html/${entry.entryName}.html`
+              : `/html/${entry.entryName}/index.html`;
           config.routes.push({
             src: `/${isMain ? '' : entry.entryName}(?:/.*)?`,
             headers: { 'cache-control': 's-maxage=0' },
-            dest: `/html/${entry.entryName}/index.html`,
+            dest: htmlPath,
           });
         });
       } else {
@@ -135,7 +139,6 @@ export const createVercelPreset: CreatePreset = (
       const pluginImportCode = genPluginImportsCode(plugins || []);
       const dynamicProdOptions = {
         config: serverConfig,
-        serverConfigFile: DEFAULT_SERVER_CONFIG,
       };
 
       const meta = getMeta(metaName);

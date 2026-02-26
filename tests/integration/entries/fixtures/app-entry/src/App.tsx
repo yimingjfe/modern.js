@@ -1,9 +1,9 @@
-import { RuntimeReactContext } from '@modern-js/runtime';
+import { RuntimeContext } from '@modern-js/runtime';
 import { BrowserRouter, Route, Routes } from '@modern-js/runtime/router';
 import { useContext } from 'react';
 
 const App = () => {
-  const context = useContext(RuntimeReactContext);
+  const context = useContext(RuntimeContext);
   const { initialData } = context;
   return (
     <BrowserRouter>
@@ -16,13 +16,6 @@ const App = () => {
       </Routes>
     </BrowserRouter>
   );
-};
-
-App.init = () => {
-  console.log('init');
-  return {
-    data: 'init data',
-  };
 };
 
 export default App;

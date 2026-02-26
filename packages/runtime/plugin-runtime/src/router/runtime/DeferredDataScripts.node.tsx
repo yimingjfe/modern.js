@@ -1,13 +1,12 @@
-import type { DeferredData } from '@modern-js/runtime-utils/browser';
-import { serializeJson, storage } from '@modern-js/runtime-utils/node';
 import type {
-  StaticHandlerContext,
+  DeferredData,
   TrackedPromise,
-} from '@modern-js/runtime-utils/remix-router';
-import { Await, useAsyncError } from '@modern-js/runtime-utils/router';
-import { Suspense, useEffect, useMemo, useRef } from 'react';
+} from '@modern-js/runtime-utils/browser';
+import { serializeJson, storage } from '@modern-js/runtime-utils/node';
+import type { StaticHandlerContext } from '@modern-js/runtime-utils/router';
+import { useEffect, useMemo, useRef } from 'react';
 import { ROUTER_DATA_JSON_ID } from '../../core/constants';
-import { modernInline, runRouterDataFnStr, runWindowFnStr } from './constants';
+import { modernInline, runWindowFnStr } from './constants';
 import { serializeErrors } from './utils';
 
 /**
@@ -22,7 +21,6 @@ const DeferredDataScripts = (props?: {
   const staticContext = props?.context;
   const useJsonScript = props?.useJsonScript;
   const hydratedRef = useRef(false);
-  const isRouterV7 = process.env._MODERN_ROUTER_VERSION === 'v7';
 
   useEffect(() => {
     hydratedRef.current = true;
@@ -39,21 +37,17 @@ const DeferredDataScripts = (props?: {
           fnRun: string;
           fnScriptSrc: string;
         }[],
-        JSX.Element[],
+        React.ReactElement[],
       ]
     | null = useMemo(() => {
     if (!staticContext) {
       return null;
     }
 
-    const originalActiveDeferreds = storage.useContext().activeDeferreds as Map<
+    const activeDeferreds = storage.useContext().activeDeferreds as Map<
       string,
       DeferredData
     >;
-
-    const activeDeferreds = !isRouterV7
-      ? staticContext.activeDeferreds || []
-      : originalActiveDeferreds;
 
     const _ROUTER_DATA = {
       loaderData: staticContext.loaderData,
@@ -69,74 +63,62 @@ const DeferredDataScripts = (props?: {
           '\n',
         );
 
-    const deferredDataScripts: JSX.Element[] = [];
+    const deferredDataScripts: React.ReactElement[] = [];
 
-    const initialScripts = (
-      activeDeferreds instanceof Map
-        ? Array.from(activeDeferreds.entries())
-        : Object.entries(activeDeferreds)
-    ).map(([routeId, deferredData]) => {
-      const pendingKeys = new Set(deferredData.pendingKeys);
-      const { deferredKeys } = deferredData;
-      const deferredKeyPromiseManifests = deferredKeys.map((key: string) => {
-        if (pendingKeys.has(key)) {
-          deferredDataScripts.push(
-            <DeferredDataScript
-              nonce={props?.nonce}
-              key={`${routeId} | ${key}`}
-              data={deferredData.data[key]}
-              dataKey={key}
-              routeId={routeId}
-            />,
-          );
-
-          return {
-            key,
-            routerDataFnName: 's',
-            routerDataFnArgs: [serializeJson(routeId), serializeJson(key)],
-          };
-        } else {
-          const trackedPromise = deferredData.data[key] as TrackedPromise;
-          if (typeof trackedPromise._error !== 'undefined') {
-            const error = {
-              message: trackedPromise._error.message,
-              stack:
-                process.env.NODE_ENV !== 'production'
-                  ? trackedPromise._error.stack
-                  : undefined,
-            };
-
+    const initialScripts = Array.from(activeDeferreds.entries()).map(
+      ([routeId, deferredData]) => {
+        const pendingKeys = new Set(deferredData.pendingKeys);
+        const { deferredKeys } = deferredData;
+        const deferredKeyPromiseManifests = deferredKeys.map((key: string) => {
+          if (pendingKeys.has(key)) {
             return {
               key,
-              routerDataFnName: 'p',
-              routerDataFnArgs: [
-                serializeJson(undefined),
-                serializeJson(error),
-              ],
+              routerDataFnName: 's',
+              routerDataFnArgs: [serializeJson(routeId), serializeJson(key)],
             };
           } else {
-            if (typeof trackedPromise._data === 'undefined') {
-              throw new Error(
-                `The deferred data for ${key} was not resolved, did you forget to return data from a deferred promise`,
-              );
+            const trackedPromise = deferredData.data[key] as TrackedPromise;
+            if (typeof trackedPromise._error !== 'undefined') {
+              const error = {
+                message: trackedPromise._error.message,
+                stack:
+                  process.env.NODE_ENV !== 'production'
+                    ? trackedPromise._error.stack
+                    : undefined,
+              };
+
+              return {
+                key,
+                routerDataFnName: 'p',
+                routerDataFnArgs: [
+                  serializeJson(undefined),
+                  serializeJson(error),
+                ],
+              };
+            } else {
+              if (typeof trackedPromise._data === 'undefined') {
+                throw new Error(
+                  `The deferred data for ${key} was not resolved, did you forget to return data from a deferred promise`,
+                );
+              }
+
+              return {
+                key,
+                routerDataFnName: 'p',
+                routerDataFnArgs: [serializeJson(trackedPromise._data)],
+              };
             }
-
-            return {
-              key,
-              routerDataFnName: 'p',
-              routerDataFnArgs: [serializeJson(trackedPromise._data)],
-            };
           }
-        }
-      });
+        });
 
-      return {
-        fnName: `mergeLoaderData`,
-        fnRun: runWindowFnStr,
-        fnArgs: [routeId, deferredKeyPromiseManifests],
-        fnScriptSrc: 'modern-run-window-fn',
-      };
-    });
+        return {
+          fnName: `mergeLoaderData`,
+          fnRun: runWindowFnStr,
+          fnArgs: [routeId, deferredKeyPromiseManifests],
+          fnScriptSrc: 'modern-run-window-fn',
+        };
+      },
+    );
 
     return [
       initialScript0,
@@ -187,84 +169,7 @@ const DeferredDataScripts = (props?: {
           ))}
         </>
       )}
-      {!hydratedRef.current && deferredScripts[3]}
     </>
-  );
-};
-
-const DeferredDataScript = ({
-  data,
-  routeId,
-  dataKey,
-  nonce,
-}: {
-  data: any;
-  routeId: string;
-  dataKey: string;
-  nonce?: string;
-}) => {
-  return (
-    <Suspense>
-      {typeof document === 'undefined' && data && dataKey && routeId ? (
-        <Await
-          resolve={data}
-          errorElement={
-            <ErrorDeferredDataScript
-              routeId={routeId}
-              dataKey={dataKey}
-              nonce={nonce}
-            />
-          }
-        >
-          {(data: any) => (
-            <script
-              async
-              nonce={nonce}
-              data-fn-name="r"
-              data-script-src="modern-run-router-data-fn"
-              data-fn-args={`${JSON.stringify([routeId, dataKey, data])}`}
-              suppressHydrationWarning
-              dangerouslySetInnerHTML={{
-                __html: runRouterDataFnStr,
-              }}
-            />
-          )}
-        </Await>
-      ) : null}
-    </Suspense>
-  );
-};
-
-const ErrorDeferredDataScript = ({
-  routeId,
-  dataKey,
-  nonce,
-}: {
-  routeId: string;
-  dataKey: string;
-  nonce?: string;
-}) => {
-  const error = useAsyncError() as Error;
-
-  return (
-    <script
-      data-fn-name="r"
-      data-script-src="modern-run-router-data-fn"
-      data-fn-args={`${JSON.stringify([
-        routeId,
-        dataKey,
-        undefined,
-        {
-          message: error.message,
-          stack: error.stack,
-        },
-      ])}`}
-      nonce={nonce}
-      suppressHydrationWarning
-      dangerouslySetInnerHTML={{
-        __html: runRouterDataFnStr,
-      }}
-    />
   );
 };
 

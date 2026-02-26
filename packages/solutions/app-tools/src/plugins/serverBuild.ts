@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { compile } from '@modern-js/server-utils';
 import { SERVER_DIR, SHARED_DIR, getMeta } from '@modern-js/utils';
-import type { AppTools, CliPluginFuture } from '../types';
+import type { AppTools, CliPlugin } from '../types';
 
 const TS_CONFIG_FILENAME = 'tsconfig.json';
 
@@ -22,7 +22,7 @@ function checkHasConfig(appDir: string, metaName = 'modern-js') {
   return fs.existsSync(tsFilepath) || fs.existsSync(jsfilepath);
 }
 
-export default (): CliPluginFuture<AppTools<'shared'>> => ({
+export default (): CliPlugin<AppTools> => ({
   name: '@modern-js/server-build',
 
   setup(api) {
@@ -53,7 +53,6 @@ export default (): CliPluginFuture<AppTools<'shared'>> => ({
 
       const { server } = modernConfig;
       const { alias } = modernConfig.source;
-      const { babel } = modernConfig.tools;
 
       if (sourceDirs.length > 0) {
         await compile(
@@ -61,7 +60,6 @@ export default (): CliPluginFuture<AppTools<'shared'>> => ({
           {
             server,
             alias,
-            babelConfig: babel,
           },
           {
             sourceDirs,

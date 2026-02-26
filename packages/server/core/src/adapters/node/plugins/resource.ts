@@ -1,6 +1,6 @@
 import path from 'path';
 import { fileReader } from '@modern-js/runtime-utils/fileReader';
-import type { Logger, ServerRoute } from '@modern-js/types';
+import type { Monitors, ServerRoute } from '@modern-js/types';
 import {
   fs,
   LOADABLE_STATS_FILE,
@@ -13,15 +13,20 @@ import {
 } from '@modern-js/utils';
 import type {
   Middleware,
+  MiddlewareHandler,
   ServerEnv,
   ServerManifest,
-  ServerPluginLegacy,
+  ServerPlugin,
 } from '../../../types';
 import { uniqueKeyByRoute } from '../../../utils';
 
 export async function getHtmlTemplates(pwd: string, routes: ServerRoute[]) {
+  // Only process routes with entryName, which are HTML template routes.
+  // Public static file routes don't have entryName and shouldn't be processed here.
+  const htmlRoutes = routes.filter(route => route.entryName);
+
   const htmls = await Promise.all(
-    routes.map(async route => {
+    htmlRoutes.map(async route => {
       let html: string | undefined;
       try {
         const htmlPath = path.join(pwd, route.entryPath);
@@ -54,7 +59,7 @@ export function injectTemplates(
   };
 }
 
-const loadBundle = async (filepath: string, logger: Logger) => {
+const loadBundle = async (filepath: string, monitors?: Monitors) => {
   if (!(await fs.pathExists(filepath))) {
     return undefined;
   }
@@ -63,10 +68,18 @@ const loadBundle = async (filepath: string, logger: Logger) => {
     const module = await compatibleRequire(filepath, false);
     return module;
   } catch (e) {
-    logger.error(
-      `Load ${filepath} bundle failed, error = %s`,
-      e instanceof Error ? e.stack || e.message : e,
-    );
+    if (monitors) {
+      monitors.error(
+        `Load ${filepath} bundle failed, error = %s`,
+        e instanceof Error ? e.stack || e.message : e,
+      );
+    } else {
+      console.error(
+        `Load ${filepath} bundle failed, error = ${
+          e instanceof Error ? e.stack || e.message : e
+        }`,
+      );
+    }
     return undefined;
   }
 };
@@ -74,7 +87,7 @@ const loadBundle = async (filepath: string, logger: Logger) => {
 export async function getServerManifest(
   pwd: string,
   routes: ServerRoute[],
-  logger: Logger,
+  monitors?: Monitors,
 ): Promise<ServerManifest> {
   const loaderBundles: Record<string, any> = {};
   const renderBundles: Record<string, any> = {};
@@ -91,8 +104,8 @@ export async function getServerManifest(
           `${entryName}-server-loaders.js`,
         );
 
-        const renderBundle = await loadBundle(renderBundlePath, logger);
-        const loaderBundle = await loadBundle(loaderBundlePath, logger);
+        const renderBundle = await loadBundle(renderBundlePath, monitors);
+        const loaderBundle = await loadBundle(loaderBundlePath, monitors);
 
         renderBundle && (renderBundles[entryName] = renderBundle);
         loaderBundle &&
@@ -134,9 +147,9 @@ export function injectServerManifest(
 ): Middleware<ServerEnv> {
   return async (c, next) => {
     if (routes && !c.get('serverManifest')) {
-      const logger = c.get('logger');
+      const monitors = c.get('monitors');
       const serverManifest = await (manifestPromise ||
-        getServerManifest(pwd, routes, logger));
+        getServerManifest(pwd, routes, monitors));
 
       c.set('serverManifest', serverManifest);
     }
@@ -166,76 +179,73 @@ export async function getRscSSRManifest(pwd: string) {
   return rscSSRManifest;
 }
 
-export const injectRscManifestPlugin = (): ServerPluginLegacy => ({
+export const injectRscManifestPlugin = (enableRsc: boolean): ServerPlugin => ({
   name: '@modern-js/plugin-inject-rsc-manifest',
   setup(api) {
-    return {
-      async prepare() {
-        const { middlewares, distDirectory: pwd } = api.useAppContext();
-        const config = api.useConfigContext();
-        // only rsc project need inject rsc manifest
-        if (!config.server?.rsc) {
-          return;
-        }
+    api.onPrepare(() => {
+      const { middlewares, distDirectory: pwd } = api.getServerContext();
+      // only rsc project need inject rsc manifest
+      if (!enableRsc) {
+        return;
+      }
 
-        // TODO: should inject in prepare stage, not first request
-        middlewares.push({
-          name: 'inject-rsc-manifest',
-          handler: async (c, next) => {
-            if (!c.get('rscServerManifest')) {
-              const rscServerManifest = await getRscServerManifest(pwd);
-              c.set('rscServerManifest', rscServerManifest);
-            }
+      // TODO: should inject in prepare stage, not first request
+      middlewares.push({
+        name: 'inject-rsc-manifest',
+        handler: (async (c, next) => {
+          if (!c.get('rscServerManifest')) {
+            const rscServerManifest = await getRscServerManifest(pwd!);
+            c.set('rscServerManifest', rscServerManifest);
+          }
 
-            if (!c.get('rscClientManifest')) {
-              const rscClientManifest = await getClientManifest(pwd);
-              c.set('rscClientManifest', rscClientManifest);
-            }
+          if (!c.get('rscClientManifest')) {
+            const rscClientManifest = await getClientManifest(pwd!);
+            c.set('rscClientManifest', rscClientManifest);
+          }
 
-            if (!c.get('rscSSRManifest')) {
-              const rscSSRManifest = await getRscSSRManifest(pwd);
-              c.set('rscSSRManifest', rscSSRManifest);
-            }
+          if (!c.get('rscSSRManifest')) {
+            const rscSSRManifest = await getRscSSRManifest(pwd!);
+            c.set('rscSSRManifest', rscSSRManifest);
+          }
 
-            await next();
-          },
-        });
-      },
-    };
+          await next();
+        }) as MiddlewareHandler,
+      });
+    });
   },
 });
 
-export const injectResourcePlugin = (): ServerPluginLegacy => ({
+export const injectResourcePlugin = (): ServerPlugin => ({
   name: '@modern-js/plugin-inject-resource',
 
   setup(api) {
-    return {
-      async prepare() {
-        const { middlewares, routes, distDirectory: pwd } = api.useAppContext();
+    api.onPrepare(() => {
+      const {
+        middlewares,
+        routes,
+        distDirectory: pwd,
+      } = api.getServerContext();
 
-        // In Production, should warmup server bundles on prepare.
-        let htmlTemplatePromise:
-          | ReturnType<typeof getHtmlTemplates>
-          | undefined;
-        let manifestPromise: Promise<ServerManifest> | undefined;
+      // In Production, should warmup server bundles on prepare.
+      let htmlTemplatePromise: ReturnType<typeof getHtmlTemplates> | undefined;
+      let manifestPromise: Promise<ServerManifest> | undefined;
 
-        if (isProd()) {
-          manifestPromise = getServerManifest(pwd, routes || [], console);
-          htmlTemplatePromise = getHtmlTemplates(pwd, routes || []);
-        }
+      if (isProd()) {
+        manifestPromise = getServerManifest(pwd!, routes || [], undefined);
+        htmlTemplatePromise = getHtmlTemplates(pwd!, routes || []);
+      }
 
-        middlewares.push({
-          name: 'inject-server-manifest',
+      middlewares.push({
+        name: 'inject-server-manifest',
 
-          handler: injectServerManifest(pwd, routes, manifestPromise),
-        });
+        handler: injectServerManifest(pwd!, routes, manifestPromise),
+      });
 
-        middlewares.push({
-          name: 'inject-html',
+      middlewares.push({
+        name: 'inject-html',
 
-          handler: injectTemplates(pwd, routes, htmlTemplatePromise),
-        });
-      },
-    };
+        handler: injectTemplates(pwd!, routes, htmlTemplatePromise),
+      });
+    });
   },
 });

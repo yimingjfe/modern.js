@@ -1,27 +1,11 @@
 import { appTools, defineConfig } from '@modern-js/app-tools';
-import routerPlugin from '@modern-js/plugin-router-v7';
-
-const bundler = process.env.BUNDLER;
 
 export default defineConfig({
-  plugins: [
-    appTools({
-      bundler: bundler === 'rspack' ? 'rspack' : 'webpack',
-    }),
-    routerPlugin(),
-  ],
-  runtime: {
-    router: true,
-    state: false,
-  },
-  runtimeByEntries: {
-    one: {
-      router: false,
-    },
-  },
+  plugins: [appTools()],
   output: {
     polyfill: 'off',
     disableTsChecker: true,
+    minify: false,
   },
   server: {
     ssrByEntries: {
@@ -29,10 +13,12 @@ export default defineConfig({
       two: false,
       three: {
         mode: 'stream',
-        disablePrerender: true,
         loaderFailureMode: 'clientRender',
       },
       four: false,
     },
+  },
+  performance: {
+    buildCache: false,
   },
 });

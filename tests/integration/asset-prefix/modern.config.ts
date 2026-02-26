@@ -14,7 +14,7 @@ export default applyBaseConfig({
           writeFileSync(
             path.resolve(
               __dirname,
-              api.useAppContext().distDirectory,
+              api.getAppContext().distDirectory,
               'static',
               'test.js',
             ),
@@ -27,9 +27,5 @@ export default applyBaseConfig({
   output: {
     // assetPrefix: '/my-prefix',
   },
-  performance: {
-    chunkSplit: {
-      strategy: 'all-in-one',
-    },
-  },
+  splitChunks: false,
 });

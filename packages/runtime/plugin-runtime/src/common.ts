@@ -1,16 +1,10 @@
-import type { Plugin, RuntimePluginFuture } from './core/plugin';
-import type { RouterConfig } from './router';
+import type { RuntimePlugin } from './core/plugin';
 
 export const isBrowser = () =>
   typeof window !== 'undefined' && window.name !== 'nodejs';
 
-export interface AppConfig {
-  router?: Pick<RouterConfig, 'future' | 'basename'>;
-  [key: string]: any;
-}
-
 export interface RuntimeConfig {
-  plugins?: (Plugin | RuntimePluginFuture)[];
+  plugins?: RuntimePlugin[];
   [key: string]: any;
 }
 

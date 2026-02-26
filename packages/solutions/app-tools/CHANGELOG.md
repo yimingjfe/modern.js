@@ -1,5 +1,199 @@
 # @modern-js/app-tools
 
+## 3.0.3
+
+### Patch Changes
+
+- Updated dependencies [a270428]
+- Updated dependencies [ece3967]
+  - @modern-js/builder@3.0.3
+  - @modern-js/server@3.0.3
+  - @modern-js/plugin@3.0.3
+  - @modern-js/plugin-data-loader@3.0.3
+  - @modern-js/server-core@3.0.3
+  - @modern-js/prod-server@3.0.3
+  - @modern-js/server-utils@3.0.3
+  - @modern-js/i18n-utils@3.0.3
+  - @modern-js/types@3.0.3
+  - @modern-js/utils@3.0.3
+
+## 3.0.2
+
+### Patch Changes
+
+- dcf43b8: feat: support rspack builtin rsc
+  feat: 使用 rspack 内置的 rsc 插件
+- 28cf50a: fix: should support windows path in server-entry route pattern
+  fix: route pattern 中应该支持 windows 系统路径
+- Updated dependencies [dcf43b8]
+- Updated dependencies [28cf50a]
+  - @modern-js/builder@3.0.2
+  - @modern-js/server@3.0.2
+  - @modern-js/plugin@3.0.2
+  - @modern-js/plugin-data-loader@3.0.2
+  - @modern-js/server-core@3.0.2
+  - @modern-js/prod-server@3.0.2
+  - @modern-js/server-utils@3.0.2
+  - @modern-js/i18n-utils@3.0.2
+  - @modern-js/types@3.0.2
+  - @modern-js/utils@3.0.2
+
+## 3.0.1
+
+### Patch Changes
+
+- Updated dependencies [7a278a6]
+  - @modern-js/builder@3.0.1
+  - @modern-js/server@3.0.1
+  - @modern-js/plugin@3.0.1
+  - @modern-js/plugin-data-loader@3.0.1
+  - @modern-js/server-core@3.0.1
+  - @modern-js/prod-server@3.0.1
+  - @modern-js/server-utils@3.0.1
+  - @modern-js/i18n-utils@3.0.1
+  - @modern-js/types@3.0.1
+  - @modern-js/utils@3.0.1
+
+## 3.0.0
+
+### Major Changes
+
+- ef4288c: feat: release Modern.js 3.0
+
+  feat: 发布 Modern.js 3.0
+
+### Minor Changes
+
+- ecd247c: feat: esm runtime
+
+### Patch Changes
+
+- 76d0fc2: feat(app-tools): add info command to display project entries information
+  feat(app-tools): 新增 info 命令，用于展示项目的 entries 信息
+- Updated dependencies [96b5424]
+- Updated dependencies [eecb927]
+- Updated dependencies [ecd247c]
+- Updated dependencies [952f6fe]
+- Updated dependencies [79f0efd]
+  - @modern-js/server-core@3.0.0
+  - @modern-js/i18n-utils@3.0.0
+  - @modern-js/types@3.0.0
+  - @modern-js/plugin-data-loader@3.0.0
+  - @modern-js/prod-server@3.0.0
+  - @modern-js/server@3.0.0
+  - @modern-js/server-utils@3.0.0
+  - @modern-js/plugin@3.0.0
+  - @modern-js/builder@3.0.0
+  - @modern-js/utils@3.0.0
+
+## 3.0.0-alpha.2
+
+### Major Changes
+
+- ef4288c: feat: release Modern.js 3.0
+
+  feat: 发布 Modern.js 3.0
+
+### Minor Changes
+
+- ecd247c: feat: esm runtime
+
+### Patch Changes
+
+- 76d0fc2: feat(app-tools): add info command to display project entries information
+  feat(app-tools): 新增 info 命令，用于展示项目的 entries 信息
+- Updated dependencies [96b5424]
+- Updated dependencies [eecb927]
+- Updated dependencies [ecd247c]
+- Updated dependencies [952f6fe]
+- Updated dependencies [79f0efd]
+  - @modern-js/server-core@3.0.0-alpha.2
+  - @modern-js/i18n-utils@3.0.0-alpha.2
+  - @modern-js/types@3.0.0-alpha.2
+  - @modern-js/plugin-data-loader@3.0.0-alpha.2
+  - @modern-js/prod-server@3.0.0-alpha.2
+  - @modern-js/server@3.0.0-alpha.2
+  - @modern-js/server-utils@3.0.0-alpha.2
+  - @modern-js/plugin@3.0.0-alpha.2
+  - @modern-js/builder@3.0.0-alpha.2
+  - @modern-js/utils@3.0.0-alpha.2
+
+## 3.0.0-alpha.1
+
+### Major Changes
+
+- ef4288c: feat: release Modern.js 3.0
+
+  feat: 发布 Modern.js 3.0
+
+### Patch Changes
+
+- Updated dependencies [eecb927]
+- Updated dependencies [952f6fe]
+- Updated dependencies [79f0efd]
+  - @modern-js/server-core@3.0.0-alpha.1
+  - @modern-js/types@3.0.0-alpha.1
+  - @modern-js/plugin-data-loader@3.0.0-alpha.1
+  - @modern-js/prod-server@3.0.0-alpha.1
+  - @modern-js/server@3.0.0-alpha.1
+  - @modern-js/server-utils@3.0.0-alpha.1
+  - @modern-js/builder@3.0.0-alpha.1
+  - @modern-js/plugin@3.0.0-alpha.1
+  - @modern-js/utils@3.0.0-alpha.1
+  - @modern-js/i18n-utils@3.0.0-alpha.1
+
+## 3.0.0-alpha.0
+
+### Major Changes
+
+- ef4288c: feat: release Modern.js 3.0
+
+  feat: 发布 Modern.js 3.0
+
+### Patch Changes
+
+- Updated dependencies [eecb927]
+- Updated dependencies [952f6fe]
+  - @modern-js/server-core@3.0.0-alpha.0
+  - @modern-js/types@3.0.0-alpha.0
+  - @modern-js/plugin-data-loader@3.0.0-alpha.0
+  - @modern-js/prod-server@3.0.0-alpha.0
+  - @modern-js/server@3.0.0-alpha.0
+  - @modern-js/server-utils@3.0.0-alpha.0
+  - @modern-js/builder@3.0.0-alpha.0
+  - @modern-js/plugin@3.0.0-alpha.0
+  - @modern-js/utils@3.0.0-alpha.0
+  - @modern-js/i18n-utils@3.0.0-alpha.0
+
+## 2.68.1
+
+### Patch Changes
+
+- 2740b74: feat: support output Modern.js config when calling `modern inspect`
+
+  feat: 当 `modern inspect` 命令调用时，支持输出 Modern.js 配置
+
+- 0d98723: feat: support rsc for spa projects
+  feat: 为 SPA 项目支持 RSC
+- 0d98723: feat: inject the rsc payload into the html for csr
+  feat: 为 CSR 项目，注入 rsc payload 到 html 中
+- Updated dependencies [0d98723]
+- Updated dependencies [0d98723]
+  - @modern-js/uni-builder@2.68.1
+  - @modern-js/server-core@2.68.1
+  - @modern-js/core@2.68.1
+  - @modern-js/server@2.68.1
+  - @modern-js/plugin-v2@2.68.1
+  - @modern-js/plugin-data-loader@2.68.1
+  - @modern-js/prod-server@2.68.1
+  - @modern-js/server-utils@2.68.1
+  - @modern-js/plugin-i18n@2.68.1
+  - @modern-js/rsbuild-plugin-esbuild@2.68.1
+  - @modern-js/node-bundle-require@2.68.1
+  - @modern-js/plugin@2.68.1
+  - @modern-js/types@2.68.1
+  - @modern-js/utils@2.68.1
+
 ## 2.68.0
 
 ### Minor Changes

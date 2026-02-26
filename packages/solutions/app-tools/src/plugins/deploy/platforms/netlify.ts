@@ -1,6 +1,5 @@
 import path from 'node:path';
 import {
-  DEFAULT_SERVER_CONFIG,
   ROUTE_SPEC_FILE,
   SERVER_DIR,
   fs as fse,
@@ -69,14 +68,19 @@ export const createNetlifyPreset: CreatePreset = (
       }[] = [];
       const {
         source: { mainEntryName },
+        html: { outputStructure },
       } = modernConfig;
 
       if (!needModernServer) {
         entrypoints.forEach(entry => {
           const isMain = isMainEntry(entry.entryName, mainEntryName);
+          const htmlPath =
+            outputStructure === 'flat'
+              ? `/html/${entry.entryName}.html`
+              : `/html/${entry.entryName}/index.html`;
           routes.push({
             src: `/${isMain ? '' : `${entry.entryName}/`}*`,
-            dest: `/html/${entry.entryName}/index.html`,
+            dest: htmlPath,
             status: 200,
           });
         });
@@ -128,7 +132,6 @@ export const createNetlifyPreset: CreatePreset = (
       const pluginImportCode = genPluginImportsCode(plugins || []);
       const dynamicProdOptions = {
         config: serverConfig,
-        serverConfigFile: DEFAULT_SERVER_CONFIG,
       };
 
       const serverConfigPath = `path.join(__dirname, "${SERVER_DIR}", "${meta}.server")`;

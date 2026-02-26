@@ -1,5 +1,4 @@
-import type { IAppContext } from '@modern-js/core';
-import { SERVICE_WORKER_ENVIRONMENT_NAME } from '@modern-js/uni-builder';
+import { SERVICE_WORKER_ENVIRONMENT_NAME } from '@modern-js/builder';
 import {
   isProd,
   isSSR,
@@ -8,13 +7,13 @@ import {
   isUseSSRBundle,
 } from '@modern-js/utils';
 import type { RsbuildConfig } from '@rsbuild/core';
-import type { AppNormalizedConfig, Bundler } from '../../types';
-import type { AppToolsContext } from '../../types/new';
+import type { AppNormalizedConfig } from '../../types';
+import type { AppToolsContext } from '../../types/plugin';
 
-export function getBuilderEnvironments<B extends Bundler>(
-  normalizedConfig: AppNormalizedConfig<B>,
-  appContext: AppToolsContext<B>,
-  tempBuilderConfig: Omit<AppNormalizedConfig<B>, 'plugins'>,
+export function getBuilderEnvironments(
+  normalizedConfig: AppNormalizedConfig,
+  appContext: AppToolsContext,
+  tempBuilderConfig: Omit<AppNormalizedConfig, 'plugins'>,
 ) {
   // create entries
   type Entries = Record<string, string[]>;
@@ -42,7 +41,7 @@ export function getBuilderEnvironments<B extends Bundler>(
   }
 
   const environments: RsbuildConfig['environments'] = {
-    web: {
+    client: {
       output: {
         target: 'web',
       },
@@ -52,9 +51,9 @@ export function getBuilderEnvironments<B extends Bundler>(
     },
   };
 
-  // copy config should only works in main (web) environment
+  // copy config should only works in main (client) environment
   if (tempBuilderConfig.output?.copy) {
-    environments.web.output!.copy = tempBuilderConfig.output.copy;
+    environments.client.output!.copy = tempBuilderConfig.output.copy;
 
     delete tempBuilderConfig.output.copy;
   }
@@ -64,7 +63,7 @@ export function getBuilderEnvironments<B extends Bundler>(
     (isProd() ? isUseSSRBundle(normalizedConfig) : isSSR(normalizedConfig));
 
   if (useNodeTarget) {
-    environments.node = {
+    environments.server = {
       output: {
         target: 'node',
       },

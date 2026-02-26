@@ -1,11 +1,10 @@
-import path from 'path';
-import { SERVICE_WORKER_ENVIRONMENT_NAME } from '@modern-js/uni-builder';
+import path from 'node:path';
+import { SERVICE_WORKER_ENVIRONMENT_NAME } from '@modern-js/builder';
 import type { RsbuildPlugin, RspackChain } from '@rsbuild/core';
-import type { Bundler } from '../../../types';
 import type { BuilderOptions } from '../types';
 
-export const builderPluginAdapterBasic = <B extends Bundler>(
-  options: BuilderOptions<B>,
+export const builderPluginAdapterBasic = (
+  options: BuilderOptions,
 ): RsbuildPlugin => ({
   name: 'builder-plugin-adapter-modern-basic',
 
@@ -21,28 +20,50 @@ export const builderPluginAdapterBasic = <B extends Bundler>(
 
       if (target === 'web') {
         const bareServerModuleReg = /\.(server|node)\.[tj]sx?$/;
+        const depExt = process.env.MODERN_LIB_FORMAT === 'esm' ? 'mjs' : 'js';
         chain.module.rule(CHAIN_ID.RULE.JS).exclude.add(bareServerModuleReg);
         chain.module
           .rule('bare-server-module')
           .test(bareServerModuleReg)
           .use('server-module-loader')
-          .loader(require.resolve('../loaders/serverModuleLoader'));
+          .loader(
+            path.join(__dirname, `../loaders/serverModuleLoader.${depExt}`),
+          );
       }
 
       const { appContext } = options;
       const { metaName } = appContext;
-
-      // compat modern-js v1
-      // this helps symlinked packages to resolve packages correctly, such as `react/jsx-runtime`.
-      chain.resolve.modules
-        .add('node_modules')
-        .add(path.join(api.context.rootPath, 'node_modules'));
 
       chain.watchOptions({
         ignored: [
           `[\\\\/](?:node_modules(?![\\\\/]\\.${metaName})|.git)[\\\\/]`,
         ],
       });
+    });
+
+    // Use modifyRspackConfig to ensure extensionAlias has higher priority than rsbuild defaults
+    api.modifyRspackConfig((config, { target, environment }) => {
+      const isServiceWorker =
+        environment.name === SERVICE_WORKER_ENVIRONMENT_NAME;
+
+      if (target === 'node' || isServiceWorker) {
+        // Define extensionAlias for server and node files
+        // a .mjs file will resolve in order of .node.mjs, .server.mjs, .mjs
+        const extensionAlias: Record<string, string[]> = {
+          '.js': ['.node.js', '.server.js', '.js'],
+          '.jsx': ['.node.jsx', '.server.jsx', '.jsx'],
+          '.ts': ['.node.ts', '.server.ts', '.ts'],
+          '.tsx': ['.node.tsx', '.server.tsx', '.tsx'],
+          '.mjs': ['.node.mjs', '.server.mjs', '.mjs'],
+          '.json': ['.node.json', '.server.json', '.json'],
+        };
+
+        config.resolve ??= {};
+        config.resolve.extensionAlias = {
+          ...config.resolve.extensionAlias,
+          ...extensionAlias,
+        };
+      }
     });
   },
 });
@@ -54,10 +75,12 @@ function applyNodeCompat(isServiceWorker: boolean, chain: RspackChain) {
     '.node.jsx',
     '.node.ts',
     '.node.tsx',
+    '.node.mjs',
     '.server.js',
     '.server.jsx',
     '.server.ts',
     '.server.tsx',
+    '.server.mjs',
   ];
   const webWorkerExts = [
     '.worker.js',

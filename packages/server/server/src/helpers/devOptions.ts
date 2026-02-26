@@ -1,15 +1,18 @@
-import type { UniBuilderInstance } from '@modern-js/uni-builder';
-import { merge } from '@modern-js/utils/lodash';
-import type { ModernDevServerOptions } from '../types';
-import { getDefaultDevOptions } from './constants';
+import type { BuilderInstance } from '@modern-js/builder';
+import type { DevServerOptions } from '../types';
 
-export const getDevOptions = (options: ModernDevServerOptions) => {
-  const devOptions = options.dev;
-  const defaultOptions = getDefaultDevOptions();
-  return merge(defaultOptions, devOptions);
+export const getDevOptions = (devOptions: DevServerOptions) => {
+  const defaultOptions: DevServerOptions = {
+    https: false,
+    server: {},
+  };
+  return {
+    ...defaultOptions,
+    ...devOptions,
+  };
 };
 
-export const getDevAssetPrefix = (builder?: UniBuilderInstance) => {
+export const getDevAssetPrefix = (builder?: BuilderInstance) => {
   return new Promise<string>(resolve => {
     if (!builder) {
       return resolve('');

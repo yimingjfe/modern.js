@@ -11,11 +11,8 @@
 import type {
   ErrorResponse,
   StaticHandlerContext,
-} from '@modern-js/runtime-utils/remix-router';
-import {
-  isRouteErrorResponse,
-  json,
-} from '@modern-js/runtime-utils/remix-router';
+} from '@modern-js/runtime-utils/router';
+import { isRouteErrorResponse } from '@modern-js/runtime-utils/router';
 
 /**
  * This thing probably warrants some explanation.
@@ -132,7 +129,7 @@ export function serializeErrors(
 }
 
 export function errorResponseToJson(errorResponse: ErrorResponse): Response {
-  return json(
+  return Response.json(
     // @ts-expect-error This is "private" from users but intended for internal use
     serializeError(errorResponse.error || new Error('Unexpected Server Error')),
     {

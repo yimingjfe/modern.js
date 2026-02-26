@@ -1,8 +1,7 @@
 import os from 'os';
 import path from 'path';
 import type { InternalPlugins } from '@modern-js/types';
-import { fs, browserslist, json5 } from '../../compiled';
-import { INTERNAL_CLI_PLUGINS } from '../constants';
+import { fs, json5 } from '../../compiled';
 import { isDepExists } from '../is';
 import { canUsePnpm, canUseYarn } from '../package';
 
@@ -43,26 +42,9 @@ export const getCoreJsVersion = (corejsPkgPath: string) => {
   }
 };
 
-export const getAntdMajorVersion = (appDirectory: string) => {
-  try {
-    const pkgJsonPath = require.resolve('antd/package.json', {
-      paths: [appDirectory],
-    });
-    const { version } = require(pkgJsonPath);
-    return Number(version.split('.')[0]);
-  } catch (err) {
-    return null;
-  }
-};
-
-export const defaults = ['> 0.01%', 'not dead', 'not op_mini all'];
-
-export const getBrowserslist = (appDirectory: string) =>
-  browserslist.loadConfig({ path: appDirectory }) || defaults;
-
 export function getInternalPlugins(
   appDirectory: string,
-  internalPlugins: InternalPlugins = INTERNAL_CLI_PLUGINS,
+  internalPlugins: InternalPlugins = {},
 ) {
   return [
     ...Object.keys(internalPlugins)

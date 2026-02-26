@@ -1,5 +1,5 @@
 import path from 'node:path';
-import { expect, test } from '@modern-js/e2e/playwright';
+import { expect, test } from '@playwright/test';
 import { build } from '@scripts/shared';
 
 test('should allow to use `postcssOptions` function to apply different postcss config for different files and overrides modern.js default plugins', async () => {
@@ -96,7 +96,7 @@ test('should allow to use `postcssOptions` function to apply different postcss c
   )!;
   // apply tailwind config and autoprefixer correctly
   expect(files[fooCssFile]).toEqual(
-    '.font-bold{font-weight:700}.underline{-webkit-text-decoration-line:underline;-moz-text-decoration-line:underline;text-decoration-line:underline}',
+    '.font-bold{font-weight:700}.underline{text-decoration-line:underline}',
   );
 
   const barCssFile = Object.keys(files).find(

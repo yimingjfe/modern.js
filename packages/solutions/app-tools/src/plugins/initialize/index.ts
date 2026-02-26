@@ -4,51 +4,29 @@ import {
   isDev,
   isDevCommand,
 } from '@modern-js/utils';
-import {
-  checkIsLegacyConfig,
-  createDefaultConfig,
-  createLegacyDefaultConfig,
-  transformNormalizedConfig,
-} from '../../config';
+import { createDefaultConfig } from '../../config';
 import type {
-  AppNormalizedConfig,
   AppTools,
   AppToolsNormalizedConfig,
   AppUserConfig,
-  CliPluginFuture,
+  CliPlugin,
 } from '../../types';
 
-export default ({
-  bundler,
-}: {
-  bundler: 'rspack' | 'webpack';
-}): CliPluginFuture<AppTools<'shared'>> => ({
+export default (): CliPlugin<AppTools> => ({
   name: '@modern-js/plugin-initialize',
 
   post: [
     '@modern-js/plugin-ssr',
     '@modern-js/plugin-document',
-    '@modern-js/plugin-state',
     '@modern-js/plugin-router',
-    '@modern-js/plugin-router-v5',
     '@modern-js/plugin-polyfill',
   ],
 
   setup(api) {
     api.config(() => {
       const appContext = api.getAppContext();
-      const userConfig = api.getConfig();
 
-      // set bundlerType to appContext
-      api.updateAppContext({
-        bundlerType: bundler,
-      });
-
-      return (checkIsLegacyConfig(userConfig)
-        ? createLegacyDefaultConfig(appContext)
-        : createDefaultConfig(
-            appContext,
-          )) as unknown as AppUserConfig<'shared'>;
+      return createDefaultConfig(appContext) as unknown as AppUserConfig;
     });
 
     api.modifyResolvedConfig(async resolved => {
@@ -67,18 +45,13 @@ export default ({
 
       api.updateAppContext(appContext);
 
-      const normalizedConfig = checkIsLegacyConfig(resolved)
-        ? transformNormalizedConfig(resolved as any)
-        : resolved;
+      const normalizedConfig = resolved;
 
       resolved._raw = userConfig;
       resolved.server = {
         ...(normalizedConfig.server || {}),
         port,
       };
-      (resolved as unknown as AppNormalizedConfig).autoLoadPlugins =
-        (normalizedConfig as unknown as AppNormalizedConfig).autoLoadPlugins ??
-        false;
       stabilizeConfig(
         resolved,
         normalizedConfig as AppToolsNormalizedConfig & { plugins: any },
@@ -92,17 +65,10 @@ export default ({
           'testing',
           'plugins',
           'builderPlugins',
-          'runtime',
-          'runtimeByEntries',
           'deploy',
           'performance',
         ],
       );
-
-      if (bundler === 'webpack') {
-        resolved.security = normalizedConfig.security || {};
-        resolved.experiments = normalizedConfig.experiments;
-      }
 
       return resolved;
     });
@@ -123,7 +89,7 @@ async function getServerPort(config: AppToolsNormalizedConfig) {
   const prodPort = Number(process.env.PORT) || config.server.port || 8080;
 
   if (isDev() && isDevCommand()) {
-    return getPort(Number(process.env.PORT) || config.dev.port || prodPort);
+    return getPort(Number(process.env.PORT) || prodPort);
   }
 
   return prodPort;

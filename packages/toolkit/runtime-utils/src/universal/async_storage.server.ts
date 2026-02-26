@@ -56,12 +56,13 @@ const storage = createStorage<{
     status: number;
   };
   activeDeferreds?: Map<string, unknown>;
+  serverPayload?: unknown;
 }>();
 
 type Storage = typeof storage;
 
 export { storage, type Storage };
 
-export const getAsyncLocalStorage = (): Storage => {
+export const getAsyncLocalStorage = async (): Promise<Storage> => {
   return storage;
 };

@@ -69,7 +69,7 @@ const universalBuildConfig = [
   {
     buildType: 'bundleless',
     format: 'esm',
-    target: 'es5',
+    target: 'es2019',
     dts: false,
     outDir: './dist/esm',
     externalHelpers,
@@ -83,6 +83,7 @@ const universalBuildConfig = [
     outDir: './dist/esm-node',
     externalHelpers,
     transformLodash,
+    autoExtension: true,
   },
   skipDts
     ? null
@@ -204,7 +205,7 @@ const generatorBuildUmdConfig = {
     '@modern-js/codesmith-utils/npm': 'codesmithNpmUtils',
     '@modern-js/codesmith-utils/ora': 'codesmithOraUtils',
     '@modern-js/codesmith-utils/semver': 'codesmithSemverUtils',
-    '@modern-js/plugin-i18n': 'pluginI18N',
+    '@modern-js/i18n-utils': 'pluginI18N',
   },
 };
 

@@ -15,197 +15,74 @@
     "modern",
     "modern.js"
   ],
-  "version": "2.68.0",
-  "jsnext:source": "./src/index.ts",
+  "version": "3.0.3",
   "types": "./src/index.ts",
   "main": "./dist/cjs/index.js",
-  "module": "./dist/esm/index.js",
+  "module": "./dist/esm/index.mjs",
   "_comment": "Provide ESM and CJS exports, ESM is used by runtime package, for treeshaking",
   "exports": {
     ".": {
-      "jsnext:source": "./src/index.ts",
       "types": "./dist/types/index.d.ts",
+      "node": {
+        "import": "./dist/esm-node/index.mjs",
+        "require": "./dist/cjs/index.js"
+      },
       "default": "./dist/cjs/index.js"
     },
-    "./logger": {
-      "jsnext:source": "./src/cli/logger.ts",
-      "default": "./dist/cjs/cli/logger.js"
-    },
-    "./chain-id": {
-      "jsnext:source": "./src/cli/constants/chainId.ts",
-      "default": "./dist/cjs/cli/constants/chainId.js"
-    },
     "./universal": {
-      "jsnext:source": "./src/universal/index.ts",
-      "import": "./dist/esm/universal/index.js",
-      "default": "./dist/cjs/universal/index.js"
+      "node": {
+        "module": "./dist/esm/universal/index.mjs",
+        "import": "./dist/esm-node/universal/index.mjs",
+        "require": "./dist/cjs/universal/index.js"
+      },
+      "default": "./dist/esm/universal/index.mjs"
     },
     "./universal/constants": {
-      "jsnext:source": "./src/universal/constants.ts",
-      "import": "./dist/esm/universal/constants.js",
-      "default": "./dist/cjs/universal/constants.js"
-    },
-    "./universal/format-webpack": {
-      "jsnext:source": "./src/universal/formatWebpack.ts",
-      "import": "./dist/esm/universal/formatWebpack.js",
-      "default": "./dist/cjs/universal/formatWebpack.js"
-    },
-    "./universal/plugin-dag-sort": {
-      "jsnext:source": "./src/universal/pluginDagSort.ts",
-      "import": "./dist/esm/universal/pluginDagSort.js",
-      "default": "./dist/cjs/universal/pluginDagSort.js"
-    },
-    "./commander": "./compiled/commander/index.js",
-    "./ora": "./compiled/ora/index.js",
-    "./glob": "./compiled/glob/index.js",
-    "./chalk": "./compiled/chalk/index.js",
-    "./execa": "./compiled/execa/index.js",
-    "./json5": "./compiled/json5/index.js",
-    "./semver": "./compiled/semver/index.js",
-    "./lodash": "./compiled/lodash/index.js",
-    "./globby": "./compiled/globby/index.js",
-    "./fs-extra": "./compiled/fs-extra/index.js",
-    "./fast-glob": "./compiled/fast-glob/index.js",
-    "./gzip-size": "./compiled/gzip-size/index.js",
-    "./mime-types": "./compiled/mime-types/index.js",
-    "./strip-ansi": "./compiled/strip-ansi/index.js",
-    "./browserslist": "./compiled/browserslist/index.js",
-    "./webpack-chain": "./compiled/webpack-chain/index.js",
-    "./tsconfig-paths": "./compiled/tsconfig-paths/index.js",
-    "./react-server-dom-webpack": "./compiled/react-server-dom-webpack/index.js",
-    "./react-server-dom-webpack/client": {
-      "workerd": "./compiled/react-server-dom-webpack/client.edge.js",
-      "deno": "./compiled/react-server-dom-webpack/client.edge.js",
-      "worker": "./compiled/react-server-dom-webpack/client.edge.js",
       "node": {
-        "webpack": "./compiled/react-server-dom-webpack/client.node.js",
-        "default": "./compiled/react-server-dom-webpack/client.node.unbundled.js"
+        "module": "./dist/esm/universal/constants.mjs",
+        "import": "./dist/esm-node/universal/constants.mjs",
+        "require": "./dist/cjs/universal/constants.js"
       },
-      "edge-light": "./compiled/react-server-dom-webpack/client.edge.js",
-      "browser": "./compiled/react-server-dom-webpack/client.browser.js",
-      "default": "./compiled/react-server-dom-webpack/client.browser.js"
+      "default": "./dist/esm/universal/constants.mjs"
     },
-    "./react-server-dom-webpack/client.browser": "./compiled/react-server-dom-webpack/client.browser.js",
-    "./react-server-dom-webpack/client.edge": "./compiled/react-server-dom-webpack/client.edge.js",
-    "./react-server-dom-webpack/server": {
-      "react-server": {
-        "workerd": "./compiled/react-server-dom-webpack/server.edge.js",
-        "deno": "./compiled/react-server-dom-webpack/server.browser.js",
-        "node": {
-          "webpack": "./compiled/react-server-dom-webpack/server.node.js",
-          "default": "./compiled/react-server-dom-webpack/server.node.unbundled.js"
-        },
-        "edge-light": "./compiled/react-server-dom-webpack/server.edge.js",
-        "browser": "./compiled/react-server-dom-webpack/server.browser.js"
-      },
-      "default": "./compiled/react-server-dom-webpack/server.js"
+    "./commander": {
+      "import": "./dist/compiled/commander/index.mjs",
+      "default": "./dist/compiled/commander/index.js"
     },
-    "./react-server-dom-webpack/server.edge": "./compiled/react-server-dom-webpack/server.edge.js"
+    "./ora": "./dist/compiled/ora/index.js",
+    "./glob": "./dist/compiled/glob/index.js",
+    "./chalk": "./dist/compiled/chalk/index.js",
+    "./execa": "./dist/compiled/execa/index.js",
+    "./json5": "./dist/compiled/json5/index.js",
+    "./semver": "./dist/compiled/semver/index.js",
+    "./lodash": {
+      "import": "./dist/compiled/lodash/index.mjs",
+      "default": "./dist/compiled/lodash/index.js"
+    },
+    "./globby": "./dist/compiled/globby/index.js",
+    "./fs-extra": "./dist/compiled/fs-extra/index.js",
+    "./fast-glob": "./dist/compiled/fast-glob/index.js",
+    "./gzip-size": "./dist/compiled/gzip-size/index.js",
+    "./mime-types": "./dist/compiled/mime-types/index.js",
+    "./strip-ansi": "./dist/compiled/strip-ansi/index.js",
+    "./browserslist": "./dist/compiled/browserslist/index.js",
+    "./tsconfig-paths": {
+      "import": "./dist/compiled/tsconfig-paths/index.mjs",
+      "default": "./dist/compiled/tsconfig-paths/index.js"
+    }
   },
   "publishConfig": {
     "registry": "https://registry.npmjs.org/",
     "access": "public",
-    "types": "./dist/types/index.d.ts",
-    "exports": {
-      ".": {
-        "types": "./dist/types/index.d.ts",
-        "default": "./dist/cjs/index.js"
-      },
-      "./logger": {
-        "types": "./dist/types/cli/logger.d.ts",
-        "default": "./dist/cjs/cli/logger.js"
-      },
-      "./chain-id": {
-        "types": "./dist/types/cli/constants/chainId.d.ts",
-        "default": "./dist/cjs/cli/constants/chainId.js"
-      },
-      "./universal": {
-        "types": "./dist/types/universal/index.d.ts",
-        "import": "./dist/esm/universal/index.js",
-        "default": "./dist/cjs/universal/index.js"
-      },
-      "./universal/constants": {
-        "types": "./dist/types/universal/constants.d.ts",
-        "import": "./dist/esm/universal/constants.js",
-        "default": "./dist/cjs/universal/constants.js"
-      },
-      "./universal/format-webpack": {
-        "types": "./dist/types/universal/formatWebpack.d.ts",
-        "import": "./dist/esm/universal/formatWebpack.js",
-        "default": "./dist/cjs/universal/formatWebpack.js"
-      },
-      "./universal/plugin-dag-sort": {
-        "types": "./dist/types/universal/pluginDagSort.d.ts",
-        "import": "./dist/esm/universal/pluginDagSort.js",
-        "default": "./dist/cjs/universal/pluginDagSort.js"
-      },
-      "./commander": "./dist/compiled/commander/index.js",
-      "./ora": "./dist/compiled/ora/index.js",
-      "./glob": "./dist/compiled/glob/index.js",
-      "./chalk": "./dist/compiled/chalk/index.js",
-      "./execa": "./dist/compiled/execa/index.js",
-      "./json5": "./dist/compiled/json5/index.js",
-      "./semver": "./dist/compiled/semver/index.js",
-      "./lodash": "./dist/compiled/lodash/index.js",
-      "./globby": "./dist/compiled/globby/index.js",
-      "./fs-extra": "./dist/compiled/fs-extra/index.js",
-      "./fast-glob": "./dist/compiled/fast-glob/index.js",
-      "./gzip-size": "./dist/compiled/gzip-size/index.js",
-      "./mime-types": "./dist/compiled/mime-types/index.js",
-      "./strip-ansi": "./dist/compiled/strip-ansi/index.js",
-      "./browserslist": "./dist/compiled/browserslist/index.js",
-      "./webpack-chain": "./dist/compiled/webpack-chain/index.js",
-      "./tsconfig-paths": "./dist/compiled/tsconfig-paths/index.js",
-      "./react-server-dom-webpack": "./dist/compiled/react-server-dom-webpack/index.js",
-      "./react-server-dom-webpack/client": {
-        "workerd": "./dist/compiled/react-server-dom-webpack/client.edge.js",
-        "deno": "./dist/compiled/react-server-dom-webpack/client.edge.js",
-        "worker": "./dist/compiled/react-server-dom-webpack/client.edge.js",
-        "node": {
-          "webpack": "./dist/compiled/react-server-dom-webpack/client.node.js",
-          "default": "./dist/compiled/react-server-dom-webpack/client.node.unbundled.js"
-        },
-        "edge-light": "./dist/compiled/react-server-dom-webpack/client.edge.js",
-        "browser": "./dist/compiled/react-server-dom-webpack/client.browser.js",
-        "default": "./dist/compiled/react-server-dom-webpack/client.browser.js"
-      },
-      "./react-server-dom-webpack/client.browser": "./dist/compiled/react-server-dom-webpack/client.browser.js",
-      "./react-server-dom-webpack/client.edge": "./dist/compiled/react-server-dom-webpack/client.edge.js",
-      "./react-server-dom-webpack/server": {
-        "react-server": {
-          "workerd": "./dist/compiled/react-server-dom-webpack/server.edge.js",
-          "deno": "./dist/compiled/react-server-dom-webpack/server.browser.js",
-          "node": {
-            "webpack": "./dist/compiled/react-server-dom-webpack/server.node.js",
-            "default": "./dist/compiled/react-server-dom-webpack/server.node.unbundled.js"
-          },
-          "edge-light": "./dist/compiled/react-server-dom-webpack/server.edge.js",
-          "browser": "./dist/compiled/react-server-dom-webpack/server.browser.js"
-        },
-        "default": "./dist/compiled/react-server-dom-webpack/server.js"
-      },
-      "./react-server-dom-webpack/server.edge": "./dist/compiled/react-server-dom-webpack/server.edge.js"
-    }
+    "types": "./dist/types/index.d.ts"
   },
   "typesVersions": {
     "*": {
-      "logger": [
-        "./dist/types/cli/logger.d.ts"
-      ],
-      "chain-id": [
-        "./dist/types/cli/constants/chainId.d.ts"
-      ],
       "universal": [
         "./dist/types/universal/index.d.ts"
       ],
       "universal/constants": [
         "./dist/types/universal/constants.d.ts"
-      ],
-      "universal/format-webpack": [
-        "./dist/types/universal/formatWebpack.d.ts"
-      ],
-      "universal/plugin-dag-sort": [
-        "./dist/types/universal/pluginDagSort.d.ts"
       ],
       "execa": [
         "./dist/compiled/execa/index.d.ts"
@@ -246,9 +123,6 @@
       "browserslist": [
         "./dist/compiled/browserslist/index.d.ts"
       ],
-      "webpack-chain": [
-        "./dist/compiled/webpack-chain/types/index.d.ts"
-      ],
       "tsconfig-paths": [
         "./dist/compiled/tsconfig-paths/lib/index.d.ts"
       ],
@@ -262,26 +136,38 @@
   },
   "scripts": {
     "prepublishOnly": "only-allow-pnpm",
-    "new": "modern-lib new",
-    "dev": "modern-lib build --watch",
-    "build": "modern-lib build",
-    "test": "jest --passWithNoTests"
+    "dev": "rslib build --watch",
+    "build": "rslib build",
+    "test": "rstest --passWithNoTests"
   },
   "dependencies": {
     "@swc/helpers": "^0.5.17",
     "caniuse-lite": "^1.0.30001520",
-    "lodash": "^4.17.21",
-    "rslog": "^1.1.0"
+    "import-meta-resolve": "^4.2.0",
+    "lodash": "^4.17.23",
+    "lodash-es": "^4.17.23",
+    "rslog": "^1.3.2"
   },
   "devDependencies": {
+    "@modern-js/rslib": "workspace:*",
     "@modern-js/types": "workspace:*",
-    "@scripts/build": "workspace:*",
-    "@scripts/jest-config": "workspace:*",
-    "@types/jest": "^29",
-    "@types/node": "^14",
-    "jest": "^29",
-    "typescript": "^5",
-    "webpack": "^5.99.8"
+    "@rslib/core": "0.19.6",
+    "@scripts/rstest-config": "workspace:*",
+    "@types/node": "^20",
+    "happy-dom": "^20.7.0",
+    "typescript": "^5"
+  },
+  "peerDependencies": {
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    },
+    "react-dom": {
+      "optional": true
+    }
   },
   "sideEffects": false
 }

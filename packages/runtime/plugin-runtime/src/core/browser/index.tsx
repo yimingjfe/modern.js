@@ -1,24 +1,12 @@
 import cookieTool from 'cookie';
 import type React from 'react';
-import { getGlobalAppInit, getGlobalInternalRuntimeContext } from '../context';
-import { type RuntimeContext, getInitialContext } from '../context/runtime';
-import { createLoaderManager } from '../loader/loaderManager';
+import { getGlobalInternalRuntimeContext } from '../context';
+import { type TRuntimeContext, getInitialContext } from '../context/runtime';
 import { wrapRuntimeContextProvider } from '../react/wrapper';
 import type { SSRContainer } from '../types';
 import { hydrateRoot } from './hydrate';
 
 const IS_REACT18 = process.env.IS_REACT18 === 'true';
-
-type ExtraSSRContainer = {
-  context?: {
-    request: {
-      cookieMap?: Record<string, string>;
-      cookie?: string;
-      userAgent?: string;
-      referer?: string;
-    };
-  };
-};
 
 const getQuery = () =>
   window.location.search
@@ -78,53 +66,30 @@ function isClientArgs(id: unknown): id is HTMLElement | string {
 export type RenderFunc = typeof render;
 
 export async function render(
-  App: React.ReactElement,
+  App: React.ReactElement<{ basename: string }>,
   id?: HTMLElement | string,
 ) {
-  const context: RuntimeContext = getInitialContext();
-  const runBeforeRender = async (context: RuntimeContext) => {
+  const context: TRuntimeContext = getInitialContext();
+  const runBeforeRender = async (context: TRuntimeContext) => {
     const internalRuntimeContext = getGlobalInternalRuntimeContext();
     const api = internalRuntimeContext!.pluginAPI;
     api!.updateRuntimeContext(context);
     const hooks = internalRuntimeContext!.hooks;
     await hooks.onBeforeRender.call(context);
-    const init = getGlobalAppInit();
-    return init?.(context);
   };
 
   if (isClientArgs(id)) {
     // TODO: This field may suitable to be called `requestData`, because both SSR and CSR can get the context
     const ssrData = getSSRData();
-    const loadersData = ssrData.data?.loadersData || {};
-
-    const initialLoadersState = Object.keys(loadersData).reduce(
-      (res: any, key) => {
-        const loaderData = loadersData[key];
-
-        if (loaderData?.loading !== false) {
-          return res;
-        }
-
-        res[key] = loaderData;
-        return res;
-      },
-      {},
-    );
 
     Object.assign(context, {
-      loaderManager: createLoaderManager(initialLoadersState, {
-        skipStatic: true,
-      }),
       // garfish plugin params
       _internalRouterBaseName: App.props.basename,
       ssrContext: ssrData.context,
+      initialData: ssrData.data?.initialData,
     });
 
-    context.initialData = ssrData.data?.initialData;
-    const initialData = await runBeforeRender(context);
-    if (initialData) {
-      context.initialData = initialData;
-    }
+    await runBeforeRender(context);
     const rootElement =
       id && typeof id !== 'string'
         ? id
@@ -168,7 +133,7 @@ export async function renderWithReact17(
   App: React.ReactElement,
   rootElement: HTMLElement,
 ) {
-  const ReactDOM = await import('react-dom');
+  const ReactDOM: any = await import('react-dom');
   ReactDOM.render(App, rootElement);
   return rootElement;
 }
@@ -187,7 +152,7 @@ export async function hydrateWithReact17(
   rootElement: HTMLElement,
   callback?: () => void,
 ) {
-  const ReactDOM = await import('react-dom');
+  const ReactDOM: any = await import('react-dom');
   const root = ReactDOM.hydrate(App, rootElement, callback);
   return root as any;
 }

@@ -9,11 +9,6 @@ export const ROUTE_MANIFEST = `_MODERNJS_ROUTE_MANIFEST`;
 export const ROUTE_MODULES = `_routeModules`;
 
 /**
- * hmr socket connect path
- */
-export const HMR_SOCK_PATH = '/webpack-hmr';
-
-/**
  * html placeholder
  */
 export const HTML_CHUNKSMAP_SEPARATOR = '<!--<?- chunksMap.js ?>-->';
@@ -39,6 +34,11 @@ export const NESTED_ROUTE_SPEC_FILE = 'nestedRoutes.json';
 export const MAIN_ENTRY_NAME = 'main';
 
 /**
+ * default entry name
+ */
+export const DEFAULT_ENTRY_NAME = 'index';
+
+/**
  * server side bundles directory, which relative to dist.
  */
 export const SERVER_BUNDLE_DIRECTORY = 'bundles';
@@ -49,7 +49,4 @@ export const SERVER_BUNDLE_DIRECTORY = 'bundles';
 export const SERVER_RENDER_FUNCTION_NAME = 'serverRender';
 
 export const SERVER_PLUGIN_BFF = '@modern-js/plugin-bff';
-export const SERVER_PLUGIN_EXPRESS = '@modern-js/plugin-express';
-export const SERVER_PLUGIN_KOA = '@modern-js/plugin-koa';
-export const SERVER_PLUGIN_SERVER = '@modern-js/plugin-server';
 export const SERVER_PLUGIN_POLYFILL = '@modern-js/plugin-polyfill';

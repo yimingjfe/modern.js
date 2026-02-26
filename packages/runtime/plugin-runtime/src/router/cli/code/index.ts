@@ -4,7 +4,7 @@ import type {
   AppTools,
   AppToolsContext,
 } from '@modern-js/app-tools';
-import type { CLIPluginAPI } from '@modern-js/plugin-v2';
+import type { CLIPluginAPI } from '@modern-js/plugin';
 import type {
   Entrypoint,
   NestedRouteForCli,
@@ -17,6 +17,7 @@ import {
   fs,
   getEntryOptions,
   isSSGEntry,
+  isUseRsc,
   isUseSSRBundle,
   logger,
 } from '@modern-js/utils';
@@ -27,34 +28,86 @@ import {
 } from '@modern-js/utils';
 import { cloneDeep } from '@modern-js/utils/lodash';
 import { ENTRY_POINT_RUNTIME_GLOBAL_CONTEXT_FILE_NAME } from '../../../cli/constants';
+import { resolveSSRMode } from '../../../cli/ssr/mode';
 import { FILE_SYSTEM_ROUTES_FILE_NAME } from '../constants';
-import { getClientRoutes, getClientRoutesLegacy } from './getClientRoutes';
 import { walk } from './nestedRoutes';
 import * as templates from './templates';
 import { getServerCombinedModueFile, getServerLoadersFile } from './utils';
 
+/**
+ * Generate routing information for a single entry point (can be reused by the routes inspect feature)
+ */
+export async function generateRoutesForEntry(
+  entrypoint: Entrypoint,
+  appContext: AppToolsContext,
+): Promise<NestedRouteForCli[]> {
+  const routes: NestedRouteForCli[] = [];
+
+  if (entrypoint.nestedRoutesEntry) {
+    const nestedRoutes = await walk({
+      dirname: entrypoint.nestedRoutesEntry,
+      rootDir: entrypoint.nestedRoutesEntry,
+      alias: {
+        name: appContext.internalSrcAlias,
+        basename: appContext.srcDirectory,
+      },
+      entryName: entrypoint.entryName,
+      isMainEntry: entrypoint.isMainEntry,
+    });
+
+    if (nestedRoutes) {
+      if (!Array.isArray(nestedRoutes)) {
+        routes.push(nestedRoutes);
+      } else {
+        routes.push(...nestedRoutes);
+      }
+    }
+  }
+
+  const fileRoutes: NestedRouteForCli[] =
+    routes.length > 0 ? (Array.isArray(routes) ? routes : [routes]) : [];
+
+  const { discoverAndParseConfigRoutes } = await import(
+    '../config-routes/parseRouteConfig'
+  );
+
+  const configRoutesData = await discoverAndParseConfigRoutes(
+    entrypoint,
+    appContext,
+    fileRoutes,
+  );
+
+  if (configRoutesData) {
+    const { processConfigRoutes } = await import('../config-routes/converter');
+
+    const processedConfigRoutes = await processConfigRoutes(
+      configRoutesData.routes,
+      entrypoint.entryName,
+      entrypoint.isMainEntry || false,
+      path.dirname(configRoutesData.filePath),
+      {
+        name: appContext.internalSrcAlias,
+        basename: appContext.srcDirectory,
+      },
+    );
+
+    routes.length = 0;
+    routes.push(...processedConfigRoutes);
+  }
+
+  return routes;
+}
+
 export const generateCode = async (
-  appContext: AppToolsContext<'shared'>,
-  config: AppNormalizedConfig<'shared'>,
+  appContext: AppToolsContext,
+  config: AppNormalizedConfig,
   entrypoints: Entrypoint[],
-  api: CLIPluginAPI<AppTools<'shared'>>,
-  isRouterV5: boolean,
+  api: CLIPluginAPI<AppTools>,
 ) => {
-  const {
-    internalDirectory,
-    srcDirectory,
-    internalDirAlias,
-    internalSrcAlias,
-    packageName,
-  } = appContext;
+  const { internalDirectory, srcDirectory, internalSrcAlias, packageName } =
+    appContext;
 
   const hooks = api.getHooks();
-
-  const getRoutes = isRouterV5 ? getClientRoutesLegacy : getClientRoutes;
-  const oldVersion =
-    typeof (config?.runtime.router as { oldVersion: boolean }) === 'object'
-      ? Boolean((config?.runtime.router as { oldVersion: boolean }).oldVersion)
-      : false;
 
   await Promise.all(entrypoints.map(generateEntryCode));
 
@@ -68,43 +121,56 @@ export const generateCode = async (
     } = entrypoint;
     const { metaName } = api.getAppContext();
     if (isAutoMount) {
+      const config = api.getNormalizedConfig();
+      const ssr = getEntryOptions(
+        entryName,
+        isMainEntry,
+        config.server.ssr,
+        config.server.ssrByEntries,
+        packageName,
+      );
+
+      const ssrMode = resolveSSRMode({
+        entry: entrypoint.entryName,
+        config,
+        appDirectory: appContext.appDirectory,
+        nestedRoutesEntry: entrypoint.nestedRoutesEntry,
+      });
+
+      // Check if non-convention-based routing (no nestedRoutesEntry) with non-string SSR mode
+      if (
+        !nestedRoutesEntry &&
+        ssrMode &&
+        ssrMode !== 'string' &&
+        !isUseRsc(config)
+      ) {
+        logger.error(
+          'Streaming SSR is only supported for convention-based routing (nested routes). Please set `server.ssr.mode` to `"string"` for non-convention-based routing projects.',
+        );
+        process.exit(1);
+      }
+
       // generate routes file for file system routes entrypoint.
       if (pageRoutesEntry || nestedRoutesEntry) {
-        let initialRoutes: (NestedRouteForCli | PageRoute)[] | RouteLegacy[] =
+        const initialRoutes: (NestedRouteForCli | PageRoute)[] | RouteLegacy[] =
           [];
-        let nestedRoutes: NestedRouteForCli | NestedRouteForCli[] | null = null;
-        if (entrypoint.entry) {
-          initialRoutes = getRoutes({
-            entrypoint,
-            srcDirectory,
-            srcAlias: internalSrcAlias,
-            internalDirectory,
-            internalDirAlias,
-          });
-        }
-        if (!isRouterV5 && entrypoint.nestedRoutesEntry) {
-          nestedRoutes = await walk(
-            entrypoint.nestedRoutesEntry,
-            entrypoint.nestedRoutesEntry,
-            {
-              name: internalSrcAlias,
-              basename: srcDirectory,
-            },
-            entrypoint.entryName,
-            entrypoint.isMainEntry,
-            oldVersion,
-          );
-          if (nestedRoutes) {
-            if (!Array.isArray(nestedRoutes)) {
-              nestedRoutes = [nestedRoutes];
-            }
-            for (const route of nestedRoutes) {
-              (initialRoutes as Route[]).unshift(route);
-            }
-          }
+
+        const generatedRoutes = await generateRoutesForEntry(
+          entrypoint,
+          appContext,
+        );
+
+        // Remove component fields from generated routes
+        const { normalizeRoutes: removeComponentFields } = await import(
+          '../config-routes/converter'
+        );
+        const normalizedRoutes = removeComponentFields(generatedRoutes);
+
+        // Add all routes to initialRoutes
+        for (const route of normalizedRoutes) {
+          (initialRoutes as Route[]).unshift(route);
         }
 
-        const config = api.getNormalizedConfig();
         const ssrByRouteIds = config.server.ssrByRouteIds || [];
         const clonedRoutes = cloneDeep(initialRoutes);
 
@@ -121,20 +187,7 @@ export const generateCode = async (
           routes: markedRoutes,
         });
 
-        const ssr = getEntryOptions(
-          entryName,
-          isMainEntry,
-          config.server.ssr,
-          config.server.ssrByEntries,
-          packageName,
-        );
-        const useSSG = isSSGEntry(config, entryName, entrypoints);
-
-        let mode: SSRMode | undefined;
-        if (ssr) {
-          mode = typeof ssr === 'object' ? ssr.mode || 'string' : 'string';
-        }
-        if (mode === 'stream') {
+        if (ssrMode === 'stream') {
           const hasPageRoute = routes.some(
             route => 'type' in route && route.type === 'page',
           );
@@ -150,17 +203,21 @@ export const generateCode = async (
           entrypoint,
           code: await templates.fileSystemRoutes({
             metaName,
-            routes,
-            ssrMode: useSSG ? 'string' : mode,
+            routes: routes,
+            ssrMode: isUseRsc(config) ? 'stream' : ssrMode,
             nestedRoutesEntry: entrypoint.nestedRoutesEntry,
             entryName: entrypoint.entryName,
             internalDirectory,
             splitRouteChunks: config?.output?.splitRouteChunks,
+            isRscClient: isUseRsc(config),
           }),
         });
 
         // extract nested router loaders
-        if (entrypoint.nestedRoutesEntry && isUseSSRBundle(config)) {
+        if (
+          entrypoint.nestedRoutesEntry &&
+          (isUseSSRBundle(config) || isUseRsc(config))
+        ) {
           const routesServerFile = getServerLoadersFile(
             internalDirectory,
             entryName,
@@ -183,11 +240,12 @@ export const generateCode = async (
           const serverRoutesCode = await templates.fileSystemRoutes({
             metaName,
             routes: filtedRoutesForServer,
-            ssrMode: useSSG ? 'string' : mode,
+            ssrMode,
             nestedRoutesEntry: entrypoint.nestedRoutesEntry,
             entryName: entrypoint.entryName,
             internalDirectory,
             splitRouteChunks: config?.output?.splitRouteChunks,
+            isRscClient: false,
           });
 
           await fs.outputFile(
@@ -200,7 +258,7 @@ export const generateCode = async (
         const serverLoaderCombined = templates.ssrLoaderCombinedModule(
           entrypoints,
           entrypoint,
-          config as AppNormalizedConfig<'shared'>,
+          config as AppNormalizedConfig,
           appContext,
         );
         if (serverLoaderCombined) {
@@ -234,6 +292,21 @@ export function generatorRegisterCode(
     path.resolve(
       internalDirectory,
       `./${entryName}/${ENTRY_POINT_RUNTIME_GLOBAL_CONTEXT_FILE_NAME}.js`,
+    ),
+    code,
+    'utf8',
+  );
+}
+
+export function generatorServerRegisterCode(
+  internalDirectory: string,
+  entryName: string,
+  code: string,
+) {
+  fs.outputFileSync(
+    path.resolve(
+      internalDirectory,
+      `./${entryName}/${ENTRY_POINT_RUNTIME_GLOBAL_CONTEXT_FILE_NAME}.server.js`,
     ),
     code,
     'utf8',

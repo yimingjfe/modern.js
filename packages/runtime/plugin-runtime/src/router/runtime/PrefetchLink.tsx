@@ -1,3 +1,4 @@
+'use client';
 import {
   type Path,
   type RouteObject,
@@ -16,7 +17,7 @@ import type {
   MouseEventHandler,
   TouchEventHandler,
 } from 'react';
-import { RuntimeReactContext } from '../../core';
+import { InternalRuntimeContext } from '../../core/context';
 import type { RouteAssets, RouteManifest } from './types';
 
 interface PrefetchHandlers {
@@ -31,9 +32,7 @@ declare const __webpack_chunk_load__:
   | ((chunkId: string | number) => Promise<void>)
   | undefined;
 
-export function composeEventHandlers<
-  EventType extends React.SyntheticEvent | Event,
->(
+function composeEventHandlers<EventType extends React.SyntheticEvent | Event>(
   theirHandler: ((event: EventType) => any) | undefined,
   ourHandler: (event: EventType) => any,
 ): (event: EventType) => any {
@@ -150,7 +149,8 @@ async function loadRouteModule(
   try {
     await Promise.all(
       chunkIds.map(chunkId => {
-        return __webpack_chunk_load__?.(chunkId);
+        // @ts-ignore
+        return WEBPACK_CHUNK_LOAD?.(chunkId);
       }),
     );
   } catch (error) {
@@ -187,7 +187,7 @@ const getDataHref = (
 
 const PrefetchPageLinks: React.FC<{ path: Path }> = ({ path }) => {
   const { pathname } = path;
-  const context = useContext(RuntimeReactContext);
+  const context = useContext(InternalRuntimeContext);
   const { routeManifest, routes } = context;
   const { routeAssets } = routeManifest || {};
   const matches = Array.isArray(routes) ? matchRoutes(routes, pathname) : [];
@@ -203,7 +203,7 @@ const PrefetchPageLinks: React.FC<{ path: Path }> = ({ path }) => {
     <PrefetchDataLinks
       matches={matches}
       path={path}
-      routeManifest={routeManifest}
+      routeManifest={routeManifest!}
     />
   );
 };

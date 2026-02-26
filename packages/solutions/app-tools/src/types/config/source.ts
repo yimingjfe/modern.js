@@ -1,4 +1,4 @@
-import type { UniBuilderConfig } from '@modern-js/uni-builder';
+import type { BuilderConfig } from '@modern-js/builder';
 
 export type Entry =
   | string
@@ -12,12 +12,6 @@ export type Entry =
        */
       disableMount?: boolean;
       /**
-       * @deprecated
-       * Using customEntry instead.
-       * Specify the file path of custom bootstrap.
-       */
-      customBootstrap?: string;
-      /**
        * use src/{entryName}/entry.tsx to custom entry
        */
       customEntry?: boolean;
@@ -25,8 +19,7 @@ export type Entry =
 
 export type Entries = Record<string, Entry>;
 
-export interface SourceUserConfig
-  extends NonNullable<UniBuilderConfig['source']> {
+export interface SourceUserConfig extends NonNullable<BuilderConfig['source']> {
   /**
    * Used to configure custom page entries.
    */
@@ -43,11 +36,6 @@ export interface SourceUserConfig
    */
   enableAsyncEntry?: boolean;
   /**
-   * Enable use entry.tsx to custom entry
-   * @default false
-   */
-  enableCustomEntry?: boolean;
-  /**
    * Used to disable the functionality of automatically identifying page entry points based on directory structure.
    * @default false
    */
@@ -58,17 +46,7 @@ export interface SourceUserConfig
    */
   entriesDir?: string;
   /**
-   * By default, framework identifies the application entry point based on the `src` directory.
-   * You can use this option to prevent some directories from being recognized as application entry points.
-   */
-  disableEntryDirs?: string[];
-  /**
    * Customize the directory of the framework configuration files.
    */
   configDir?: string;
-  /**
-   * @deprecated designSystem is no longer required.
-   * If you are using Tailwind CSS, you can now use the `theme` option of Tailwind CSS, they are the same.
-   */
-  designSystem?: Record<string, any>;
 }

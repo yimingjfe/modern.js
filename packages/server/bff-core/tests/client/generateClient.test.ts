@@ -5,27 +5,17 @@ import { generateClient } from '../../src/client/generateClient';
 const PWD = path.resolve(__dirname, '../fixtures/function');
 
 describe('client', () => {
-  beforeAll(() => {
-    jest.mock(
-      '@modern-js/create-request',
-      () => ({
-        __esModule: true,
-        createRequest: () => {},
-      }),
-      { virtual: true },
-    );
-  });
-
   test('generateClient should works correctly', async () => {
     const prefix = '/api';
     const port = 3000;
     const resourcePath = path.resolve(
       __dirname,
-      '../fixtures/function/[id]/origin/foo.ts',
+      '../fixtures/function/lambda/[id]/origin/foo.ts',
     );
     const source = await fs.readFile(resourcePath, 'utf-8');
 
     const result = await generateClient({
+      appDir: __dirname,
       prefix,
       port,
       resourcePath,
@@ -43,11 +33,12 @@ describe('client', () => {
     const port = 3000;
     const resourcePath = path.resolve(
       __dirname,
-      '../fixtures/function/normal/origin/index.ts',
+      '../fixtures/function/lambda/normal/origin/index.ts',
     );
     const source = await fs.readFile(resourcePath, 'utf-8');
 
     const result = await generateClient({
+      appDir: __dirname,
       prefix,
       port,
       resourcePath,
@@ -60,16 +51,17 @@ describe('client', () => {
     expect(result.value).toMatchSnapshot();
   });
 
-  test('generateClient should support cross croject invocation', async () => {
+  test('generateClient should support cross project invocation', async () => {
     const prefix = '/';
     const port = 3000;
     const resourcePath = path.resolve(
       __dirname,
-      '../fixtures/function/normal/origin/index.ts',
+      '../fixtures/function/lambda/normal/origin/index.ts',
     );
     const source = await fs.readFile(resourcePath, 'utf-8');
 
     const result = await generateClient({
+      appDir: __dirname,
       prefix,
       port,
       resourcePath,

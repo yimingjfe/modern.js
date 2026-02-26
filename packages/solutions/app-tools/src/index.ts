@@ -1,7 +1,7 @@
 import path from 'path';
-import { getLocaleLanguage } from '@modern-js/plugin-i18n/language-detector';
-import { createAsyncHook, createCollectAsyncHook } from '@modern-js/plugin-v2';
-import { castArray } from '@modern-js/uni-builder';
+import { castArray } from '@modern-js/builder';
+import { getLocaleLanguage } from '@modern-js/i18n-utils/language-detector';
+import { createAsyncHook } from '@modern-js/plugin';
 import {
   cleanRequireCache,
   deprecatedCommands,
@@ -13,23 +13,19 @@ import {
   buildCommand,
   deployCommand,
   devCommand,
+  infoCommand,
   inspectCommand,
-  newCommand,
   serverCommand,
-  upgradeCommand,
 } from './commands';
 import { compatPlugin } from './compat';
-import {
-  DEFAULT_RUNTIME_CONFIG_FILE,
-  DEFAULT_SERVER_CONFIG_FILE,
-} from './constants';
+import { DEFAULT_RUNTIME_CONFIG_FILE } from './constants';
 import { i18n } from './locale';
 import analyzePlugin from './plugins/analyze';
 import deployPlugin from './plugins/deploy';
 import initializePlugin from './plugins/initialize';
 import serverBuildPlugin from './plugins/serverBuild';
 import serverRuntimePlugin from './plugins/serverRuntime';
-import type { AppTools, AppToolsOptions, CliPluginFuture } from './types';
+import type { AppTools, CliPlugin } from './types';
 import type {
   AddRuntimeExportsFn,
   AfterPrepareFn,
@@ -40,39 +36,20 @@ import type {
   GenerateEntryCodeFn,
   ModifyEntrypointsFn,
   ModifyFileSystemRoutesFn,
-  RegisterBuildPlatformFn,
-  RegisterDevFn,
-} from './types/new';
+} from './types/plugin';
 import { generateWatchFiles } from './utils/generateWatchFiles';
 import { initAppContext } from './utils/initAppContext';
 import { restart } from './utils/restart';
 
 export * from './defineConfig';
 
-export const appTools = (
-  options: AppToolsOptions = {
-    // default webpack to be compatible with original projects
-    bundler: 'webpack',
-  },
-): CliPluginFuture<AppTools<'shared'>> => ({
+export const appTools = (): CliPlugin<AppTools> => ({
   name: '@modern-js/app-tools',
   usePlugins: [
     serverRuntimePlugin(),
     compatPlugin(),
-    initializePlugin({
-      bundler:
-        options?.bundler &&
-        ['rspack', 'experimental-rspack'].includes(options.bundler)
-          ? 'rspack'
-          : 'webpack',
-    }),
-    analyzePlugin({
-      bundler:
-        options?.bundler &&
-        ['rspack', 'experimental-rspack'].includes(options.bundler)
-          ? 'rspack'
-          : 'webpack',
-    }),
+    initializePlugin(),
+    analyzePlugin(),
     serverBuildPlugin(),
     deployPlugin(),
   ],
@@ -81,9 +58,7 @@ export const appTools = (
     '@modern-js/plugin-analyze',
     '@modern-js/plugin-ssr',
     '@modern-js/plugin-document',
-    '@modern-js/plugin-state',
     '@modern-js/plugin-router',
-    '@modern-js/plugin-router-v5',
     '@modern-js/plugin-polyfill',
   ],
   registryHooks: {
@@ -95,9 +70,6 @@ export const appTools = (
     generateEntryCode: createAsyncHook<GenerateEntryCodeFn>(),
     onBeforeGenerateRoutes: createAsyncHook<BeforeGenerateRoutesFn>(),
     onBeforePrintInstructions: createAsyncHook<BeforePrintInstructionsFn>(),
-    registerDev: createCollectAsyncHook<RegisterDevFn>(),
-    registerBuildPlatform: createCollectAsyncHook<RegisterBuildPlatformFn>(),
-    addRuntimeExports: createAsyncHook<AddRuntimeExportsFn>(),
   },
   setup: api => {
     const context = api.getAppContext();
@@ -108,7 +80,6 @@ export const appTools = (
       initAppContext({
         metaName: context.metaName,
         appDirectory: context.appDirectory,
-        serverConfigFile: DEFAULT_SERVER_CONFIG_FILE,
         runtimeConfigFile: DEFAULT_RUNTIME_CONFIG_FILE,
         tempDir: userConfig.output?.tempDir,
       }),
@@ -119,9 +90,8 @@ export const appTools = (
       await buildCommand(program, api);
       serverCommand(program, api);
       deployCommand(program, api);
-      newCommand(program, locale);
       inspectCommand(program, api);
-      upgradeCommand(program);
+      infoCommand(program, api);
       deprecatedCommands(program);
     });
 
@@ -194,9 +164,7 @@ export const appTools = (
   },
 });
 
-export { defineConfig, defineLegacyConfig } from './defineConfig';
-export { mergeConfig } from '@modern-js/core';
-export type { RuntimeUserConfig } from './types/config';
+export { defineConfig } from './defineConfig';
 
 export { dev } from './commands/dev';
 export { serve } from './commands/serve';
@@ -208,3 +176,6 @@ export * from './types';
 export { initAppContext };
 
 export default appTools;
+
+// TODO: check mergeConfig is equal to @modern-js/core
+export { mergeConfig } from '@modern-js/plugin/cli';

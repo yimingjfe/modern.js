@@ -1,10 +1,10 @@
-import type { CLIPluginAPI } from '@modern-js/plugin-v2';
+import type { CLIPluginAPI } from '@modern-js/plugin';
 import type { RsbuildMode } from '@rsbuild/core';
 import type { AppTools } from '../types';
 import type { InspectOptions } from '../utils/types';
 
 export const inspect = async (
-  api: CLIPluginAPI<AppTools<'shared'>>,
+  api: CLIPluginAPI<AppTools>,
   options: InspectOptions,
 ) => {
   const appContext = api.getAppContext();

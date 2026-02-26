@@ -6,7 +6,6 @@ export const initAppContext = ({
   appDirectory,
   runtimeConfigFile,
   options,
-  serverConfigFile,
   tempDir,
 }: {
   metaName: string;
@@ -18,19 +17,20 @@ export const initAppContext = ({
     distDir?: string;
     sharedDir?: string;
   };
-  serverConfigFile: string;
   tempDir?: string;
 }) => {
   const { apiDir = 'api', sharedDir = 'shared' } = options || {};
   const pkgPath = path.resolve(appDirectory, './package.json');
+
+  const moduleType = fs.existsSync(pkgPath)
+    ? fs.readJSONSync(pkgPath).type || 'commonjs'
+    : 'commonjs';
+
   return {
     runtimeConfigFile,
-    serverConfigFile,
     ip: address.ip(),
     port: 0,
-    moduleType: fs.existsSync(pkgPath)
-      ? require(pkgPath).type || 'commonjs'
-      : 'commonjs',
+    moduleType,
     apiDirectory: path.resolve(appDirectory, apiDir),
     lambdaDirectory: path.resolve(appDirectory, apiDir, 'lambda'),
     sharedDirectory: path.resolve(appDirectory, sharedDir),

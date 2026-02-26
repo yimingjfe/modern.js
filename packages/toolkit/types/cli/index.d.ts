@@ -28,11 +28,6 @@ export interface Entrypoint {
   pageRoutesEntry?: string;
   isAutoMount?: boolean;
   /**
-   * @deprecated
-   * Using customEntry instead.
-   */
-  customBootstrap?: string | false;
-  /**
    * use src/{entryName}/entry.tsx to custom entry
    */
   customEntry?: boolean;
@@ -82,6 +77,9 @@ export type NestedRouteForCli = NestedRoute<string>;
 
 export interface NestedRoute<T = string | (() => JSX.Element)> extends Route {
   type: 'nested';
+  origin: 'file-system' | 'config';
+  // Route type to distinguish between page and layout routes
+  routeType?: 'page' | 'layout';
   parentId?: string;
   data?: string;
   clientData?: string;
@@ -95,6 +93,7 @@ export interface NestedRoute<T = string | (() => JSX.Element)> extends Route {
   isRoot?: boolean;
   config?: string | Record<string, any>;
   inValidSSRRoute?: boolean;
+  params?: string[];
 }
 
 export interface PageRoute extends Route {
@@ -123,27 +122,29 @@ export type SSGRouteOptions =
   | {
       url: string;
       output?: string;
-      params?: Record<string, any>[];
       headers?: Record<string, any>;
     };
 
 export type SSGSingleEntryOptions =
   | boolean
   | {
-      preventDefault?: string[];
       headers?: Record<string, any>;
       routes?: SSGRouteOptions[];
     };
 
-export type SSGMultiEntryOptions = Record<string, SSGSingleEntryOptions>;
+export type SSGSingleEntryOptionsFactory = (
+  entryName: string,
+  ctx: { baseUrl?: string | string[] },
+) => SSGSingleEntryOptions;
+
+export type SSGMultiEntryOptions = Record<
+  string,
+  SSGSingleEntryOptions | SSGSingleEntryOptionsFactory
+>;
 
 export type SSGConfig =
   | boolean
   | SSGSingleEntryOptions
-  | SSGMultiEntryOptions
-  | ((
-      entryName: string,
-      payload: { baseUrl?: string },
-    ) => SSGSingleEntryOptions);
+  | SSGSingleEntryOptionsFactory;
 
 export type { Merge } from 'type-fest';

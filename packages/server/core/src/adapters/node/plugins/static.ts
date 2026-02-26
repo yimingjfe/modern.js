@@ -8,34 +8,39 @@ import type {
   HtmlNormalizedConfig,
   Middleware,
   OutputNormalizedConfig,
-  ServerPluginLegacy,
+  ServerNormalizedConfig,
+  ServerPlugin,
 } from '../../../types';
 import { sortRoutes } from '../../../utils';
+import { getPublicDirPatterns } from '../../../utils/publicDir';
 
-export const serverStaticPlugin = (): ServerPluginLegacy => ({
+export const serverStaticPlugin = (): ServerPlugin => ({
   name: '@modern-js/plugin-server-static',
 
   setup(api) {
-    return {
-      prepare() {
-        const { middlewares, distDirectory: pwd, routes } = api.useAppContext();
+    api.onPrepare(() => {
+      const {
+        middlewares,
+        distDirectory: pwd,
+        routes,
+      } = api.getServerContext();
 
-        const config = api.useConfigContext();
+      const config = api.getServerConfig();
 
-        const serverStaticMiddleware = createStaticMiddleware({
-          pwd,
-          routes,
-          output: config.output || {},
-          html: config.html || {},
-        });
+      const serverStaticMiddleware = createStaticMiddleware({
+        pwd: pwd!,
+        routes,
+        output: config.output || {},
+        html: config.html || {},
+        server: config.server || {},
+      });
 
-        middlewares.push({
-          name: 'server-static',
+      middlewares.push({
+        name: 'server-static',
 
-          handler: serverStaticMiddleware,
-        });
-      },
-    };
+        handler: serverStaticMiddleware,
+      });
+    });
   },
 });
 
@@ -58,6 +63,13 @@ export function createPublicMiddleware({
       const mimeType = getMimeType(filename);
 
       if (data !== null) {
+        // Hono's `Data` type does not accept Node.js `Buffer<ArrayBufferLike>` directly.
+        // Convert Buffer to `Uint8Array<ArrayBuffer>` without copying.
+        const body = new Uint8Array(
+          data.buffer as ArrayBuffer,
+          data.byteOffset,
+          data.byteLength,
+        );
         if (mimeType) {
           c.header('Content-Type', mimeType);
         }
@@ -66,7 +78,7 @@ export function createPublicMiddleware({
           c.header(k, v as string);
         });
 
-        return c.body(data, 200);
+        return c.body(body, 200);
       }
     }
 
@@ -108,6 +120,7 @@ export interface ServerStaticOptions {
   pwd: string;
   output: OutputNormalizedConfig;
   html: HtmlNormalizedConfig;
+  server: ServerNormalizedConfig;
   routes?: ServerRoute[];
 }
 
@@ -130,12 +143,23 @@ export function createStaticMiddleware(
   const {
     distPath: { css: cssPath, js: jsPath, media: mediaPath } = {},
   } = options.output;
-  const { favicon, faviconByEntries } = options.html;
-  const favicons = prepareFavicons(favicon, faviconByEntries);
+  const { favicon } = options.html;
+  const { publicDir } = options.server;
+  const favicons = prepareFavicons(favicon);
   const staticFiles = [cssPath, jsPath, mediaPath].filter(v => Boolean(v));
 
+  // Handle custom publicDir: string | string[]
+  // Convert publicDir paths to regex patterns for matching
+  // e.g., './locales' or 'locales' -> 'locales/'
+  const publicDirPatterns = getPublicDirPatterns(publicDir);
+
   // TODO: If possible, we should not use `...staticFiles` here, file should only be read in static and upload dir.
-  const staticReg = ['static/', 'upload/', ...staticFiles];
+  const staticReg = [
+    'static/',
+    'upload/',
+    ...staticFiles,
+    ...publicDirPatterns,
+  ];
   // TODO: Also remove iconReg
   const iconReg = ['favicon.ico', 'icon.png', ...favicons];
   const regPrefix = pathPrefix.endsWith('/') ? pathPrefix : `${pathPrefix}/`;
@@ -158,7 +182,7 @@ export function createStaticMiddleware(
       return next();
     }
 
-    // exist is path
+    // Check if path matches static resource pattern
     const hit = staticPathRegExp.test(pathname);
 
     // FIXME: shoudn't hit, when cssPath, jsPath, mediaPath as '.'
@@ -186,7 +210,16 @@ export function createStaticMiddleware(
 
       // TODO: handle http range
       c.header('Content-Length', String(size));
-      return c.body(chunk, 200);
+      if (chunk === null) {
+        return next();
+      }
+      // See comment above: convert Buffer<ArrayBufferLike> to Uint8Array<ArrayBuffer>.
+      const body = new Uint8Array(
+        chunk.buffer as ArrayBuffer,
+        chunk.byteOffset,
+        chunk.byteLength,
+      );
+      return c.body(body, 200);
     } else {
       return createPublicMiddleware({ pwd, routes: routes || [] })(c, next);
     }
@@ -195,23 +228,12 @@ export function createStaticMiddleware(
 
 const prepareFavicons = (
   favicon?: string | ((o: { entryName: string; value: string }) => string),
-  faviconByEntries?: Record<string, string | undefined>,
 ) => {
   const faviconNames = [];
 
   // TODO: handle favicon as function.
   if (favicon && typeof favicon === 'string') {
     faviconNames.push(favicon.substring(favicon.lastIndexOf('/') + 1));
-  }
-  if (faviconByEntries) {
-    Object.keys(faviconByEntries).forEach(f => {
-      const curFavicon = faviconByEntries[f];
-      if (curFavicon) {
-        faviconNames.push(
-          curFavicon.substring(curFavicon.lastIndexOf('/') + 1),
-        );
-      }
-    });
   }
   return faviconNames;
 };

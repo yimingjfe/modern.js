@@ -1,38 +1,87 @@
 import type { Server as NodeServer } from 'node:http';
 import type { Http2SecureServer } from 'node:http2';
-import type { DevServerHttpsOptions, DevServerOptions } from '@modern-js/types';
-import type { Rspack, UniBuilderInstance } from '@modern-js/uni-builder';
+import type { BuilderInstance, Rspack } from '@modern-js/builder';
+import type {
+  DevServerHttpsOptions,
+  ExposeServerApis,
+  RequestHandler,
+} from '@modern-js/types';
 
 import type {
   ServerBase,
   ServerBaseOptions,
   ServerPlugin,
-  ServerPluginLegacy,
 } from '@modern-js/server-core';
 
-export type { DevServerOptions, DevServerHttpsOptions };
+export type { DevServerHttpsOptions };
+
+type StaticOrigin =
+  | boolean
+  | string
+  | RegExp
+  | Array<boolean | string | RegExp>;
+
+type CustomOrigin = (
+  requestOrigin: string | undefined,
+  callback: (err: Error | null, origin?: StaticOrigin) => void,
+) => void;
+
+export interface CorsOptions {
+  /**
+   * @default '*''
+   */
+  origin?: StaticOrigin | CustomOrigin | undefined;
+}
+
+export interface DevServerConfig {
+  /**
+   * Configure CORS for the dev server.
+   * - object: enable CORS with the specified options.
+   * - true: enable CORS with default options (allow all origins, not recommended).
+   * - false: disable CORS.
+   * @default
+   * ```js
+   * { origin: defaultAllowedOrigins }
+   * ```
+   * where `defaultAllowedOrigins` includes:
+   * - `localhost`
+   * - `127.0.0.1`
+   *
+   * @link https://github.com/expressjs/cors
+   */
+  cors?: boolean | CorsOptions;
+}
+
+export type DevServerOptions = {
+  /** Provides the ability to execute a custom function and apply custom middlewares */
+  setupMiddlewares?: Array<
+    (
+      /** Order: `devServer.before` => `unshift` => internal middlewares => `push` => `devServer.after` */
+      middlewares: {
+        /** Use the `unshift` method if you want to run a middleware before all other middlewares */
+        unshift: (...handlers: RequestHandler[]) => void;
+        /** Use the `push` method if you want to run a middleware after all other middlewares */
+        push: (...handlers: RequestHandler[]) => void;
+      },
+      server: ExposeServerApis,
+    ) => void
+  >;
+  /** Whether to enable hot reload. */
+  https?: DevServerHttpsOptions;
+  /** Dev server specific options. */
+  server?: DevServerConfig;
+};
 
 export type ExtraOptions = {
-  dev: Pick<DevServerOptions, 'watch' | 'https'> & {
-    port?: number;
-    host?: string;
-  };
+  dev: DevServerOptions;
 
   runCompile?: boolean;
 
-  /**
-   * The existing compiler can be used here.
-   */
-  compiler?: Rspack.Compiler | Rspack.MultiCompiler;
-
-  /** compat, the default value is modern.server-runtime.config.ts  */
-  serverConfigFile?: string;
-
   serverConfigPath: string;
 
-  builder?: UniBuilderInstance;
+  builder?: BuilderInstance;
 
-  plugins?: (ServerPlugin | ServerPluginLegacy)[];
+  plugins?: ServerPlugin[];
 };
 
 export type ModernDevServerOptions<
